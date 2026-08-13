@@ -5,7 +5,6 @@ using Platform.CashOut.Service.Repository;
 using Platform.Shared.MessageModels;
 using Platform.Shared.Utility;
 using RabbitMQ.Client.Events;
-using Sportradar.MTS.SDK.API;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -22,7 +21,6 @@ namespace Platform.CashOut.Service
         private readonly IMessageBroker _messageBroker;
         private readonly IBettingRepository _bettingRepository;
         private readonly IConfiguration _configuration;
-        private IMtsSdk _mts;
 
         private Stack<int> _index = new Stack<int>();
 
@@ -239,21 +237,6 @@ namespace Platform.CashOut.Service
         public override Task StartAsync(CancellationToken cancellationToken)
         {
             _logger.LogInformation("Worker initializing");
-            if (Convert.ToBoolean(_configuration["Custom:IsMTSEnabled"]))
-            {
-                try
-                {
-                    var config = MtsSdk.GetConfiguration();
-
-                    _mts = new MtsSdk(config);
-                    _mts.Open();
-                    _logger.LogInformation("The application has started");
-                }
-                catch (Exception ex)
-                {
-                    _logger.LogError(ex, "An error occurred while starting the application");
-                }
-            }
 
             return base.StartAsync(cancellationToken);
         }
@@ -261,20 +244,6 @@ namespace Platform.CashOut.Service
         public override Task StopAsync(CancellationToken cancellationToken)
         {
             _logger.LogInformation("Worker stopping");
-            if (Convert.ToBoolean(_configuration["Custom:IsMTSEnabled"]))
-            {
-                try
-                {
-                    _mts.Close();
-
-                    _messageBroker.Dispose();
-                    _logger.LogInformation("The application has stopped");
-                }
-                catch (Exception ex)
-                {
-                    _logger.LogError(ex, "An error occurred while stopping the application");
-                }
-            }
 
             _messageBroker.Dispose();
 
@@ -849,13 +818,13 @@ namespace Platform.CashOut.Service
                 {
                     case "OnBetFullCashOut":
                         var onCashoutBetSettlement = JsonSerializer.Deserialize<OnCashoutBetSettlement>(payload);
-                        _bettingRepository.ProcessCashOut(onCashoutBetSettlement, _mts, _messageBroker, correlationId ?? Guid.NewGuid().ToString());
+                        _bettingRepository.ProcessCashOut(onCashoutBetSettlement, _messageBroker, correlationId ?? Guid.NewGuid().ToString());
                         _messageBroker.Acknowledge(e);
                         break;
                         //
                     case "OnBetPartialCashOut":
                         var onPartialCashoutBetSettlement = JsonSerializer.Deserialize<OnCashoutBetSettlement>(payload);
-                        _bettingRepository.ProcessCashOut(onPartialCashoutBetSettlement, _mts, _messageBroker, correlationId ?? Guid.NewGuid().ToString());
+                        _bettingRepository.ProcessCashOut(onPartialCashoutBetSettlement, _messageBroker, correlationId ?? Guid.NewGuid().ToString());
                         _messageBroker.Acknowledge(e);
                         break;
                     default:

@@ -80,12 +80,24 @@ Encoded by `StatusCode` 104–117 and `BetConfig`. **[Verified]** (codes) / **[L
    (`CashOutStatus{Available, Unavailable, Closed}`); unavailable → `141 CashOut_Is_Unavailable`. **[Verified]**.
 2. **Value can move** — between quote and confirm the cashout value may change →
    `142 CashOut_Stake_Changed_From_X_To_Y`; client must re-confirm. **[Verified]** (code).
-3. **Full vs partial** (`CashoutType`): full closes the bet (`IsCashout=true`, residual stake 0);
-   partial (`CashoutStakePercent` < 100) cashes a fraction, leaves residual stake, sets
-   `IsPartialCashout=true`, and **recalculates remaining payout**; each event writes a
-   `PartialCashoutAudit` row. **[Verified]** (entity modeling).
+3. **Full vs partial** (`CashoutType`): full closes the bet (`BetStatusId=CashedOut` (8000),
+   selections `CashedOut`; note `Bet.IsCashout` is **not** set by `CashOut.Service` — only copied
+   during resettlement); partial (`CashoutStakePercent` < 100) cashes a fraction, leaves residual
+   stake, sets `IsPartialCashout=true`, and **recalculates remaining payout**; each event writes a
+   `PartialCashoutAudit` row. **[Verified]** (code, GM-398 review).
 4. Cashout value is maintained live by `CashOutStake.Servicev2` reacting to `OnOddsChange`, and
    pushed to clients via `OnCashOutChange`. **[Verified]**.
+5. **Provider gate (pre-acceptance)** — before accepting, `CashOut.Service` resolves the bet's
+   provider (`IBetProviderFactory.Resolve(OnCashoutBetSettlement.ChannelTypeId)`, default BG) and
+   calls `ValidateCashoutAsync`: BG → GTS Bet Assessment (read-only, `cashout-`-prefixed betId,
+   `totalStake=1`); SR → MTS ticket cashout (executes). Decline (including provider auth/API
+   errors — fail-fast) → cashout declined, no money moves, `OnBetStatus` pushed to the client.
+   Providers self-gate on `Custom:IsProviderEnabled`. **[Verified]** (GM-398).
+6. **Provider bet update (post-settlement)** — `Provider.Service` consumes
+   `OnBetFullCashOut` from `r.bet.operator` and reports the bet to GTS as `Settled` with
+   `cashedOutTotalStake`/`cashedOutAmount`/`payout`; legs stay `Open` with `payoutPrice=null`
+   (per Genius Sports guidance). Partial cashout is not yet forwarded (message lacks cumulative
+   figures). **[Verified]** (GM-398).
 
 ## I. Settlement rules
 1. **Grading** sets `BetSelectionStatusId` per leg, then the `Bet` status:

@@ -3510,6 +3510,9 @@ namespace Platform.Betting.API.Repository
                         UserId = bet.UserId,
                         ClientCode = bet.ClientCode,
                         ClientId = bet.ClientId.ToUpper(),
+                        // Bet has no persisted provider column yet; BG (0) is the only active
+                        // provider — set explicitly rather than relying on the model default.
+                        ChannelTypeId = (int)ChannelType.BG,
                         CashoutType = CashoutType.Partial,
                         CashOutStake = newCashoutStake,
                         CashOutStakePercent = request.CashOutStakePercent,
@@ -3521,6 +3524,7 @@ namespace Platform.Betting.API.Repository
                         Probabilities = cashOut.Probabilities.Select(s => new CashedOutProbabilities
                         {
                             BetSelectionId = s.BetSelectionId,
+                            IsLive = s.IsLive,
                             Probability = s.Probability,
                             WonProbability = s.WonProbability,
                             LostProbability = s.LostProbability,
@@ -3546,6 +3550,9 @@ namespace Platform.Betting.API.Repository
                         UserId = bet.UserId,
                         ClientCode = bet.ClientCode,
                         ClientId = bet.ClientId.ToUpper(),
+                        // Bet has no persisted provider column yet; BG (0) is the only active
+                        // provider — set explicitly rather than relying on the model default.
+                        ChannelTypeId = (int)ChannelType.BG,
                         CashoutType = CashoutType.Full,
                         CashOutStake = cashOut.CashOutStake,
                         CashOutStakePercent = 1,
@@ -3557,6 +3564,7 @@ namespace Platform.Betting.API.Repository
                         Probabilities = cashOut.Probabilities.Select(s => new CashedOutProbabilities
                         {
                             BetSelectionId = s.BetSelectionId,
+                            IsLive = s.IsLive,
                             Probability = s.Probability,
                             WonProbability = s.WonProbability,
                             LostProbability = s.LostProbability,
@@ -3651,6 +3659,7 @@ namespace Platform.Betting.API.Repository
                 Probabilities = cashOut.Probabilities.Select(s => new CashedOutProbabilities
                 {
                     BetSelectionId = s.BetSelectionId,
+                            IsLive = s.IsLive,
                     Probability = s.Probability,
                     WonProbability = s.WonProbability,
                     LostProbability = s.LostProbability,

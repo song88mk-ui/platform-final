@@ -184,6 +184,102 @@ namespace Platform.Shared.Providers.MTS
             //return new NotImplementedException();
         }
 
+        public Task ProcessCashout(OnBetSettlement bet, CashoutType cashoutType, string correlationId)
+        {
+            // No-op: MTS is notified pre-acceptance via ValidateCashoutAsync
+            // (SendTicketCashoutBlocking executes the cashout at MTS).
+            return Task.CompletedTask;
+        }
+
+        // Pre-acceptance cash-out gate. Unlike the GTS assessment (read-only), the MTS
+        // ticket cashout EXECUTES the cashout at MTS, which is why this must run before
+        // the platform accepts and pays out (same behavior the CashOut.Service had inline).
+        public Task<BetProviderResult> ValidateCashoutAsync(OnCashoutBetSettlement message, Bet bet, List<BetSelection> selections, bool isFullCashout, decimal cashoutPercent, decimal prevCashoutAmount)
+        {
+            if (!Convert.ToBoolean(_configuration["Custom:IsProviderEnabled"]))
+                return Task.FromResult(new BetProviderResult
+                {
+                    Acceptance = BetAcceptance.Accepted,
+                    Reason = "1024 - Cashout Accepted (MTS disabled)"
+                });
+
+            if (selections.Any(s => s.SportId.IsVirtualSportId()))
+                return Task.FromResult(new BetProviderResult
+                {
+                    Acceptance = BetAcceptance.Accepted,
+                    Reason = "1024 - Cashout Accepted (MTS disabled for VS)"
+                });
+
+            EnsureInitialized();
+
+            var result = isFullCashout
+                ? SendCashoutToMTS(message)
+                : SendPartialCashoutToMTS(message, cashoutPercent, prevCashoutAmount);
+
+            return Task.FromResult(new BetProviderResult
+            {
+                Acceptance = result.Item1 == CashoutAcceptance.Accepted ? BetAcceptance.Accepted : BetAcceptance.Rejected,
+                Reason = result.Item2
+            });
+        }
+
+        private Tuple<CashoutAcceptance, string> SendCashoutToMTS(OnCashoutBetSettlement message)
+        {
+            try
+            {
+                _factory = _mts.BuilderFactory;
+
+                var cashoutStake = (long)0;
+
+                if (message.ClientCode.ToUpper() == "RKP")
+                    cashoutStake = (long)(message.CashOutStake * .10m) * 10000;
+                else
+                    cashoutStake = (long)(message.CashOutStake * 10000);
+
+                var betCashout = _factory.CreateTicketCashoutBuilder().SetTicketId(message.BetId.ToString().ToUpper()).SetCashoutStake(cashoutStake).BuildTicket();
+
+                var response = _mts.SendTicketCashoutBlocking(betCashout);
+
+                return new Tuple<CashoutAcceptance, string>(response.Status, $"{response.Reason.Code} - {response.Reason.Message}");
+            }
+            catch (Exception ex)
+            {
+                return new Tuple<CashoutAcceptance, string>(CashoutAcceptance.Rejected, $"10000 - {ex.Message}");
+            }
+        }
+
+        private Tuple<CashoutAcceptance, string> SendPartialCashoutToMTS(OnCashoutBetSettlement message, decimal cashoutPercent, decimal prevCashoutAmount)
+        {
+            try
+            {
+                _factory = _mts.BuilderFactory;
+
+                var cashoutStake = (long)0;
+                var cashoutStakePercent = (int)0;
+
+                if (message.ClientCode.ToUpper() == "RKP")
+                {
+                    cashoutStake = (long)((prevCashoutAmount + message.CashOutStake) * .10m) * 10000;
+                    cashoutStakePercent = (int)((cashoutPercent * 100) * .10m) * 10000;
+                }
+                else
+                {
+                    cashoutStake = (long)((prevCashoutAmount + message.CashOutStake) * 10000);
+                    cashoutStakePercent = (int)((cashoutPercent * 100) * 10000);
+                }
+
+                var betCashout = _factory.CreateTicketCashoutBuilder().SetTicketId(message.BetId.ToString().ToUpper()).SetCashoutStake(cashoutStake).SetCashoutPercent(cashoutStakePercent).BuildTicket();
+
+                var response = _mts.SendTicketCashoutBlocking(betCashout);
+
+                return new Tuple<CashoutAcceptance, string>(response.Status, $"{response.Reason.Code} - {response.Reason.Message}");
+            }
+            catch (Exception ex)
+            {
+                return new Tuple<CashoutAcceptance, string>(CashoutAcceptance.Rejected, $"10000 - {ex.Message}");
+            }
+        }
+
         private Tuple<TicketAcceptance, string> ValidateToMTS(OnBetPlacement message)
         {
             try

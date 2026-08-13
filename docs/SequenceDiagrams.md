@@ -129,7 +129,9 @@ sequenceDiagram
     participant PW as MyBetsCashoutButton
     participant Gateway as Platform.API
     participant CashOut as CashOut.Service
+    participant GTS as GTS (BetGenius)
     participant SQL as BettingContext
+    participant Provider as Provider.Service
 
     OE-->>CS: OnOddsChange
     CS->>CS: recompute live cashout value
@@ -137,9 +139,13 @@ sequenceDiagram
     WS-->>PW: OnCashOutChange (new offer)
     PW->>Gateway: POST v1/bet/cashout (BetCashoutRequestDTO)
     Gateway->>CashOut: OnBetFullCashOut / OnBetPartialCashOut
+    CashOut->>GTS: ValidateCashoutAsync via IBetProviderFactory.Resolve(ChannelTypeId)<br/>(BG: assessment, read-only; SR: MTS ticket, executes)
+    GTS-->>CashOut: allowed / rejected (reject → OnBetStatus declined → UI, stop)
     CashOut->>SQL: write PartialCashoutAudit; update Bet
     CashOut-->>Gateway: result (or 142 value changed → reconfirm)
     Gateway-->>PW: BaseResponseDTO<BetCashoutModel>
+    CashOut->>Provider: OnBetFullCashOut (r.bet.operator)
+    Provider->>GTS: POST …/bets — Settled + cashedOutTotalStake/cashedOutAmount<br/>(legs stay Open, payoutPrice null)
 ```
 
 ## 6. Settlement (async, server-side)

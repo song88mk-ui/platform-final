@@ -218,7 +218,39 @@ namespace Platform.Provider.Service
                                     (payload, provider, correlationId) => _bettingRepository.ProcessBetSettlement(payload, provider, correlationId)
                                 ));
                             break;
+
+                        case "OnBetFullCashOut":
+
+                            _logger.LogInformation($"OnBetFullCashOut received: {payload}");
+
+                            ProcessMessage<OnBetSettlement>(payload, msg =>
+                                ProcessWithProvider(
+                                    msg,
+                                    msg.ChannelTypeId,
+                                    betProviderFactory,
+                                    correlationId,
+                                    (payload, provider, correlationId) => _bettingRepository.ProcessBetCashout(payload, CashoutType.Full, provider, correlationId)
+                                ));
+                            break;
+
+                        case "OnBetPartialCashOut":
+
+                            _logger.LogInformation($"OnBetPartialCashOut received: {payload}");
+
+                            ProcessMessage<OnBetSettlementPartial>(payload, msg =>
+                                ProcessWithProvider(
+                                    msg,
+                                    msg.ChannelTypeId,
+                                    betProviderFactory,
+                                    correlationId,
+                                    (payload, provider, correlationId) => _bettingRepository.ProcessBetCashout(payload, CashoutType.Partial, provider, correlationId)
+                                ));
+                            break;
                     }
+                    // No explicit Acknowledge here: this worker consumes via Connect(), whose
+                    // HandleMessage wrapper acks after this handler returns (and nacks+requeues
+                    // if it throws) — see MessageBroker.HandleMessage. Only services using
+                    // ConnectWithManualAck() must ack themselves.
                     activity?.SetStatus(ActivityStatusCode.Ok);
                 }
                 catch (Exception ex)

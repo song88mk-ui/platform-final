@@ -7,8 +7,8 @@
 ## Betting / odds providers
 | System | What it is | platform-final usage | Config keys | Evidence |
 |--------|-----------|----------------------|-------------|----------|
-| **Sportradar MTS** | bet validation / max-stake / risk (Betradar) | `MtsBetProvider` (ChannelType SR), `MTSAuthRepository`/`MTSMaxStakeRepository`, `CashOut.Service` MTS SDK (`Sportradar.MTS.SDKCore` 2.4.1.2) | `API:MTSAuthAPI`, `Custom:MTSClientSecret|MTSUsername|MTSPassword`, `Custom:IsMTSEnabled` | [Verified] |
-| **Genius Sports / BetGenius (GTS)** | bet assessment + feed + livestream | `GTSBetProvider` (ChannelType BG), `GTSRepository`/`GTSAuthRepository`, `BetGeniusRepository`, `BetGeniusLiveStream` | `API:GTSAPI`, `Custom:GTSBookmakerId`, `Custom:BetGenius:Uri|User|Password` | [Verified] |
+| **Sportradar MTS** | bet validation / max-stake / risk (Betradar) | `MtsBetProvider` (ChannelType SR) incl. ticket cashout via `ValidateCashoutAsync` (SDK is provider-owned, `Sportradar.MTS.SDKCore` 2.4.1.2), `MTSAuthRepository`/`MTSMaxStakeRepository` | `API:MTSAuthAPI|MTSMaxStakeAPI`, `Custom:MTSClientSecret|MTSUsername|MTSPassword`, self-gated on `Custom:IsProviderEnabled` (`IsMTSEnabled` retired, GM-398) | [Verified] |
+| **Genius Sports / BetGenius (GTS)** | bet assessment + cashout (assessment gate + bet update) + feed + livestream | `GTSBetProvider` (ChannelType BG) — `ValidateCashoutAsync` (pre-acceptance assessment) and `ProcessCashout` (bet update: Settled + cashedOutTotalStake/cashedOutAmount), `GTSRepository`/`GTSAuthRepository`, `BetGeniusRepository`, `BetGeniusLiveStream` | `API:GTSAPI|GTSAuthAPI`, `Custom:GTSBookmakerId|GTSClientID|GTSClientSecret`, `Custom:BetGenius:Uri|User|Password`, self-gated on `Custom:IsProviderEnabled` | [Verified] |
 | **Ably** (ably.io) | realtime channel for **GTS delayed assessment** responses | `Provider.Service` subscribes, republishes `OnBetPlacement` | `Custom:Ably:ApiKey|Channel|ChannelCount` | [Verified] |
 | **Oddin** | eSports odds provider | `Oddin.API` integration | `Custom:Oddin:BaseUrl|BrandToken` | [Verified] |
 

@@ -753,6 +753,24 @@ namespace Platform.Operator.Servicev2.Repository
                             Timestamp = DateTime.UtcNow
                         });
 
+                        if (result.StatusId != 1000) // operator answered 200 with an error status; do not accept the bet
+                        {
+                            var betMessage = string.Empty;
+
+                            if (result.StatusId == 1001)
+                                betMessage = "Insufficient Funds";
+                            else if (result.StatusId == 1002)
+                                betMessage = "Invalid Token";
+                            else if (result.StatusId == 1003)
+                                betMessage = "Operator Error";
+                            else
+                                betMessage = result.Message;
+
+                            CancelBet(betData.BetId, betMessage, Guid.NewGuid().ToString().ToUpper(), messageBroker, result.IsFreeBet, message.IsBoosted, threadId);
+
+                            return;
+                        }
+
                         AcceptBet(message.Bet.BetId, correlationId, messageBroker, result, message.IsBoosted, message.IsBetBuilder, message.UserAgent);
 
                         foreach (var selection in message.BetSelections.Where(c => c.MarketSelectionCount <= 3))

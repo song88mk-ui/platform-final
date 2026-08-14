@@ -717,7 +717,7 @@ namespace Platform.Operator.Servicev2.Repository
                 {
                     var responsePayload = response.Content.ReadAsStringAsync().Result;
 
-                    var result = JsonSerializer.Deserialize<OperatorBetResponseDTO>(responsePayload, new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+                    var result = JsonSerializer.Deserialize<OperatorBetResponseDTO>(responsePayload, new JsonSerializerOptions() { PropertyNameCaseInsensitive = true, Converters = { new DecimalJsonConverter() } });
 
                     activity?.SetTag("response.payload", responsePayload);
 
@@ -784,7 +784,7 @@ namespace Platform.Operator.Servicev2.Repository
                     {
                         var responsePayload = response.Content.ReadAsStringAsync().Result;
 
-                        var result = JsonSerializer.Deserialize<OperatorBetResponseDTO>(responsePayload, new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+                        var result = JsonSerializer.Deserialize<OperatorBetResponseDTO>(responsePayload, new JsonSerializerOptions() { PropertyNameCaseInsensitive = true, Converters = { new DecimalJsonConverter() } });
 
                         activity?.SetTag("response.bad.request.payload", responsePayload);
 
@@ -1235,7 +1235,7 @@ namespace Platform.Operator.Servicev2.Repository
                 {
                     var responsePayload = response.Content.ReadAsStringAsync().Result;
 
-                    var result = JsonSerializer.Deserialize<OperatorBetResponseDTO>(responsePayload, new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+                    var result = JsonSerializer.Deserialize<OperatorBetResponseDTO>(responsePayload, new JsonSerializerOptions() { PropertyNameCaseInsensitive = true, Converters = { new DecimalJsonConverter() } });
 
                     activity?.SetTag("response.payload", responsePayload);
 
@@ -1252,12 +1252,15 @@ namespace Platform.Operator.Servicev2.Repository
                         Timestamp = DateTime.UtcNow
                     });
 
-                    messageBroker.Publish(new OnWalletChange
+                    if (result.StatusId == 1000) // 1000 = operator success; error responses carry a null balance
                     {
-                        ClientId = message.Bet.ClientId.ToUpper(),
-                        UserId = message.Bet.UserId,
-                        Balance = result.Balance
-                    }, "OnWalletChange", $"r.wallet.{message.Bet.ClientCode.ToString().ToLower()}", correlationId, 10);
+                        messageBroker.Publish(new OnWalletChange
+                        {
+                            ClientId = message.Bet.ClientId.ToUpper(),
+                            UserId = message.Bet.UserId,
+                            Balance = result.Balance
+                        }, "OnWalletChange", $"r.wallet.{message.Bet.ClientCode.ToString().ToLower()}", correlationId, 10);
+                    }
 
                     AddOrUpdateOperatorSettlementRetry(new OnBetSettlementRetry { OnBetSettlement = message }, "OnBetFullCashOut", correlationId, response.IsSuccessStatusCode);
                 }
@@ -1267,7 +1270,7 @@ namespace Platform.Operator.Servicev2.Repository
                     {
                         var responsePayload = response.Content.ReadAsStringAsync().Result;
 
-                        var result = JsonSerializer.Deserialize<OperatorBetResponseDTO>(responsePayload, new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+                        var result = JsonSerializer.Deserialize<OperatorBetResponseDTO>(responsePayload, new JsonSerializerOptions() { PropertyNameCaseInsensitive = true, Converters = { new DecimalJsonConverter() } });
 
                         activity?.SetTag("response.bad.request.payload", responsePayload);
 
@@ -1513,7 +1516,7 @@ namespace Platform.Operator.Servicev2.Repository
                 {
                     if (response.StatusCode == HttpStatusCode.BadRequest)
                     {
-                        var result = JsonSerializer.Deserialize<OperatorBetResponseDTO>(response.Content.ReadAsStringAsync().Result, new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+                        var result = JsonSerializer.Deserialize<OperatorBetResponseDTO>(response.Content.ReadAsStringAsync().Result, new JsonSerializerOptions() { PropertyNameCaseInsensitive = true, Converters = { new DecimalJsonConverter() } });
 
                         AddOperatorLog(new OperatorLog
                         {
@@ -1654,7 +1657,7 @@ namespace Platform.Operator.Servicev2.Repository
 
                 if (response.IsSuccessStatusCode)
                 {
-                    var result = JsonSerializer.Deserialize<OperatorBetResponseDTO>(response.Content.ReadAsStringAsync().Result, new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+                    var result = JsonSerializer.Deserialize<OperatorBetResponseDTO>(response.Content.ReadAsStringAsync().Result, new JsonSerializerOptions() { PropertyNameCaseInsensitive = true, Converters = { new DecimalJsonConverter() } });
 
                     AddOperatorLog(new OperatorLog
                     {
@@ -1669,12 +1672,15 @@ namespace Platform.Operator.Servicev2.Repository
                         Timestamp = DateTime.UtcNow
                     });
 
-                    messageBroker.Publish(new OnWalletChange
+                    if (result.StatusId == 1000) // 1000 = operator success; error responses carry a null balance
                     {
-                        ClientId = message.Bet.ClientId.ToUpper(),
-                        UserId = message.Bet.UserId,
-                        Balance = result.Balance
-                    }, "OnWalletChange", $"r.wallet.{message.Bet.ClientCode.ToString().ToLower()}", correlationId, 10);
+                        messageBroker.Publish(new OnWalletChange
+                        {
+                            ClientId = message.Bet.ClientId.ToUpper(),
+                            UserId = message.Bet.UserId,
+                            Balance = result.Balance
+                        }, "OnWalletChange", $"r.wallet.{message.Bet.ClientCode.ToString().ToLower()}", correlationId, 10);
+                    }
 
                     AddOrUpdateOperatorSettlementRetry(new OnBetSettlementRetry { OnBetSettlement = message }, "OnBetPartialCashOut", correlationId, response.IsSuccessStatusCode);
                 }
@@ -1682,7 +1688,7 @@ namespace Platform.Operator.Servicev2.Repository
                 {
                     if (response.StatusCode == HttpStatusCode.BadRequest)
                     {
-                        var result = JsonSerializer.Deserialize<OperatorBetResponseDTO>(response.Content.ReadAsStringAsync().Result, new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+                        var result = JsonSerializer.Deserialize<OperatorBetResponseDTO>(response.Content.ReadAsStringAsync().Result, new JsonSerializerOptions() { PropertyNameCaseInsensitive = true, Converters = { new DecimalJsonConverter() } });
 
                         AddOperatorLog(new OperatorLog
                         {
@@ -1842,7 +1848,7 @@ namespace Platform.Operator.Servicev2.Repository
                 {
                     var responsePayload = response.Content.ReadAsStringAsync().Result;
 
-                    var result = JsonSerializer.Deserialize<OperatorBetResponseDTO>(responsePayload, new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+                    var result = JsonSerializer.Deserialize<OperatorBetResponseDTO>(responsePayload, new JsonSerializerOptions() { PropertyNameCaseInsensitive = true, Converters = { new DecimalJsonConverter() } });
 
                     activity?.SetTag("response.payload", responsePayload);
 
@@ -1870,12 +1876,15 @@ namespace Platform.Operator.Servicev2.Repository
                             Message = message.Message
                         }, "OnBetStatus", $"r.bet.betstatus.{message.Bet.ClientCode.ToString().ToLower()}", correlationId, 10);
 
-                        messageBroker.Publish(new OnWalletChange
+                        if (result.StatusId == 1000) // 1000 = operator success; error responses carry a null balance
                         {
-                            ClientId = message.Bet.ClientId.ToUpper(),
-                            UserId = message.Bet.UserId,
-                            Balance = result.Balance
-                        }, "OnWalletChange", $"r.wallet.{message.Bet.ClientCode.ToString().ToLower()}", correlationId, 10);
+                            messageBroker.Publish(new OnWalletChange
+                            {
+                                ClientId = message.Bet.ClientId.ToUpper(),
+                                UserId = message.Bet.UserId,
+                                Balance = result.Balance
+                            }, "OnWalletChange", $"r.wallet.{message.Bet.ClientCode.ToString().ToLower()}", correlationId, 10);
+                        }
 
                         AddOrUpdateOperatorSettlementRetry(new OnBetSettlementRetry { OnBetSettlement = message }, "OnBetSettlement", correlationId, response.IsSuccessStatusCode);
                     }
@@ -1886,7 +1895,7 @@ namespace Platform.Operator.Servicev2.Repository
                     {
                         var responsePayload = response.Content.ReadAsStringAsync().Result;
 
-                        var result = JsonSerializer.Deserialize<OperatorBetResponseDTO>(responsePayload, new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+                        var result = JsonSerializer.Deserialize<OperatorBetResponseDTO>(responsePayload, new JsonSerializerOptions() { PropertyNameCaseInsensitive = true, Converters = { new DecimalJsonConverter() } });
 
                         activity?.SetTag("response.bad.request.payload", responsePayload);
 
@@ -2450,7 +2459,7 @@ namespace Platform.Operator.Servicev2.Repository
                 {
                     var responsePayload = response.Content.ReadAsStringAsync().Result;
 
-                    var result = JsonSerializer.Deserialize<OperatorBetResponseDTO>(responsePayload, new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+                    var result = JsonSerializer.Deserialize<OperatorBetResponseDTO>(responsePayload, new JsonSerializerOptions() { PropertyNameCaseInsensitive = true, Converters = { new DecimalJsonConverter() } });
 
                     activity?.SetTag("response.payload", responsePayload);
 
@@ -2467,12 +2476,15 @@ namespace Platform.Operator.Servicev2.Repository
                         Timestamp = DateTime.UtcNow
                     });
 
-                    messageBroker.Publish(new OnWalletChange
+                    if (result.StatusId == 1000) // 1000 = operator success; error responses carry a null balance
                     {
-                        ClientId = message.Bet.ClientId.ToUpper(),
-                        UserId = message.Bet.UserId,
-                        Balance = result.Balance
-                    }, "OnWalletChange", $"r.wallet.{message.Bet.ClientCode.ToString().ToLower()}", correlationId, 10);
+                        messageBroker.Publish(new OnWalletChange
+                        {
+                            ClientId = message.Bet.ClientId.ToUpper(),
+                            UserId = message.Bet.UserId,
+                            Balance = result.Balance
+                        }, "OnWalletChange", $"r.wallet.{message.Bet.ClientCode.ToString().ToLower()}", correlationId, 10);
+                    }
 
                     AddOrUpdateOperatorSettlementRetry(new OnBetSettlementRetry { OnBetSettlement = message }, "OnBetCancellation", correlationId, response.IsSuccessStatusCode);
                 }
@@ -2482,7 +2494,7 @@ namespace Platform.Operator.Servicev2.Repository
                     {
                         var responsePayload = response.Content.ReadAsStringAsync().Result;
 
-                        var result = JsonSerializer.Deserialize<OperatorBetResponseDTO>(responsePayload, new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+                        var result = JsonSerializer.Deserialize<OperatorBetResponseDTO>(responsePayload, new JsonSerializerOptions() { PropertyNameCaseInsensitive = true, Converters = { new DecimalJsonConverter() } });
 
                         activity?.SetTag("response.bad.request.payload", responsePayload);
 
@@ -2879,7 +2891,7 @@ namespace Platform.Operator.Servicev2.Repository
 
                 if (response.IsSuccessStatusCode)
                 {
-                    var result = JsonSerializer.Deserialize<OperatorBetResponseDTO>(response.Content.ReadAsStringAsync().Result, new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+                    var result = JsonSerializer.Deserialize<OperatorBetResponseDTO>(response.Content.ReadAsStringAsync().Result, new JsonSerializerOptions() { PropertyNameCaseInsensitive = true, Converters = { new DecimalJsonConverter() } });
 
                     AddOperatorLog(new OperatorLog
                     {
@@ -2898,7 +2910,7 @@ namespace Platform.Operator.Servicev2.Repository
                 {
                     if (response.StatusCode == HttpStatusCode.BadRequest)
                     {
-                        var result = JsonSerializer.Deserialize<OperatorBetResponseDTO>(response.Content.ReadAsStringAsync().Result, new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+                        var result = JsonSerializer.Deserialize<OperatorBetResponseDTO>(response.Content.ReadAsStringAsync().Result, new JsonSerializerOptions() { PropertyNameCaseInsensitive = true, Converters = { new DecimalJsonConverter() } });
 
                         AddOperatorLog(new OperatorLog
                         {
@@ -2986,7 +2998,7 @@ namespace Platform.Operator.Servicev2.Repository
 
                 if (response.IsSuccessStatusCode)
                 {
-                    var result = JsonSerializer.Deserialize<OperatorBetResponseDTO>(response.Content.ReadAsStringAsync().Result, new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+                    var result = JsonSerializer.Deserialize<OperatorBetResponseDTO>(response.Content.ReadAsStringAsync().Result, new JsonSerializerOptions() { PropertyNameCaseInsensitive = true, Converters = { new DecimalJsonConverter() } });
 
                     if (message.OnBetSettlement.IsAudit)
                     {
@@ -3008,7 +3020,7 @@ namespace Platform.Operator.Servicev2.Repository
                 {
                     if (response.StatusCode == HttpStatusCode.BadRequest)
                     {
-                        var result = JsonSerializer.Deserialize<OperatorBetResponseDTO>(response.Content.ReadAsStringAsync().Result, new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+                        var result = JsonSerializer.Deserialize<OperatorBetResponseDTO>(response.Content.ReadAsStringAsync().Result, new JsonSerializerOptions() { PropertyNameCaseInsensitive = true, Converters = { new DecimalJsonConverter() } });
 
                         if (message.OnBetSettlement.IsAudit)
                         {
@@ -3103,7 +3115,7 @@ namespace Platform.Operator.Servicev2.Repository
 
                 if (response.IsSuccessStatusCode)
                 {
-                    var result = JsonSerializer.Deserialize<OperatorBetResponseDTO>(response.Content.ReadAsStringAsync().Result, new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+                    var result = JsonSerializer.Deserialize<OperatorBetResponseDTO>(response.Content.ReadAsStringAsync().Result, new JsonSerializerOptions() { PropertyNameCaseInsensitive = true, Converters = { new DecimalJsonConverter() } });
 
                     AddOperatorLog(new OperatorLog
                     {
@@ -3122,7 +3134,7 @@ namespace Platform.Operator.Servicev2.Repository
                 {
                     if (response.StatusCode == HttpStatusCode.BadRequest)
                     {
-                        var result = JsonSerializer.Deserialize<OperatorBetResponseDTO>(response.Content.ReadAsStringAsync().Result, new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+                        var result = JsonSerializer.Deserialize<OperatorBetResponseDTO>(response.Content.ReadAsStringAsync().Result, new JsonSerializerOptions() { PropertyNameCaseInsensitive = true, Converters = { new DecimalJsonConverter() } });
 
                         AddOperatorLog(new OperatorLog
                         {

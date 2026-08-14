@@ -378,7 +378,7 @@ namespace Platform.WebSocket.API2.Repository
                 { "RequestTimestamp", DateTime.UtcNow.ToString() }
             };
 
-            _logger.LogInformation("{event} {@properties}", "PublishOddsChangeForMainMarkets", properties);
+            _logger.LogDebug("{event} {@properties}", "PublishOddsChangeForMainMarkets", properties);
 
             await Clients.Groups(message.Gr).OnOddsChange(message.Pa);
         }
@@ -405,7 +405,7 @@ namespace Platform.WebSocket.API2.Repository
                 { "RequestTimestamp", DateTime.UtcNow.ToString() }
             };
 
-            _logger.LogInformation("{event} {@properties}", "PublishBetStopFixture", properties);
+            _logger.LogDebug("{event} {@properties}", "PublishBetStopFixture", properties);
 
             await Clients.Group($"onbetslipbetstopfixture:{clientCode}:{message.Pa.FiId}").OnBetslipBetStopFixture(message.Pa);
             await Clients.Group($"ontopmarketsbetstopfixture:{clientCode}:{message.Pa.FiId}").OnTopMarketsBetStopFixture(message.Pa);
@@ -424,7 +424,7 @@ namespace Platform.WebSocket.API2.Repository
                 { "RequestTimestamp", DateTime.UtcNow.ToString() }
             };
 
-            _logger.LogInformation("{event} {@properties}", "PublishBetStopGlobal", properties);
+            _logger.LogDebug("{event} {@properties}", "PublishBetStopGlobal", properties);
 
             await Clients.Group($"onbetstopglobal:{clientCode}").OnBetStopGlobal(message);
         }
@@ -441,7 +441,7 @@ namespace Platform.WebSocket.API2.Repository
                 { "RequestTimestamp", DateTime.UtcNow.ToString() }
             };
 
-            _logger.LogInformation("{event} {@properties}", "PublishBetStatus", properties);
+            _logger.LogDebug("{event} {@properties}", "PublishBetStatus", properties);
 
             await Clients.Group($"onbetstatus:{clientCode}:{message.UsId.ToLower()}").OnBetStatus(message);
         }
@@ -466,7 +466,7 @@ namespace Platform.WebSocket.API2.Repository
                 { "RequestTimestamp", DateTime.UtcNow.ToString() }
             };
 
-            _logger.LogInformation("{event} {@properties}", "PublishWalletChange", properties);
+            _logger.LogDebug("{event} {@properties}", "PublishWalletChange", properties);
             _logger.LogInformation("Sending to {target}", $"onwalletchange:{clientCode}:{message.UsId.ToLower()}");
 
             await Clients.Group($"onwalletchange:{clientCode}:{message.UsId.ToLower()}").OnWalletChange(message);

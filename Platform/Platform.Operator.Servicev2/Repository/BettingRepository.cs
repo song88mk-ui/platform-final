@@ -2501,6 +2501,7 @@ namespace Platform.Operator.Servicev2.Repository
                     }
                     else
                     {
+                        messageBroker.Publish(new OnBetBackofficeCancellation { BetId = message.Bet.BetId }, "OnBetBackofficeCancellation", "r.bet.cancellation", correlationId);
                         RetryBetCancellation(new OnBetSettlementRetry { RemainingRetries = 0, OnBetSettlement = message }, payload, "OnBetCancellation", messageBroker, correlationId, threadId);
                     }
                 }

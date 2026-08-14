@@ -1260,9 +1260,13 @@ namespace Platform.Operator.Servicev2.Repository
                             UserId = message.Bet.UserId,
                             Balance = result.Balance
                         }, "OnWalletChange", $"r.wallet.{message.Bet.ClientCode.ToString().ToLower()}", correlationId, 10);
-                    }
 
-                    AddOrUpdateOperatorSettlementRetry(new OnBetSettlementRetry { OnBetSettlement = message }, "OnBetFullCashOut", correlationId, response.IsSuccessStatusCode);
+                        AddOrUpdateOperatorSettlementRetry(new OnBetSettlementRetry { OnBetSettlement = message }, "OnBetFullCashOut", correlationId, response.IsSuccessStatusCode);
+                    }
+                    else
+                    {
+                        RetryBetCashOut(new OnBetSettlementRetry { RemainingRetries = 0, OnBetSettlement = message }, payload, path, "OnBetFullCashOut", messageBroker, correlationId, threadId);
+                    }
                 }
                 else
                 {
@@ -1680,9 +1684,13 @@ namespace Platform.Operator.Servicev2.Repository
                             UserId = message.Bet.UserId,
                             Balance = result.Balance
                         }, "OnWalletChange", $"r.wallet.{message.Bet.ClientCode.ToString().ToLower()}", correlationId, 10);
-                    }
 
-                    AddOrUpdateOperatorSettlementRetry(new OnBetSettlementRetry { OnBetSettlement = message }, "OnBetPartialCashOut", correlationId, response.IsSuccessStatusCode);
+                        AddOrUpdateOperatorSettlementRetry(new OnBetSettlementRetry { OnBetSettlement = message }, "OnBetPartialCashOut", correlationId, response.IsSuccessStatusCode);
+                    }
+                    else
+                    {
+                        RetryBetCashOut(new OnBetSettlementRetry { RemainingRetries = 0, OnBetSettlement = message }, payload, path, "OnBetPartialCashOut", messageBroker, correlationId, threadId);
+                    }
                 }
                 else
                 {
@@ -1884,9 +1892,13 @@ namespace Platform.Operator.Servicev2.Repository
                                 UserId = message.Bet.UserId,
                                 Balance = result.Balance
                             }, "OnWalletChange", $"r.wallet.{message.Bet.ClientCode.ToString().ToLower()}", correlationId, 10);
-                        }
 
-                        AddOrUpdateOperatorSettlementRetry(new OnBetSettlementRetry { OnBetSettlement = message }, "OnBetSettlement", correlationId, response.IsSuccessStatusCode);
+                            AddOrUpdateOperatorSettlementRetry(new OnBetSettlementRetry { OnBetSettlement = message }, "OnBetSettlement", correlationId, response.IsSuccessStatusCode);
+                        }
+                        else
+                        {
+                            RetryBetSettlement(new OnBetSettlementRetry { RemainingRetries = 0, OnBetSettlement = message }, payload, "OnBetSettlement", messageBroker, correlationId, threadId);
+                        }
                     }
                 }
                 else
@@ -2484,9 +2496,13 @@ namespace Platform.Operator.Servicev2.Repository
                             UserId = message.Bet.UserId,
                             Balance = result.Balance
                         }, "OnWalletChange", $"r.wallet.{message.Bet.ClientCode.ToString().ToLower()}", correlationId, 10);
-                    }
 
-                    AddOrUpdateOperatorSettlementRetry(new OnBetSettlementRetry { OnBetSettlement = message }, "OnBetCancellation", correlationId, response.IsSuccessStatusCode);
+                        AddOrUpdateOperatorSettlementRetry(new OnBetSettlementRetry { OnBetSettlement = message }, "OnBetCancellation", correlationId, response.IsSuccessStatusCode);
+                    }
+                    else
+                    {
+                        RetryBetCancellation(new OnBetSettlementRetry { RemainingRetries = 0, OnBetSettlement = message }, payload, "OnBetCancellation", messageBroker, correlationId, threadId);
+                    }
                 }
                 else
                 {

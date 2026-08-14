@@ -17,7 +17,7 @@
 | File | Purpose |
 |------|---------|
 | `OddsTypeHelper.cs` | `GetOddsByOddsType(oddsTypeId, decimalOdds, isBinary)` → converts decimal odds to Malay/HK/Indo (binary-market rules); the single source of odds-format conversion. |
-| `DecimalJsonConverter.cs` | custom `System.Text.Json` converter for decimal precision. |
+| `DecimalJsonConverter.cs` | custom `System.Text.Json` converter for decimal precision: Write trims trailing zeros; Read tolerates `null` → 0 and string-wrapped numbers (operator wallet APIs send `"balance": null` on error responses, e.g. statusId 1002 Invalid Token). Registered at every `OperatorBetResponseDTO` deserialization in `Platform.Operator.Servicev2`. |
 
 ## `Platform.Shared/Services/` `[Verified]`
 | File | Purpose |

@@ -89,6 +89,7 @@ builder.Services.AddCors(options =>
 
 builder.Services.AddDbContext<PlatformContext>(o => o.UseSqlServer(builder.Configuration["ConnectionStrings:Platform"]));
 builder.Services.AddSingleton<IMemCache, MemCache>();
+builder.Services.AddSingleton<Platform.Websocket.API2.Handlers.ClientPresenceTracker>();
 
 var app = builder.Build();
 

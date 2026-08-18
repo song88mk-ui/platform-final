@@ -17,13 +17,15 @@ namespace Platform.WebSocket.API2.Repository
         private readonly IMemCache _memCache;
         private readonly ILogger<WebSocketRepository> _logger;
         private readonly Counter<long> _eventCounter;
+        private readonly ClientPresenceTracker _presenceTracker;
 
-        public WebSocketRepository(IServiceProvider provider, IMemCache memCache, ILogger<WebSocketRepository> logger, Instrumentation instrumentation)
+        public WebSocketRepository(IServiceProvider provider, IMemCache memCache, ILogger<WebSocketRepository> logger, Instrumentation instrumentation, ClientPresenceTracker presenceTracker)
         {
             _provider = provider;
             _memCache = memCache;
             _logger = logger;
             _eventCounter = instrumentation.EventCounter;
+            _presenceTracker = presenceTracker;
         }
 
         public string GetConnectionId()
@@ -81,6 +83,8 @@ namespace Platform.WebSocket.API2.Repository
 
             UserHandler.ConnectedIds.Remove(connectionId);
 
+            _presenceTracker.TrackDisconnect(connectionId);
+
             await base.OnDisconnectedAsync(exception);
         }
 
@@ -105,6 +109,8 @@ namespace Platform.WebSocket.API2.Repository
             if (client.Item1 == true)
                 if (string.IsNullOrEmpty(request.ChannelKey) == false)
                 {
+                    _presenceTracker.TrackSubscription(Context.ConnectionId, client.Item2);
+
                     await Groups.AddToGroupAsync(Context.ConnectionId, $"endpoint:{client.Item2}:{request.ChannelKey}");
                     await Groups.AddToGroupAsync(Context.ConnectionId, $"onbetstopglobal:{client.Item2}");
                 }
@@ -153,6 +159,8 @@ namespace Platform.WebSocket.API2.Repository
 
                 if (isLong)
                 {
+                    _presenceTracker.TrackSubscription(Context.ConnectionId, client.Item2);
+
                     await Groups.AddToGroupAsync(Context.ConnectionId, $"onbetslipoddschange:{client.Item2}:{fixtureId}");
                     await Groups.AddToGroupAsync(Context.ConnectionId, $"onbetslipbetstopfixture:{client.Item2}:{fixtureId}");
                 }
@@ -199,6 +207,8 @@ namespace Platform.WebSocket.API2.Repository
 
                 if (isLong)
                 {
+                    _presenceTracker.TrackSubscription(Context.ConnectionId, client.Item2);
+
                     await Groups.AddToGroupAsync(Context.ConnectionId, $"ontopmarketsoddschange:{client.Item2}:{fixtureId}");
                     await Groups.AddToGroupAsync(Context.ConnectionId, $"ontopmarketsbetstopfixture:{client.Item2}:{fixtureId}");
                 }
@@ -240,7 +250,11 @@ namespace Platform.WebSocket.API2.Repository
             var client = await GetClient(request.ClientId);
 
             if (client.Item1 == true)
+            {
+                _presenceTracker.TrackSubscription(Context.ConnectionId, client.Item2);
+
                 await Groups.AddToGroupAsync(Context.ConnectionId, $"onbetstatus:{client.Item2}:{request.UserId.ToLower()}");
+            }
         }
 
         public async Task UnsubscribeToBetStatus(BetStatusRequest request)
@@ -270,7 +284,11 @@ namespace Platform.WebSocket.API2.Repository
             var client = await GetClient(request.ClientId);
 
             if (client.Item1 == true)
+            {
+                _presenceTracker.TrackSubscription(Context.ConnectionId, client.Item2);
+
                 await Groups.AddToGroupAsync(Context.ConnectionId, $"oncashoutchange:{client.Item2}:{request.UserId.ToLower()}");
+            }
         }
 
         public async Task UnsubscribeToCashOutChange(CashOutChangeRequest request)
@@ -300,7 +318,11 @@ namespace Platform.WebSocket.API2.Repository
             var client = await GetClient(request.ClientId);
 
             if (client.Item1 == true)
+            {
+                _presenceTracker.TrackSubscription(Context.ConnectionId, client.Item2);
+
                 await Groups.AddToGroupAsync(Context.ConnectionId, $"onwalletchange:{client.Item2}:{request.UserId.ToLower()}");
+            }
         }
 
         public async Task UnsubscribeToWalletChange(WalletChangeRequest request)
@@ -330,7 +352,11 @@ namespace Platform.WebSocket.API2.Repository
             var client = await GetClient(request.ClientId);
 
             if (client.Item1 == true)
+            {
+                _presenceTracker.TrackSubscription(Context.ConnectionId, client.Item2);
+
                 await Groups.AddToGroupAsync(Context.ConnectionId, $"onpayablechange:{client.Item2}:{request.UserId.ToLower()}");
+            }
         }
 
         public async Task UnsubscribeToPayableChange(PayableChangeRequest request)
@@ -352,7 +378,11 @@ namespace Platform.WebSocket.API2.Repository
             var client = await GetClient(request.ClientId);
 
             if (client.Item1 == true)
+            {
+                _presenceTracker.TrackSubscription(Context.ConnectionId, client.Item2);
+
                 await Groups.AddToGroupAsync(Context.ConnectionId, $"onfavorites:{client.Item2}:{request.UserId.ToLower()}");
+            }
         }
 
         public async Task UnsubscribeToFavorites(WalletChangeRequest request)

@@ -74,6 +74,16 @@ namespace Platform.Shared.Test.Extensions
             // Assert
             Assert.Equal(model.Signature, signature);
         }
+        [Fact]
+        public void NormalizeEmptyStrings_NullObject_ReturnsNull()
+        {
+            Assert.Null(ObjectExtensions.NormalizeEmptyStrings(null));
+        }
+        [Fact]
+        public void NormalizeEmptyStrings_WhitespaceString_ReturnsNull()
+        {
+            Assert.Null(ObjectExtensions.NormalizeEmptyStrings("   "));
+        }
         private OnOGDebitRequest CreateModel2()
         {
             var records = new[]

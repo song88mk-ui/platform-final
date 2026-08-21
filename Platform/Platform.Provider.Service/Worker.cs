@@ -29,6 +29,9 @@ namespace Platform.Provider.Service
 {
     public class Worker : BackgroundService
     {
+        // shared instance: JsonSerializerOptions caches type metadata per instance; a fresh instance per call rebuilds it every request
+        private static readonly JsonSerializerOptions _jsonOptions = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+
         private readonly ILogger<Worker> _logger;
         private readonly IMessageBroker _messageBroker;
         private readonly IBettingRepository _bettingRepository;
@@ -302,10 +305,7 @@ namespace Platform.Provider.Service
             try
             {
                 var message = JsonSerializer.Deserialize<GTSAssessmentResponseDTO>(payload,
-                    new JsonSerializerOptions
-                    {
-                        PropertyNameCaseInsensitive = true
-                    });
+                    _jsonOptions);
 
                 if (message == null)
                     return;

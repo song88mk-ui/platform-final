@@ -15,6 +15,9 @@ namespace Platform.Job.Operator.Score.Repository
 {
     public class CricketScoreRepository : ICricketScoreRepository
     {
+        // shared instance: JsonSerializerOptions caches type metadata per instance; a fresh instance per call rebuilds it every request
+        private static readonly JsonSerializerOptions _jsonOptions = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+
         private readonly HttpClient _httpClient;
 
         public CricketScoreRepository(HttpClient httpClient)
@@ -34,7 +37,7 @@ namespace Platform.Job.Operator.Score.Repository
 
                 if (response.IsSuccessStatusCode)
                 {
-                    var result = JsonSerializer.Deserialize<CricketScoreResponseDTO>(response.Content.ReadAsStringAsync().Result, new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+                    var result = JsonSerializer.Deserialize<CricketScoreResponseDTO>(response.Content.ReadAsStringAsync().Result, _jsonOptions);
 
                     if(result != null && result.Score != null)
                     {

@@ -13,6 +13,9 @@ namespace Platform.Shared.Repositories
 {
     public class MTSMaxStakeRepository : IMTSMaxStakeRepository
     {
+        // shared instance: JsonSerializerOptions caches type metadata per instance; a fresh instance per call rebuilds it every request
+        private static readonly JsonSerializerOptions _jsonOptions = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+
         private readonly HttpClient _httpClient;
         private readonly IConfiguration _configuration;
 
@@ -117,7 +120,7 @@ namespace Platform.Shared.Repositories
 
                 if (response.IsSuccessStatusCode)
                 {
-                    var initialResult = JsonSerializer.Deserialize<MTSMaxStakeResponseDTO>(await response.Content.ReadAsStringAsync(), new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+                    var initialResult = JsonSerializer.Deserialize<MTSMaxStakeResponseDTO>(await response.Content.ReadAsStringAsync(), _jsonOptions);
 
                     decimal.TryParse(initialResult.MaxStake, out decimal maxStakeReturn);
 

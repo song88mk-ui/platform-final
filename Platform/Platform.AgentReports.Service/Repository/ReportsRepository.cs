@@ -21,6 +21,9 @@ namespace Platform.AgentReports.Service.Repository
 {
     public class ReportsRepository : IReportsRepository
     {
+        // shared instance: JsonSerializerOptions caches type metadata per instance; a fresh instance per call rebuilds it every request
+        private static readonly JsonSerializerOptions _jsonOptions = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+
         private readonly IConfiguration _configuration;
         private static string _agentUrl = string.Empty;
         public ReportsRepository(IConfiguration configuration)
@@ -372,7 +375,7 @@ namespace Platform.AgentReports.Service.Repository
 
                 if (response.IsSuccessStatusCode)
                 {
-                    var resultList = System.Text.Json.JsonSerializer.Deserialize<BaseResponse<List<AgentSettingsResponse>>>(response.Content.ReadAsStringAsync().Result, new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+                    var resultList = System.Text.Json.JsonSerializer.Deserialize<BaseResponse<List<AgentSettingsResponse>>>(response.Content.ReadAsStringAsync().Result, _jsonOptions);
 
                     foreach (var result in resultList.Result)
                     {
@@ -415,7 +418,7 @@ namespace Platform.AgentReports.Service.Repository
 
                 if (response.IsSuccessStatusCode)
                 {
-                    var resultList = System.Text.Json.JsonSerializer.Deserialize<BaseResponse<List<AgentSettingsResponse>>>(response.Content.ReadAsStringAsync().Result, new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+                    var resultList = System.Text.Json.JsonSerializer.Deserialize<BaseResponse<List<AgentSettingsResponse>>>(response.Content.ReadAsStringAsync().Result, _jsonOptions);
 
                     foreach (var result in resultList.Result)
                     {
@@ -808,7 +811,7 @@ namespace Platform.AgentReports.Service.Repository
 
                 if (response.IsSuccessStatusCode)
                 {
-                    var resultList = System.Text.Json.JsonSerializer.Deserialize<BaseResponse<List<AgentSettingsResponse>>>(response.Content.ReadAsStringAsync().Result, new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+                    var resultList = System.Text.Json.JsonSerializer.Deserialize<BaseResponse<List<AgentSettingsResponse>>>(response.Content.ReadAsStringAsync().Result, _jsonOptions);
 
                     foreach (var result in resultList.Result)
                     {

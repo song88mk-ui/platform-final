@@ -21,6 +21,9 @@ namespace Platform.Operator.Cashout.Service.Repository
 {
     public class BettingRepository : IBettingRepository
     {
+        // shared instance: JsonSerializerOptions caches type metadata per instance; a fresh instance per call rebuilds it every request
+        private static readonly JsonSerializerOptions _jsonOptions = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+
         private readonly ILogger<BettingRepository> _logger;
         private List<HttpClient> _httpClients = new List<HttpClient>();
         public BettingRepository(ILogger<BettingRepository> logger)
@@ -65,7 +68,7 @@ namespace Platform.Operator.Cashout.Service.Repository
 
                 if (response.IsSuccessStatusCode)
                 {
-                    var result = JsonSerializer.Deserialize<CashoutResultResponseDTO>(response.Content.ReadAsStringAsync().Result, new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+                    var result = JsonSerializer.Deserialize<CashoutResultResponseDTO>(response.Content.ReadAsStringAsync().Result, _jsonOptions);
                     _logger.LogInformation($"ProcessCashOut - Response: {message.BetId} - {response.Content.ReadAsStringAsync().Result}");
                 }
                 else

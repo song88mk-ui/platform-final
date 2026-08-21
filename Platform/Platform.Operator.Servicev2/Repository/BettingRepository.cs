@@ -26,6 +26,13 @@ namespace Platform.Operator.Servicev2.Repository
 {
     public class BettingRepository : IBettingRepository
     {
+        // shared instance: JsonSerializerOptions caches type metadata per instance; a fresh instance per call rebuilds it every request
+        private static readonly JsonSerializerOptions _jsonOptionsDecimal = new JsonSerializerOptions { PropertyNameCaseInsensitive = true, Converters = { new DecimalJsonConverter() } };
+        private static readonly JsonSerializerOptions _jsonOptionsDecimalOnly = new JsonSerializerOptions { Converters = { new DecimalJsonConverter() } };
+        private static readonly JsonSerializerOptions _jsonOptions = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+        private static readonly JsonSerializerOptions _jsonOptionsDecimalRelaxed = new JsonSerializerOptions { Converters = { new DecimalJsonConverter() }, Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping };
+        private static readonly JsonSerializerOptions _jsonOptionsCaseSensitive = new JsonSerializerOptions { PropertyNameCaseInsensitive = false };
+
         private List<Tuple<string, HttpClient>> _httpClients = new List<Tuple<string, HttpClient>>();
         private readonly object _lock = new object();
         private readonly OrientalGamingConfigDTO _ogConfig;
@@ -717,7 +724,7 @@ namespace Platform.Operator.Servicev2.Repository
                 {
                     var responsePayload = response.Content.ReadAsStringAsync().Result;
 
-                    var result = JsonSerializer.Deserialize<OperatorBetResponseDTO>(responsePayload, new JsonSerializerOptions() { PropertyNameCaseInsensitive = true, Converters = { new DecimalJsonConverter() } });
+                    var result = JsonSerializer.Deserialize<OperatorBetResponseDTO>(responsePayload, _jsonOptionsDecimal);
 
                     activity?.SetTag("response.payload", responsePayload);
 
@@ -802,7 +809,7 @@ namespace Platform.Operator.Servicev2.Repository
                     {
                         var responsePayload = response.Content.ReadAsStringAsync().Result;
 
-                        var result = JsonSerializer.Deserialize<OperatorBetResponseDTO>(responsePayload, new JsonSerializerOptions() { PropertyNameCaseInsensitive = true, Converters = { new DecimalJsonConverter() } });
+                        var result = JsonSerializer.Deserialize<OperatorBetResponseDTO>(responsePayload, _jsonOptionsDecimal);
 
                         activity?.SetTag("response.bad.request.payload", responsePayload);
 
@@ -983,10 +990,7 @@ namespace Platform.Operator.Servicev2.Repository
                 //var signature = payload.ToSignOG(privateKey);
                 payload.Signature = signature;
 
-                var options = new JsonSerializerOptions
-                {
-                    Converters = { new DecimalJsonConverter() },
-                };
+                var options = _jsonOptionsDecimalOnly;
 
                 var info = JsonSerializer.Serialize(payload, options);
 
@@ -1009,7 +1013,7 @@ namespace Platform.Operator.Servicev2.Repository
 
                 if (response.IsSuccessStatusCode)
                 {
-                    var result = JsonSerializer.Deserialize<OGDebitResponseDTO>(response.Content.ReadAsStringAsync().Result, new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+                    var result = JsonSerializer.Deserialize<OGDebitResponseDTO>(response.Content.ReadAsStringAsync().Result, _jsonOptions);
 
                     if (result.Code != "S-100")
                     {
@@ -1087,7 +1091,7 @@ namespace Platform.Operator.Servicev2.Repository
 
                     if (response.StatusCode == HttpStatusCode.BadRequest)
                     {
-                        var result = JsonSerializer.Deserialize<OGDebitResponseDTO>(response.Content.ReadAsStringAsync().Result, new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+                        var result = JsonSerializer.Deserialize<OGDebitResponseDTO>(response.Content.ReadAsStringAsync().Result, _jsonOptions);
 
                         AddOperatorLog(new OperatorLog
                         {
@@ -1253,7 +1257,7 @@ namespace Platform.Operator.Servicev2.Repository
                 {
                     var responsePayload = response.Content.ReadAsStringAsync().Result;
 
-                    var result = JsonSerializer.Deserialize<OperatorBetResponseDTO>(responsePayload, new JsonSerializerOptions() { PropertyNameCaseInsensitive = true, Converters = { new DecimalJsonConverter() } });
+                    var result = JsonSerializer.Deserialize<OperatorBetResponseDTO>(responsePayload, _jsonOptionsDecimal);
 
                     activity?.SetTag("response.payload", responsePayload);
 
@@ -1292,7 +1296,7 @@ namespace Platform.Operator.Servicev2.Repository
                     {
                         var responsePayload = response.Content.ReadAsStringAsync().Result;
 
-                        var result = JsonSerializer.Deserialize<OperatorBetResponseDTO>(responsePayload, new JsonSerializerOptions() { PropertyNameCaseInsensitive = true, Converters = { new DecimalJsonConverter() } });
+                        var result = JsonSerializer.Deserialize<OperatorBetResponseDTO>(responsePayload, _jsonOptionsDecimal);
 
                         activity?.SetTag("response.bad.request.payload", responsePayload);
 
@@ -1467,11 +1471,7 @@ namespace Platform.Operator.Servicev2.Repository
                 var signature = payload.ToSignOG(privateKey);
                 payload.Signature = signature;
 
-                var options = new JsonSerializerOptions
-                {
-                    Converters = { new DecimalJsonConverter() },
-                    Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping
-                };
+                var options = _jsonOptionsDecimalRelaxed;
 
                 AddOperatorLog(new OperatorLog
                 {
@@ -1490,7 +1490,7 @@ namespace Platform.Operator.Servicev2.Repository
 
                 if (response.IsSuccessStatusCode)
                 {
-                    var result = JsonSerializer.Deserialize<OGCreditResponseDTO>(response.Content.ReadAsStringAsync().Result, new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+                    var result = JsonSerializer.Deserialize<OGCreditResponseDTO>(response.Content.ReadAsStringAsync().Result, _jsonOptions);
 
                     if (result.Code == "S-100")
                     {
@@ -1538,7 +1538,7 @@ namespace Platform.Operator.Servicev2.Repository
                 {
                     if (response.StatusCode == HttpStatusCode.BadRequest)
                     {
-                        var result = JsonSerializer.Deserialize<OperatorBetResponseDTO>(response.Content.ReadAsStringAsync().Result, new JsonSerializerOptions() { PropertyNameCaseInsensitive = true, Converters = { new DecimalJsonConverter() } });
+                        var result = JsonSerializer.Deserialize<OperatorBetResponseDTO>(response.Content.ReadAsStringAsync().Result, _jsonOptionsDecimal);
 
                         AddOperatorLog(new OperatorLog
                         {
@@ -1679,7 +1679,7 @@ namespace Platform.Operator.Servicev2.Repository
 
                 if (response.IsSuccessStatusCode)
                 {
-                    var result = JsonSerializer.Deserialize<OperatorBetResponseDTO>(response.Content.ReadAsStringAsync().Result, new JsonSerializerOptions() { PropertyNameCaseInsensitive = true, Converters = { new DecimalJsonConverter() } });
+                    var result = JsonSerializer.Deserialize<OperatorBetResponseDTO>(response.Content.ReadAsStringAsync().Result, _jsonOptionsDecimal);
 
                     AddOperatorLog(new OperatorLog
                     {
@@ -1714,7 +1714,7 @@ namespace Platform.Operator.Servicev2.Repository
                 {
                     if (response.StatusCode == HttpStatusCode.BadRequest)
                     {
-                        var result = JsonSerializer.Deserialize<OperatorBetResponseDTO>(response.Content.ReadAsStringAsync().Result, new JsonSerializerOptions() { PropertyNameCaseInsensitive = true, Converters = { new DecimalJsonConverter() } });
+                        var result = JsonSerializer.Deserialize<OperatorBetResponseDTO>(response.Content.ReadAsStringAsync().Result, _jsonOptionsDecimal);
 
                         AddOperatorLog(new OperatorLog
                         {
@@ -1874,7 +1874,7 @@ namespace Platform.Operator.Servicev2.Repository
                 {
                     var responsePayload = response.Content.ReadAsStringAsync().Result;
 
-                    var result = JsonSerializer.Deserialize<OperatorBetResponseDTO>(responsePayload, new JsonSerializerOptions() { PropertyNameCaseInsensitive = true, Converters = { new DecimalJsonConverter() } });
+                    var result = JsonSerializer.Deserialize<OperatorBetResponseDTO>(responsePayload, _jsonOptionsDecimal);
 
                     activity?.SetTag("response.payload", responsePayload);
 
@@ -1925,7 +1925,7 @@ namespace Platform.Operator.Servicev2.Repository
                     {
                         var responsePayload = response.Content.ReadAsStringAsync().Result;
 
-                        var result = JsonSerializer.Deserialize<OperatorBetResponseDTO>(responsePayload, new JsonSerializerOptions() { PropertyNameCaseInsensitive = true, Converters = { new DecimalJsonConverter() } });
+                        var result = JsonSerializer.Deserialize<OperatorBetResponseDTO>(responsePayload, _jsonOptionsDecimal);
 
                         activity?.SetTag("response.bad.request.payload", responsePayload);
 
@@ -2151,17 +2151,14 @@ namespace Platform.Operator.Servicev2.Repository
                             Timestamp = DateTime.UtcNow
                         });
 
-                    var cancelOptions = new JsonSerializerOptions
-                    {
-                        Converters = { new DecimalJsonConverter() }
-                    };
+                    var cancelOptions = _jsonOptionsDecimalOnly;
 
                     var cancelResponse = GetHttpClient(threadId, message.Bet.Endpoint, message.Bet.OperatorToken, message.Bet.ClientId, message.Bet.IsAgent, publicKey, vendorName).PostAsync($"{message.Bet.Endpoint}{path}", new StringContent(JsonSerializer.Serialize(cancelPayload, cancelOptions), System.Text.Encoding.UTF8, "application/json")).Result;
                     if (cancelResponse.IsSuccessStatusCode)
                     {
                         if (message.IsAudit)
                         {
-                            var result = JsonSerializer.Deserialize<OGCreditResponseDTO>(cancelResponse.Content.ReadAsStringAsync().Result, new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+                            var result = JsonSerializer.Deserialize<OGCreditResponseDTO>(cancelResponse.Content.ReadAsStringAsync().Result, _jsonOptions);
 
                             if (result.Code == "S-100")
                             {
@@ -2214,11 +2211,7 @@ namespace Platform.Operator.Servicev2.Repository
                     }
                 }
 
-                var options = new JsonSerializerOptions
-                {
-                    Converters = { new DecimalJsonConverter() },
-                    Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping
-                };
+                var options = _jsonOptionsDecimalRelaxed;
 
                 if (message.IsAudit)
                     AddOperatorLog(new OperatorLog
@@ -2242,7 +2235,7 @@ namespace Platform.Operator.Servicev2.Repository
                 {
                     var responsePayload = response.Content.ReadAsStringAsync().Result;
 
-                    var result = JsonSerializer.Deserialize<OGCreditResponseDTO>(responsePayload, new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+                    var result = JsonSerializer.Deserialize<OGCreditResponseDTO>(responsePayload, _jsonOptions);
 
                     activity?.SetTag("response.payload", responsePayload);
 
@@ -2313,7 +2306,7 @@ namespace Platform.Operator.Servicev2.Repository
                     {
                         if (message.IsAudit)
                         {
-                            var result = JsonSerializer.Deserialize<OGCreditResponseDTO>(response.Content.ReadAsStringAsync().Result, new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+                            var result = JsonSerializer.Deserialize<OGCreditResponseDTO>(response.Content.ReadAsStringAsync().Result, _jsonOptions);
 
                             activity?.SetTag("response.bad.request.payload", JsonSerializer.Serialize(result));
 
@@ -2489,7 +2482,7 @@ namespace Platform.Operator.Servicev2.Repository
                 {
                     var responsePayload = response.Content.ReadAsStringAsync().Result;
 
-                    var result = JsonSerializer.Deserialize<OperatorBetResponseDTO>(responsePayload, new JsonSerializerOptions() { PropertyNameCaseInsensitive = true, Converters = { new DecimalJsonConverter() } });
+                    var result = JsonSerializer.Deserialize<OperatorBetResponseDTO>(responsePayload, _jsonOptionsDecimal);
 
                     activity?.SetTag("response.payload", responsePayload);
 
@@ -2529,7 +2522,7 @@ namespace Platform.Operator.Servicev2.Repository
                     {
                         var responsePayload = response.Content.ReadAsStringAsync().Result;
 
-                        var result = JsonSerializer.Deserialize<OperatorBetResponseDTO>(responsePayload, new JsonSerializerOptions() { PropertyNameCaseInsensitive = true, Converters = { new DecimalJsonConverter() } });
+                        var result = JsonSerializer.Deserialize<OperatorBetResponseDTO>(responsePayload, _jsonOptionsDecimal);
 
                         activity?.SetTag("response.bad.request.payload", responsePayload);
 
@@ -2733,16 +2726,13 @@ namespace Platform.Operator.Servicev2.Repository
                     Timestamp = DateTime.UtcNow
                 });
 
-                var options = new JsonSerializerOptions
-                {
-                    Converters = { new DecimalJsonConverter() }
-                };
+                var options = _jsonOptionsDecimalOnly;
 
                 var response = GetHttpClient(threadId, message.Bet.Endpoint, message.Bet.OperatorToken, message.Bet.ClientId, message.Bet.IsAgent, publicKey, vendorName).PostAsync($"{message.Bet.Endpoint}{path}", new StringContent(JsonSerializer.Serialize(payload, options), System.Text.Encoding.UTF8, "application/json")).Result;
 
                 if (response.IsSuccessStatusCode)
                 {
-                    var result = JsonSerializer.Deserialize<OGDebitResponseDTO>(response.Content.ReadAsStringAsync().Result, new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+                    var result = JsonSerializer.Deserialize<OGDebitResponseDTO>(response.Content.ReadAsStringAsync().Result, _jsonOptions);
 
                     AddOperatorLog(new OperatorLog
                     {
@@ -2784,7 +2774,7 @@ namespace Platform.Operator.Servicev2.Repository
                                 };
                                 var signatureEx = walletRequest.ToSignOG(privateKey);
                                 var walletResponse = GetHttpClient(threadId, message.Bet.Endpoint, message.Bet.OperatorToken, message.Bet.ClientId, message.Bet.IsAgent, publicKey, vendorName).GetAsync($"{message.Bet.Endpoint}/api/v2/platform/player/balance?player_code={walletRequest.player_code}&timestamp={walletRequest.timestamp}&signature={signatureEx}").Result;
-                                var walletResult = JsonSerializer.Deserialize<OGWalletResponseDTO>(walletResponse.Content.ReadAsStringAsync().Result, new JsonSerializerOptions() { PropertyNameCaseInsensitive = false });
+                                var walletResult = JsonSerializer.Deserialize<OGWalletResponseDTO>(walletResponse.Content.ReadAsStringAsync().Result, _jsonOptionsCaseSensitive);
                                 if (walletResult.Code == "S-100")
                                 {
                                     messageBroker.Publish(new OnWalletChange
@@ -2810,7 +2800,7 @@ namespace Platform.Operator.Servicev2.Repository
                 {
                     if (response.StatusCode == HttpStatusCode.BadRequest)
                     {
-                        var result = JsonSerializer.Deserialize<OGDebitResponseDTO>(response.Content.ReadAsStringAsync().Result, new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+                        var result = JsonSerializer.Deserialize<OGDebitResponseDTO>(response.Content.ReadAsStringAsync().Result, _jsonOptions);
 
                         AddOperatorLog(new OperatorLog
                         {
@@ -2875,7 +2865,7 @@ namespace Platform.Operator.Servicev2.Repository
                     };
                     var signatureEx = walletRequest.ToSignOG(privateKey);
                     var walletResponse = GetHttpClient(threadId, message.Bet.Endpoint, message.Bet.OperatorToken, message.Bet.ClientId, message.Bet.IsAgent, publicKey, vendorName).GetAsync($"{message.Bet.Endpoint}/api/v2/platform/player/balance?player_code={walletRequest.player_code}&timestamp={walletRequest.timestamp}&signature={signatureEx}").Result;
-                    var walletResult = JsonSerializer.Deserialize<OGWalletResponseDTO>(walletResponse.Content.ReadAsStringAsync().Result, new JsonSerializerOptions() { PropertyNameCaseInsensitive = false });
+                    var walletResult = JsonSerializer.Deserialize<OGWalletResponseDTO>(walletResponse.Content.ReadAsStringAsync().Result, _jsonOptionsCaseSensitive);
                     if (walletResult.Code == "S-100")
                     {
                         messageBroker.Publish(new OnWalletChange
@@ -2926,7 +2916,7 @@ namespace Platform.Operator.Servicev2.Repository
 
                 if (response.IsSuccessStatusCode)
                 {
-                    var result = JsonSerializer.Deserialize<OperatorBetResponseDTO>(response.Content.ReadAsStringAsync().Result, new JsonSerializerOptions() { PropertyNameCaseInsensitive = true, Converters = { new DecimalJsonConverter() } });
+                    var result = JsonSerializer.Deserialize<OperatorBetResponseDTO>(response.Content.ReadAsStringAsync().Result, _jsonOptionsDecimal);
 
                     AddOperatorLog(new OperatorLog
                     {
@@ -2945,7 +2935,7 @@ namespace Platform.Operator.Servicev2.Repository
                 {
                     if (response.StatusCode == HttpStatusCode.BadRequest)
                     {
-                        var result = JsonSerializer.Deserialize<OperatorBetResponseDTO>(response.Content.ReadAsStringAsync().Result, new JsonSerializerOptions() { PropertyNameCaseInsensitive = true, Converters = { new DecimalJsonConverter() } });
+                        var result = JsonSerializer.Deserialize<OperatorBetResponseDTO>(response.Content.ReadAsStringAsync().Result, _jsonOptionsDecimal);
 
                         AddOperatorLog(new OperatorLog
                         {
@@ -3033,7 +3023,7 @@ namespace Platform.Operator.Servicev2.Repository
 
                 if (response.IsSuccessStatusCode)
                 {
-                    var result = JsonSerializer.Deserialize<OperatorBetResponseDTO>(response.Content.ReadAsStringAsync().Result, new JsonSerializerOptions() { PropertyNameCaseInsensitive = true, Converters = { new DecimalJsonConverter() } });
+                    var result = JsonSerializer.Deserialize<OperatorBetResponseDTO>(response.Content.ReadAsStringAsync().Result, _jsonOptionsDecimal);
 
                     if (message.OnBetSettlement.IsAudit)
                     {
@@ -3055,7 +3045,7 @@ namespace Platform.Operator.Servicev2.Repository
                 {
                     if (response.StatusCode == HttpStatusCode.BadRequest)
                     {
-                        var result = JsonSerializer.Deserialize<OperatorBetResponseDTO>(response.Content.ReadAsStringAsync().Result, new JsonSerializerOptions() { PropertyNameCaseInsensitive = true, Converters = { new DecimalJsonConverter() } });
+                        var result = JsonSerializer.Deserialize<OperatorBetResponseDTO>(response.Content.ReadAsStringAsync().Result, _jsonOptionsDecimal);
 
                         if (message.OnBetSettlement.IsAudit)
                         {
@@ -3150,7 +3140,7 @@ namespace Platform.Operator.Servicev2.Repository
 
                 if (response.IsSuccessStatusCode)
                 {
-                    var result = JsonSerializer.Deserialize<OperatorBetResponseDTO>(response.Content.ReadAsStringAsync().Result, new JsonSerializerOptions() { PropertyNameCaseInsensitive = true, Converters = { new DecimalJsonConverter() } });
+                    var result = JsonSerializer.Deserialize<OperatorBetResponseDTO>(response.Content.ReadAsStringAsync().Result, _jsonOptionsDecimal);
 
                     AddOperatorLog(new OperatorLog
                     {
@@ -3169,7 +3159,7 @@ namespace Platform.Operator.Servicev2.Repository
                 {
                     if (response.StatusCode == HttpStatusCode.BadRequest)
                     {
-                        var result = JsonSerializer.Deserialize<OperatorBetResponseDTO>(response.Content.ReadAsStringAsync().Result, new JsonSerializerOptions() { PropertyNameCaseInsensitive = true, Converters = { new DecimalJsonConverter() } });
+                        var result = JsonSerializer.Deserialize<OperatorBetResponseDTO>(response.Content.ReadAsStringAsync().Result, _jsonOptionsDecimal);
 
                         AddOperatorLog(new OperatorLog
                         {
@@ -3251,7 +3241,7 @@ namespace Platform.Operator.Servicev2.Repository
             var response = GetHttpClient(threadId, message.Bet.Endpoint, message.Bet.OperatorToken, message.Bet.ClientId, message.Bet.IsAgent, publicKey, vendorName).PostAsync($"{message.Bet.Endpoint}{path}", new StringContent(JsonSerializer.Serialize(payload), System.Text.Encoding.UTF8, "application/json")).Result;
             if (response.IsSuccessStatusCode)
             {
-                var result = JsonSerializer.Deserialize<OGTransactionResponseDTO>(response.Content.ReadAsStringAsync().Result, new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+                var result = JsonSerializer.Deserialize<OGTransactionResponseDTO>(response.Content.ReadAsStringAsync().Result, _jsonOptions);
 
                 if (result.Code == "S-100" && result.TransactionStatus == expectedStatus)
                 {

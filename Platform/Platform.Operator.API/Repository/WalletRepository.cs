@@ -13,6 +13,9 @@ namespace Platform.Operator.API.Repository
 {
     public class WalletRepository : IWalletRepository
     {
+        // shared instance: JsonSerializerOptions caches type metadata per instance; a fresh instance per call rebuilds it every request
+        private static readonly JsonSerializerOptions _jsonOptions = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+
         private readonly HttpClient _httpClient;
         private readonly IConfiguration _configuration;
 
@@ -33,13 +36,13 @@ namespace Platform.Operator.API.Repository
 
                 if (response.IsSuccessStatusCode)
                 {
-                    var result = JsonSerializer.Deserialize<WalletResponse>(await response.Content.ReadAsStringAsync(), new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+                    var result = JsonSerializer.Deserialize<WalletResponse>(await response.Content.ReadAsStringAsync(), _jsonOptions);
 
                     return result;
                 }
                 else
                 {
-                    var result = JsonSerializer.Deserialize<WalletResponse>(await response.Content.ReadAsStringAsync(), new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+                    var result = JsonSerializer.Deserialize<WalletResponse>(await response.Content.ReadAsStringAsync(), _jsonOptions);
 
                     return result;
                 }
@@ -62,13 +65,13 @@ namespace Platform.Operator.API.Repository
 
                 if (response.IsSuccessStatusCode)
                 {
-                    var result = JsonSerializer.Deserialize<BetResponse>(await response.Content.ReadAsStringAsync(), new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+                    var result = JsonSerializer.Deserialize<BetResponse>(await response.Content.ReadAsStringAsync(), _jsonOptions);
 
                     return result;
                 }
                 else
                 {
-                    var result = JsonSerializer.Deserialize<BetResponse>(await response.Content.ReadAsStringAsync(), new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+                    var result = JsonSerializer.Deserialize<BetResponse>(await response.Content.ReadAsStringAsync(), _jsonOptions);
 
                     return result;
                 }
@@ -91,13 +94,13 @@ namespace Platform.Operator.API.Repository
 
                 if (response.IsSuccessStatusCode)
                 {
-                    var result = JsonSerializer.Deserialize<BetResponse>(await response.Content.ReadAsStringAsync(), new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+                    var result = JsonSerializer.Deserialize<BetResponse>(await response.Content.ReadAsStringAsync(), _jsonOptions);
 
                     return result;
                 }
                 else
                 {
-                    var result = JsonSerializer.Deserialize<BetResponse>(await response.Content.ReadAsStringAsync(), new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+                    var result = JsonSerializer.Deserialize<BetResponse>(await response.Content.ReadAsStringAsync(), _jsonOptions);
 
                     return result;
                 }
@@ -120,13 +123,13 @@ namespace Platform.Operator.API.Repository
 
                 if (response.IsSuccessStatusCode)
                 {
-                    var result = JsonSerializer.Deserialize<BetResponse>(await response.Content.ReadAsStringAsync(), new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+                    var result = JsonSerializer.Deserialize<BetResponse>(await response.Content.ReadAsStringAsync(), _jsonOptions);
 
                     return result;
                 }
                 else
                 {
-                    var result = JsonSerializer.Deserialize<BetResponse>(await response.Content.ReadAsStringAsync(), new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+                    var result = JsonSerializer.Deserialize<BetResponse>(await response.Content.ReadAsStringAsync(), _jsonOptions);
 
                     return result;
                 }
@@ -149,13 +152,13 @@ namespace Platform.Operator.API.Repository
 
                 if (response.IsSuccessStatusCode)
                 {
-                    var result = JsonSerializer.Deserialize<BetResponse>(await response.Content.ReadAsStringAsync(), new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+                    var result = JsonSerializer.Deserialize<BetResponse>(await response.Content.ReadAsStringAsync(), _jsonOptions);
 
                     return result;
                 }
                 else
                 {
-                    var result = JsonSerializer.Deserialize<BetResponse>(await response.Content.ReadAsStringAsync(), new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+                    var result = JsonSerializer.Deserialize<BetResponse>(await response.Content.ReadAsStringAsync(), _jsonOptions);
 
                     return result;
                 }

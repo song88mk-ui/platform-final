@@ -11,6 +11,9 @@ namespace Platform.API.Repository
 {
     public class CasinoRepository : ICasinoRepository
     {
+        // shared instance: JsonSerializerOptions caches type metadata per instance; a fresh instance per call rebuilds it every request
+        private static readonly JsonSerializerOptions _jsonOptions = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+
         private readonly HttpClient _httpClient;
         private readonly IConfiguration _configuration;
 
@@ -27,11 +30,11 @@ namespace Platform.API.Repository
                 var response = await _httpClient.PostAsync($"v1/lobby", new StringContent(JsonSerializer.Serialize(request), System.Text.Encoding.UTF8, "application/json"));
 
                 if (response.IsSuccessStatusCode)
-                    return JsonSerializer.Deserialize<BaseResponseDTO<GameLobbyResponseDTO>>(await response.Content.ReadAsStringAsync(), new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+                    return JsonSerializer.Deserialize<BaseResponseDTO<GameLobbyResponseDTO>>(await response.Content.ReadAsStringAsync(), _jsonOptions);
                 else
                 {
                     if (response.StatusCode == HttpStatusCode.BadRequest)
-                        return JsonSerializer.Deserialize<BaseResponseDTO<GameLobbyResponseDTO>>(await response.Content.ReadAsStringAsync(), new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+                        return JsonSerializer.Deserialize<BaseResponseDTO<GameLobbyResponseDTO>>(await response.Content.ReadAsStringAsync(), _jsonOptions);
                     else
                     {
                         return new BaseResponseDTO<GameLobbyResponseDTO>
@@ -60,7 +63,7 @@ namespace Platform.API.Repository
 
                 if (response.IsSuccessStatusCode)
                 {
-                    return JsonSerializer.Deserialize<BaseResponseDTO<CasinoBetHistoryResponseDTO>>(await response.Content.ReadAsStringAsync(), new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+                    return JsonSerializer.Deserialize<BaseResponseDTO<CasinoBetHistoryResponseDTO>>(await response.Content.ReadAsStringAsync(), _jsonOptions);
                 }
                 else
                 {

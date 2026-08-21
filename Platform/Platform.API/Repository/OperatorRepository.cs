@@ -16,6 +16,10 @@ namespace Platform.API.Repository
 {
     public class OperatorRepository : IOperatorRepository
     {
+        // shared instance: JsonSerializerOptions caches type metadata per instance; a fresh instance per call rebuilds it every request
+        private static readonly JsonSerializerOptions _jsonOptions = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+        private static readonly JsonSerializerOptions _jsonOptionsCaseSensitive = new JsonSerializerOptions { PropertyNameCaseInsensitive = false };
+
         private readonly HttpClient _httpClient;
         private readonly OrientalGamingConfigDTO _ogConfig;
         private readonly ILogger<OperatorRepository> _logger;
@@ -55,7 +59,7 @@ namespace Platform.API.Repository
 
                 if (response.IsSuccessStatusCode)
                 {
-                    var result = JsonSerializer.Deserialize<LoginResponseDTO>(await response.Content.ReadAsStringAsync(), new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+                    var result = JsonSerializer.Deserialize<LoginResponseDTO>(await response.Content.ReadAsStringAsync(), _jsonOptions);
 
                     return new BaseResponseDTO<LoginResponseDTO>
                     {
@@ -86,7 +90,7 @@ namespace Platform.API.Repository
                         {
                         }
 
-                        var result = JsonSerializer.Deserialize<int>(await response.Content.ReadAsStringAsync(), new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+                        var result = JsonSerializer.Deserialize<int>(await response.Content.ReadAsStringAsync(), _jsonOptions);
 
                         return new BaseResponseDTO<LoginResponseDTO>
                         {
@@ -133,7 +137,7 @@ namespace Platform.API.Repository
 
                 if (response.IsSuccessStatusCode)
                 {
-                    var result = JsonSerializer.Deserialize<LogoutResponseDTO>(await response.Content.ReadAsStringAsync(), new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+                    var result = JsonSerializer.Deserialize<LogoutResponseDTO>(await response.Content.ReadAsStringAsync(), _jsonOptions);
 
                     return new BaseResponseDTO<object>
                     {
@@ -182,7 +186,7 @@ namespace Platform.API.Repository
 
                 if (response.IsSuccessStatusCode)
                 {
-                    var result = JsonSerializer.Deserialize<OperatorBetResponseDTO>(await response.Content.ReadAsStringAsync(), new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+                    var result = JsonSerializer.Deserialize<OperatorBetResponseDTO>(await response.Content.ReadAsStringAsync(), _jsonOptions);
 
                     return new BaseResponseDTO<OperatorBetResponseDTO>
                     {
@@ -195,7 +199,7 @@ namespace Platform.API.Repository
                 {
                     if (response.StatusCode == HttpStatusCode.BadRequest)
                     {
-                        var result = JsonSerializer.Deserialize<OperatorBetResponseDTO>(await response.Content.ReadAsStringAsync(), new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+                        var result = JsonSerializer.Deserialize<OperatorBetResponseDTO>(await response.Content.ReadAsStringAsync(), _jsonOptions);
 
                         return new BaseResponseDTO<OperatorBetResponseDTO>
                         {
@@ -283,7 +287,7 @@ namespace Platform.API.Repository
 
                 var authenticationResponse = await _httpClient.PostAsync($"{endpoint}/api/v2/platform/security/authenticate", new StringContent(JsonSerializer.Serialize(authenticationPayload), System.Text.Encoding.UTF8, "application/json"));
 
-                var authenticationResult = JsonSerializer.Deserialize<OGAuthenticationResponse>(await authenticationResponse.Content.ReadAsStringAsync(), new JsonSerializerOptions() { PropertyNameCaseInsensitive = false });
+                var authenticationResult = JsonSerializer.Deserialize<OGAuthenticationResponse>(await authenticationResponse.Content.ReadAsStringAsync(), _jsonOptionsCaseSensitive);
 
                 if (authenticationResult.Code != "S-100")
                 {
@@ -310,7 +314,7 @@ namespace Platform.API.Repository
 
                     var walletResponse = await _httpClient.GetAsync($"{endpoint}/api/v2/platform/player/balance?player_code={walletRequest.player_code}&timestamp={walletRequest.timestamp}&signature={signature}");
 
-                    var walletResult = JsonSerializer.Deserialize<OGWalletResponseDTO>(await walletResponse.Content.ReadAsStringAsync(), new JsonSerializerOptions() { PropertyNameCaseInsensitive = false });
+                    var walletResult = JsonSerializer.Deserialize<OGWalletResponseDTO>(await walletResponse.Content.ReadAsStringAsync(), _jsonOptionsCaseSensitive);
 
                     if (walletResult.Code != "S-100")
                     {
@@ -406,7 +410,7 @@ namespace Platform.API.Repository
                 if (response.IsSuccessStatusCode)
                 {
                     responseString = await response.Content.ReadAsStringAsync();
-                    var result = JsonSerializer.Deserialize<AuthenticationResponseDTO>(responseString, new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+                    var result = JsonSerializer.Deserialize<AuthenticationResponseDTO>(responseString, _jsonOptions);
 
                     return new BaseResponseDTO<AuthenticationResponseDTO>
                     {
@@ -429,7 +433,7 @@ namespace Platform.API.Repository
                     {
                         try
                         {
-                            var result = JsonSerializer.Deserialize<AuthenticationResponseDTO>(await response.Content.ReadAsStringAsync(), new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+                            var result = JsonSerializer.Deserialize<AuthenticationResponseDTO>(await response.Content.ReadAsStringAsync(), _jsonOptions);
 
                             var properties = new Dictionary<string, string>
                             {

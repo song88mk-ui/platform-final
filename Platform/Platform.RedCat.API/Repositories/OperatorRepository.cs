@@ -13,6 +13,9 @@ namespace Platform.RedCat.API.Repositories
 {
     public class OperatorRepository : IOperatorRepository
     {
+        // shared instance: JsonSerializerOptions caches type metadata per instance; a fresh instance per call rebuilds it every request
+        private static readonly JsonSerializerOptions _jsonOptions = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+
         //private readonly HttpClient _httpClient;
         //public OperatorRepository(HttpClient httpClient)
         //{
@@ -45,7 +48,7 @@ namespace Platform.RedCat.API.Repositories
 
                 if (response.IsSuccessStatusCode)
                 {
-                    var result = JsonSerializer.Deserialize<AuthenticationResponseDTO>(await response.Content.ReadAsStringAsync(), new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+                    var result = JsonSerializer.Deserialize<AuthenticationResponseDTO>(await response.Content.ReadAsStringAsync(), _jsonOptions);
 
                     return new RedCatBaseResponse<AuthenticationResponseDTO>
                     {
@@ -68,7 +71,7 @@ namespace Platform.RedCat.API.Repositories
                     {
                         try
                         {
-                            var result = JsonSerializer.Deserialize<AuthenticationResponseDTO>(await response.Content.ReadAsStringAsync(), new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+                            var result = JsonSerializer.Deserialize<AuthenticationResponseDTO>(await response.Content.ReadAsStringAsync(), _jsonOptions);
 
                             var properties = new Dictionary<string, string>
                             {

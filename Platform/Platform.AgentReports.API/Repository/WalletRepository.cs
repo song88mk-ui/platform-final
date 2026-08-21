@@ -12,6 +12,9 @@ namespace Platform.AgentReports.API.Repository
 {
     public class WalletRepository : IWalletRepository
     {
+        // shared instance: JsonSerializerOptions caches type metadata per instance; a fresh instance per call rebuilds it every request
+        private static readonly JsonSerializerOptions _jsonOptions = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+
         #region Fields
 
         private readonly HttpClient _httpClient;
@@ -41,11 +44,11 @@ namespace Platform.AgentReports.API.Repository
                 var response = await _httpClient.PostAsync($"/v1/credit", new StringContent(JsonSerializer.Serialize(request), System.Text.Encoding.UTF8, "application/json"));
 
                 if (response.IsSuccessStatusCode)
-                    return JsonSerializer.Deserialize<WalletResponse>(await response.Content.ReadAsStringAsync(), new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+                    return JsonSerializer.Deserialize<WalletResponse>(await response.Content.ReadAsStringAsync(), _jsonOptions);
                 else
                 {
                     if (response.StatusCode == HttpStatusCode.BadRequest)
-                        return JsonSerializer.Deserialize<WalletResponse>(await response.Content.ReadAsStringAsync(), new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+                        return JsonSerializer.Deserialize<WalletResponse>(await response.Content.ReadAsStringAsync(), _jsonOptions);
                     else
                     {
                         return new WalletResponse
@@ -73,11 +76,11 @@ namespace Platform.AgentReports.API.Repository
                 var response = await _httpClient.PostAsync($"/v1/debit", new StringContent(JsonSerializer.Serialize(request), System.Text.Encoding.UTF8, "application/json"));
 
                 if (response.IsSuccessStatusCode)
-                    return JsonSerializer.Deserialize<WalletResponse>(await response.Content.ReadAsStringAsync(), new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+                    return JsonSerializer.Deserialize<WalletResponse>(await response.Content.ReadAsStringAsync(), _jsonOptions);
                 else
                 {
                     if (response.StatusCode == HttpStatusCode.BadRequest)
-                        return JsonSerializer.Deserialize<WalletResponse>(await response.Content.ReadAsStringAsync(), new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+                        return JsonSerializer.Deserialize<WalletResponse>(await response.Content.ReadAsStringAsync(), _jsonOptions);
                     else
                     {
                         return new WalletResponse

@@ -11,6 +11,9 @@ namespace Platform.CacheSync.Service.Repository
 {
     public class SportsbookRepository : ISportsbookRepository
     {
+        // shared instance: JsonSerializerOptions caches type metadata per instance; a fresh instance per call rebuilds it every request
+        private static readonly JsonSerializerOptions _jsonOptions = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+
         private readonly IConfiguration _configuration;
 
         public SportsbookRepository(IConfiguration configuration)
@@ -39,7 +42,7 @@ namespace Platform.CacheSync.Service.Repository
                     var response = await httpClient.PostAsync($"v1/cachepreload", new StringContent(JsonSerializer.Serialize(request), System.Text.Encoding.UTF8, "application/json"));
 
                     if (response.IsSuccessStatusCode)
-                        return JsonSerializer.Deserialize<BaseResponseDTO<bool>>(await response.Content.ReadAsStringAsync(), new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+                        return JsonSerializer.Deserialize<BaseResponseDTO<bool>>(await response.Content.ReadAsStringAsync(), _jsonOptions);
                     else
                     {
                         return new BaseResponseDTO<bool>

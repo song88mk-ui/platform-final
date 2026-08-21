@@ -20,6 +20,9 @@ namespace Platform.RedCatOperator.API.Repositories
 {
     public class OperatorRepository : IOperatorRepository
     {
+        // shared instance: JsonSerializerOptions caches type metadata per instance; a fresh instance per call rebuilds it every request
+        private static readonly JsonSerializerOptions _jsonOptionsCaseInsensitive = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+
         public readonly PlatformContext _platformContext;
         private readonly IConfiguration _configuration;
 
@@ -97,7 +100,7 @@ namespace Platform.RedCatOperator.API.Repositories
                         };
                     }
 
-                    var operatorResponse = JsonSerializer.Deserialize<OperatorBetResponseDTO>(responsePayload, new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+                    var operatorResponse = JsonSerializer.Deserialize<OperatorBetResponseDTO>(responsePayload, _jsonOptionsCaseInsensitive);
 
                     if (operatorResponse == null)
                         return new BaseResponseDTO<RedCatBetTransactionResponseDTO>()
@@ -242,7 +245,7 @@ namespace Platform.RedCatOperator.API.Repositories
                         };
                     }
 
-                    var operatorResponse = JsonSerializer.Deserialize<OperatorBetResponseDTO>(responsePayload, new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+                    var operatorResponse = JsonSerializer.Deserialize<OperatorBetResponseDTO>(responsePayload, _jsonOptionsCaseInsensitive);
 
                     if (operatorResponse == null)
                         return new BaseResponseDTO<RedCatBetTransactionResponseDTO>()
@@ -388,7 +391,7 @@ namespace Platform.RedCatOperator.API.Repositories
                         };
                     }
 
-                    var operatorResponse = JsonSerializer.Deserialize<OperatorBetResponseDTO>(responsePayload, new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+                    var operatorResponse = JsonSerializer.Deserialize<OperatorBetResponseDTO>(responsePayload, _jsonOptionsCaseInsensitive);
 
                     if (operatorResponse == null)
                         return new BaseResponseDTO<RedCatBetTransactionResponseDTO>()
@@ -534,7 +537,7 @@ namespace Platform.RedCatOperator.API.Repositories
                         };
                     }
 
-                    var operatorResponse = JsonSerializer.Deserialize<OperatorBetResponseDTO>(responsePayload, new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+                    var operatorResponse = JsonSerializer.Deserialize<OperatorBetResponseDTO>(responsePayload, _jsonOptionsCaseInsensitive);
 
                     if (operatorResponse == null)
                         return new BaseResponseDTO<RedCatBetTransactionResponseDTO>()

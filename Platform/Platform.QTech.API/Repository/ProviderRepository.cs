@@ -10,6 +10,10 @@ namespace Platform.QTech.API.Repository
 {
     public class ProviderRepository : IProviderRepository
     {
+        // shared instance: JsonSerializerOptions caches type metadata per instance; a fresh instance per call rebuilds it every request
+        private static readonly JsonSerializerOptions _jsonOptions = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+        private static readonly JsonSerializerOptions _jsonOptionsCamelCase = new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase };
+
         private readonly HttpClient _httpClient;
         private readonly IConfiguration _configuration;
         private readonly string _userName;
@@ -32,13 +36,13 @@ namespace Platform.QTech.API.Repository
 
                 if (response.IsSuccessStatusCode)
                 {
-                    var result = JsonSerializer.Deserialize<AuthenticationResponse>(await response.Content.ReadAsStringAsync(), new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+                    var result = JsonSerializer.Deserialize<AuthenticationResponse>(await response.Content.ReadAsStringAsync(), _jsonOptions);
 
                     return new Tuple<AuthenticationCode, AuthenticationResponse>(AuthenticationCode.OK, result);
                 }
                 else
                 {
-                    var result = JsonSerializer.Deserialize<ErrorResponse>(await response.Content.ReadAsStringAsync(), new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+                    var result = JsonSerializer.Deserialize<ErrorResponse>(await response.Content.ReadAsStringAsync(), _jsonOptions);
 
                     return new Tuple<AuthenticationCode, AuthenticationResponse>(Enum.Parse<AuthenticationCode>(result.Code), new AuthenticationResponse());
                 }
@@ -63,7 +67,7 @@ namespace Platform.QTech.API.Repository
                 }
                 else
                 {
-                    var result = JsonSerializer.Deserialize<ErrorResponse>(await response.Content.ReadAsStringAsync(), new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+                    var result = JsonSerializer.Deserialize<ErrorResponse>(await response.Content.ReadAsStringAsync(), _jsonOptions);
 
                     return Enum.Parse<AuthTokenRevokeCode>(result.Code);
                 }
@@ -80,10 +84,7 @@ namespace Platform.QTech.API.Repository
                 _httpClient.DefaultRequestHeaders.Remove("Authorization");
                 _httpClient.DefaultRequestHeaders.Add("Authorization", $"Bearer {request.Token}");
 
-                var serializeOptions = new JsonSerializerOptions
-                {
-                    PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
-                };
+                var serializeOptions = _jsonOptionsCamelCase;
 
                 var payload = JsonSerializer.Serialize(request, serializeOptions);
 
@@ -91,13 +92,13 @@ namespace Platform.QTech.API.Repository
 
                 if (response.IsSuccessStatusCode)
                 {
-                    var result = JsonSerializer.Deserialize<GameLobbyResponse>(await response.Content.ReadAsStringAsync(), new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+                    var result = JsonSerializer.Deserialize<GameLobbyResponse>(await response.Content.ReadAsStringAsync(), _jsonOptions);
 
                     return new Tuple<GameLobbyCode, GameLobbyResponse>(GameLobbyCode.OK, result);
                 }
                 else
                 {
-                    var result = JsonSerializer.Deserialize<ErrorResponse>(await response.Content.ReadAsStringAsync(), new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+                    var result = JsonSerializer.Deserialize<ErrorResponse>(await response.Content.ReadAsStringAsync(), _jsonOptions);
 
                     var t1 = JsonSerializer.Serialize(result, serializeOptions);
 

@@ -12,6 +12,9 @@ namespace Platform.Job.ForexEUR.Repository
 {
     public class PlatformRepository : IPlatformRepository
     {
+        // shared instance: JsonSerializerOptions caches type metadata per instance; a fresh instance per call rebuilds it every request
+        private static readonly JsonSerializerOptions _jsonOptions = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+
         private readonly IConfiguration _configuration;
         private readonly HttpClient _httpClient;
         private readonly ILogger<PlatformRepository> _logger;
@@ -39,7 +42,7 @@ namespace Platform.Job.ForexEUR.Repository
                 return;
             }
 
-            var result = JsonSerializer.Deserialize<ExchangeRate>(await response.Content.ReadAsStringAsync(), new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+            var result = JsonSerializer.Deserialize<ExchangeRate>(await response.Content.ReadAsStringAsync(), _jsonOptions);
 
             if (result.Rates.Count <= 0)
             {

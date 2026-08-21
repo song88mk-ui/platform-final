@@ -11,6 +11,9 @@ namespace Platform.Operator.API.Repository
 {
     public class ReportRepository : IReportsRepository
     {
+        // shared instance: JsonSerializerOptions caches type metadata per instance; a fresh instance per call rebuilds it every request
+        private static readonly JsonSerializerOptions _jsonOptions = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+
         private readonly HttpClient _httpClient;
         private readonly IConfiguration _configuration;
 
@@ -30,11 +33,11 @@ namespace Platform.Operator.API.Repository
                 var response = await _httpClient.GetAsync($"v1/reports/runningbalance/{userId}");
 
                 if (response.IsSuccessStatusCode)
-                    return JsonSerializer.Deserialize<RunningBalanceResponse>(await response.Content.ReadAsStringAsync(), new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+                    return JsonSerializer.Deserialize<RunningBalanceResponse>(await response.Content.ReadAsStringAsync(), _jsonOptions);
                 else
                 {
                     if (response.StatusCode == HttpStatusCode.BadRequest)
-                        return JsonSerializer.Deserialize<RunningBalanceResponse>(await response.Content.ReadAsStringAsync(), new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+                        return JsonSerializer.Deserialize<RunningBalanceResponse>(await response.Content.ReadAsStringAsync(), _jsonOptions);
                     else
                     {
                         return new RunningBalanceResponse

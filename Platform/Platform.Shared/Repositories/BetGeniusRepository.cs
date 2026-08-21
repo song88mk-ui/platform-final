@@ -16,6 +16,9 @@ namespace Platform.Shared.Repositories
 {
     public class BetGeniusRepository : IBetGeniusRepository
     {
+        // shared instance: JsonSerializerOptions caches type metadata per instance; a fresh instance per call rebuilds it every request
+        private static readonly JsonSerializerOptions _jsonOptions = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+
         private readonly HttpClient _httpClient;
         private readonly IConfiguration _configuration;
         private readonly IMemCache _memCache;
@@ -69,7 +72,7 @@ namespace Platform.Shared.Repositories
 
                     if (response.IsSuccessStatusCode)
                     {
-                        var initialResult = JsonSerializer.Deserialize<BGAuth>(await response.Content.ReadAsStringAsync(), new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+                        var initialResult = JsonSerializer.Deserialize<BGAuth>(await response.Content.ReadAsStringAsync(), _jsonOptions);
 
                         activity?.SetStatus(ActivityStatusCode.Ok);
 
@@ -149,7 +152,7 @@ namespace Platform.Shared.Repositories
 
                     if (response.IsSuccessStatusCode)
                     {
-                        var initialResult = JsonSerializer.Deserialize<BGEvent>(await response.Content.ReadAsStringAsync(), new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+                        var initialResult = JsonSerializer.Deserialize<BGEvent>(await response.Content.ReadAsStringAsync(), _jsonOptions);
 
                         activity?.SetStatus(ActivityStatusCode.Ok);
 
@@ -264,7 +267,7 @@ namespace Platform.Shared.Repositories
 
                     if (response.IsSuccessStatusCode)
                     {
-                        var initialResult = JsonSerializer.Deserialize<BGLiveStreamResponseDto>(await response.Content.ReadAsStringAsync(), new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+                        var initialResult = JsonSerializer.Deserialize<BGLiveStreamResponseDto>(await response.Content.ReadAsStringAsync(), _jsonOptions);
 
                         activity?.SetStatus(ActivityStatusCode.Ok);
 

@@ -24,6 +24,9 @@ namespace Platform.CashOut.Service.Repository
 {
     public class BettingRepository : IBettingRepository
     {
+        // shared instance: JsonSerializerOptions caches type metadata per instance; a fresh instance per call rebuilds it every request
+        private static readonly JsonSerializerOptions _jsonOptions = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+
         private readonly ILogger<BettingRepository> _logger;
         private readonly IConfiguration _configuration;
         private readonly IServiceScopeFactory _scopeFactory;
@@ -569,7 +572,7 @@ namespace Platform.CashOut.Service.Repository
 
                     if (initial.IsSuccessStatusCode)
                     {
-                        var result = JsonSerializer.Deserialize<BaseResponseDTO<CashoutStateResponseDTO>>(initial.Content.ReadAsStringAsync().Result, new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+                        var result = JsonSerializer.Deserialize<BaseResponseDTO<CashoutStateResponseDTO>>(initial.Content.ReadAsStringAsync().Result, _jsonOptions);
 
                         // For partial cashouts the fresh quote values are for the WHOLE bet and must
                         // be scaled by the requested percent, mirroring Betting.API's original

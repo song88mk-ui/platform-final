@@ -15,6 +15,9 @@ namespace Platform.ClientPlatform.API.Repository
 {
     public class PlatformRepository : IPlatformRepository
     {
+        // shared instance: JsonSerializerOptions caches type metadata per instance; a fresh instance per call rebuilds it every request
+        private static readonly JsonSerializerOptions _jsonOptions = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+
         private readonly IConfiguration _configuration;
         private readonly HttpClient _httpClient;
         private readonly IReadOnlyRepository _readOnlyRepository;
@@ -68,11 +71,11 @@ namespace Platform.ClientPlatform.API.Repository
                 var response = await _httpClient.PostAsync($"v1/bet/cashout", new StringContent(JsonSerializer.Serialize(request), Encoding.UTF8, "application/json"));
 
                 if (response.IsSuccessStatusCode)
-                    return JsonSerializer.Deserialize<BaseResponseDTO<BetCashOutResponseFilteredDTO>>(await response.Content.ReadAsStringAsync(), new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+                    return JsonSerializer.Deserialize<BaseResponseDTO<BetCashOutResponseFilteredDTO>>(await response.Content.ReadAsStringAsync(), _jsonOptions);
                 else
                 {
                     if (response.StatusCode == HttpStatusCode.BadRequest)
-                        return JsonSerializer.Deserialize<BaseResponseDTO<BetCashOutResponseFilteredDTO>>(await response.Content.ReadAsStringAsync(), new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+                        return JsonSerializer.Deserialize<BaseResponseDTO<BetCashOutResponseFilteredDTO>>(await response.Content.ReadAsStringAsync(), _jsonOptions);
                     else
                     {
                         return new BaseResponseDTO<BetCashOutResponseFilteredDTO>

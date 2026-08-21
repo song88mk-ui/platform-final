@@ -11,6 +11,9 @@ namespace Platform.QTech.API.Repository
 {
     public class OperatorRepository : IOperatorRepository
     {
+        // shared instance: JsonSerializerOptions caches type metadata per instance; a fresh instance per call rebuilds it every request
+        private static readonly JsonSerializerOptions _jsonOptions = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+
         private readonly HttpClient _httpClient;
         public OperatorRepository(HttpClient httpClient)
         {
@@ -61,7 +64,7 @@ namespace Platform.QTech.API.Repository
 
                 if (response.IsSuccessStatusCode)
                 {
-                    var result = JsonSerializer.Deserialize<AuthenticationResponseDTO>(await response.Content.ReadAsStringAsync(), new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+                    var result = JsonSerializer.Deserialize<AuthenticationResponseDTO>(await response.Content.ReadAsStringAsync(), _jsonOptions);
 
                     return new BaseResponseDTO<AuthenticationResponseDTO>
                     {
@@ -84,7 +87,7 @@ namespace Platform.QTech.API.Repository
                     {
                         try
                         {
-                            var result = JsonSerializer.Deserialize<AuthenticationResponseDTO>(await response.Content.ReadAsStringAsync(), new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+                            var result = JsonSerializer.Deserialize<AuthenticationResponseDTO>(await response.Content.ReadAsStringAsync(), _jsonOptions);
 
                             //var properties = new Dictionary<string, string>
                             //{
@@ -166,7 +169,7 @@ namespace Platform.QTech.API.Repository
 
                 if (response.IsSuccessStatusCode)
                 {
-                    var result = JsonSerializer.Deserialize<OperatorBetResponseDTO>(await response.Content.ReadAsStringAsync(), new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+                    var result = JsonSerializer.Deserialize<OperatorBetResponseDTO>(await response.Content.ReadAsStringAsync(), _jsonOptions);
 
                     return new BaseResponseDTO<OperatorBetResponseDTO>
                     {
@@ -181,7 +184,7 @@ namespace Platform.QTech.API.Repository
                     {
                         try
                         {
-                            var result = JsonSerializer.Deserialize<OperatorBetResponseDTO>(await response.Content.ReadAsStringAsync(), new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+                            var result = JsonSerializer.Deserialize<OperatorBetResponseDTO>(await response.Content.ReadAsStringAsync(), _jsonOptions);
 
                             switch (result.StatusId)
                             {
@@ -251,7 +254,7 @@ namespace Platform.QTech.API.Repository
 
                 if (response.IsSuccessStatusCode)
                 {
-                    var result = JsonSerializer.Deserialize<OperatorBetResponseDTO>(await response.Content.ReadAsStringAsync(), new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+                    var result = JsonSerializer.Deserialize<OperatorBetResponseDTO>(await response.Content.ReadAsStringAsync(), _jsonOptions);
 
                     return new BaseResponseDTO<OperatorBetResponseDTO>
                     {
@@ -266,7 +269,7 @@ namespace Platform.QTech.API.Repository
                     {
                         try
                         {
-                            var result = JsonSerializer.Deserialize<OperatorBetResponseDTO>(await response.Content.ReadAsStringAsync(), new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+                            var result = JsonSerializer.Deserialize<OperatorBetResponseDTO>(await response.Content.ReadAsStringAsync(), _jsonOptions);
 
                             return new BaseResponseDTO<OperatorBetResponseDTO>
                             {

@@ -65,7 +65,7 @@ projects except `Websocket.API2` (see Archetype A′).
 - The only process-global side effect before host build is the **HTTP/2 cleartext AppContext
   switch** (for OTLP export). **[Verified]**
 
-### Archetype A′ — `Websocket.API2` (net7.0 minimal hosting)
+### Archetype A′ — `Websocket.API2` (minimal hosting)
 Same logical steps, but expressed in **top-level `Program.cs`** (`WebApplicationBuilder` /
 `WebApplication`) — no `Startup` class. Adds SignalR (`AddSignalR`/MessagePack, optional Azure
 SignalR) and maps the `/platform` hub. **[Verified]** — `Platform.Websocket.API2/Program.cs`.

@@ -8,7 +8,6 @@ using Platform.RedCatBetting.API.Telemetry;
 using Platform.RedCatBetting.API.Repositories;
 using Platform.Shared.Data.RedCatBetting;
 using System;
-using Platform.Shared.Telemetry;
 using Platform.Shared.Extensions;
 
 namespace Platform.RedCatBetting.API

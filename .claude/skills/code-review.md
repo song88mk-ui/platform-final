@@ -12,7 +12,7 @@ Review a diff for correctness + platform-final conformance.
 4. **Persistence:** `AsNoTracking` reads; `TransactionScope` multi-write; audit-append; money via proc;
    no Mongo writes.
 5. **Messaging/observability:** correct ack + `CorrelationId`; OTel `Activity` + Serilog; trace through MQ.
-6. **Compatibility:** stays .NET Core 3.1-compatible.
+6. **Compatibility:** builds on .NET 10 (`net10.0`).
 7. **Live variant:** editing the deployed project, not a superseded duplicate (TD-07).
 
 ## Output

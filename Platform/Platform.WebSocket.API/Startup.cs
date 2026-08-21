@@ -7,14 +7,13 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using Microsoft.OpenApi.Models;
+using Microsoft.OpenApi;
 using Platform.Shared.Utility;
 using Platform.WebSocket.API.Data;
 using Platform.WebSocket.API.Repository;
 using Platform.WebSocket.API.Telemetry;
 using System;
 using System.Linq;
-using Platform.Shared.Telemetry;
 using Platform.Shared.Extensions;
 
 namespace Platform.WebSocket.API

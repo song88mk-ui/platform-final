@@ -6,7 +6,7 @@
 > Risk = Likelihood × Impact (H/M/L), a judgment aid.
 
 ## R-1 — `Platform.Shared` blast radius (single shared kernel) — **Risk: High**
-- **Evidence:** 37 projects reference `Platform.Shared`; CI's affected-files check includes
+- **Evidence:** 37 projects reference `Platform.Shared`; CI rebuilds all 26 matrix images on every push to main/PR (no affected-files detection), so any Shared change ships in
   `Platform.Shared/**` for every app → any change rebuilds **all** images; it's the #1 churn area
   (1857 touches).
 - **Files:** `Platform.Shared/**`, `.github/workflows/ci.yml`, every `*.csproj`.
@@ -24,13 +24,15 @@
 - **Suggested investigation:** diff platform-final's `On*`/Mongo field names against odds-engine-2 &
   platform-web; check whether any contract/integration tests exist anywhere in the org.
 
-## R-3 — End-of-life runtime (.NET Core 3.1) — **Risk: High**
-- **Evidence:** ~36 projects on EOL `netcoreapp3.1`; old transitive deps (EF Core 5, RabbitMQ.Client
-  5.2.0, Swashbuckle 5.6/6.0); ad-hoc partial moves to net7/net8; build SDK 6.0 ≠ runtime 3.1.
+## R-3 — End-of-life runtime (.NET Core 3.1) — **Resolved** (2026-08-20, GM-744)
+- **Evidence (historical):** ~36 projects on EOL `netcoreapp3.1`; old transitive deps (EF Core 5,
+  RabbitMQ.Client 5.2.0, Swashbuckle 5.6/6.0); ad-hoc partial moves to net7/net8; build SDK 6.0
+  ≠ runtime 3.1.
 - **Files:** all `*.csproj`; Dockerfiles.
 - **Confidence:** **[Verified]**.
-- **Suggested investigation:** CVE scan of the locked transitive set; inventory of 3.1-only APIs that
-  would block an upgrade.
+- **Resolution:** all 40 projects now target `net10.0`; Docker build and runtime images are both
+  10.0; EF Core 10.0.11 and Swashbuckle 10.2.3 unified. RabbitMQ.Client 5.2.0 (and other
+  wire-format-sensitive packages) deliberately kept for cross-repo safety.
 
 ## R-4 — Secrets exposure in git — **Risk: High**
 - **Evidence:** committed base `appsettings.json` carry live dev/staging DB passwords + keys (prod
@@ -146,7 +148,7 @@
 ## Risk heat summary
 | Risk | L×I | Confidence |
 |------|-----|-----------|
-| R-1 Shared blast radius · R-2 contract coupling · R-3 EOL runtime · R-4 secrets · R-5 SQLi · R-6 no-auth-fallback | **High** | Verified |
+| R-1 Shared blast radius · R-2 contract coupling · ~~R-3 EOL runtime~~ (resolved 2026-08-20, GM-744) · R-4 secrets · R-5 SQLi · R-6 no-auth-fallback | **High** | Verified |
 | R-7 cache coherence · R-8 central broker SPOF | **Med-High** | Verified |
 | R-9 no global exceptions · R-10 thread pools · R-11 cross-store · R-12 BO direct writes · R-13 DbContext lifetime · R-14 duplicates · R-16 tests | **Medium** | Verified/Likely |
 | R-15 inconsistent cross-cutting | **Low-Med** | Verified |

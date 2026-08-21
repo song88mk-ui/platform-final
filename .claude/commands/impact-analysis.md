@@ -3,7 +3,7 @@
 Assess the blast radius of a proposed change **before** making it.
 
 ## Always check
-1. **Is it in `Platform.Shared`?** If yes → **every image rebuilds** (CI affected-files) and behavior
+1. **Is it in `Platform.Shared`?** If yes → **every image rebuilds** (CI always builds all 26 matrix images) and behavior
    may shift platform-wide. Treat message models / entities / enums as public API. (R-1)
 2. **Does it touch a cross-repo contract?** Message field, routing key, Mongo/SQL column, or SignalR
    method name → **up-to-4-repo silent break** (odds-engine-2, platform-web, oddsfeed, backoffice).

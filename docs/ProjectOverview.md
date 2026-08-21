@@ -13,7 +13,7 @@ Legend: **DI styles** — `HttpClient` = typed `AddHttpClient<I,Impl>`; `Scoped`
 ## Shared kernel
 
 ### Platform.Shared `[Verified]`
-- **Purpose:** the single shared library (`netstandard2.1`); see [SharedLibraries.md](SharedLibraries.md).
+- **Purpose:** the single shared library (`net10.0`); see [SharedLibraries.md](SharedLibraries.md).
 - **Responsibilities:** EF Core entities + 8 `DbContext`s, 30 RabbitMQ message contracts,
   189 DTO models, 33 enums, bet/livestream provider integrations (MTS, GTS, BetGenius),
   `MessageBroker`, `MemCache`, `ParlayBonusService`, extension/helper utilities.
@@ -123,7 +123,7 @@ Legend: **DI styles** — `HttpClient` = typed `AddHttpClient<I,Impl>`; `Scoped`
 - **Purpose:** SignalR hub (`Hub<IPlatformEvent>`), `/platform` route, MessagePack, Azure SignalR in prod.
 - **Client methods:** `SubscribeTo{Endpoint,Betslip,BetStatus,CashOutChange,WalletChange,PayableChange,Favorites}` (+ unsubscribe).
 - **Server pushes:** `Publish{OddsChange*,BetStop*,BetStatus,CashOutChange,WalletChange,PayableChange}`.
-- **DbContext:** `PlatformContext`. **API2** targets `net7.0`, adds `Custom:UseMessagePack` toggle + `UserHandler`.
+- **DbContext:** `PlatformContext`. **API2** adds `Custom:UseMessagePack` toggle + `UserHandler`.
 - **Relationship:** `API2` is the modern rewrite of `API`. CI builds **API2** as image `platform-websocket-api`.
 
 ### Platform.WebSocket.Client `[Verified]`
@@ -134,8 +134,9 @@ Legend: **DI styles** — `HttpClient` = typed `AddHttpClient<I,Impl>`; `Scoped`
 ## Background services (RabbitMQ workers)
 
 > All use Generic Host + `BackgroundService` consuming RabbitMQ via `MessageBroker`. `[Verified]`
-> for the ones traced below; `[Likely]` for `Cancellation.Service`, `ESportOperator.Service`,
+> for the ones traced below; `[Likely]` for `ESportOperator.Service`,
 > `Operator.Cashout.Service` (Workers not fully read — see [Unknowns.md](Unknowns.md)).
+> (`Cancellation.Service` is a bin/obj-only orphan dir, not a project — noted 2026-08-20, GM-744.)
 
 | Service | Consumes (message types) | Produces / does | Notable |
 |---------|--------------------------|-----------------|---------|
@@ -146,10 +147,9 @@ Legend: **DI styles** — `HttpClient` = typed `AddHttpClient<I,Impl>`; `Scoped`
 | `Settlement.Service` | `OnBetSettlement/Cancellation/BOCancellation/BOManualSettlement/OddsFeedBetCancellation` | settle → wallet/reports | OpenTelemetry, trace propagation from MQ headers |
 | `CashOut.Service` | `OnBetFullCashOut/PartialCashOut` | cashout via repo + MTS SDK; error → `r.bet.cashout.error` | 100-thread pool; `Custom:IsMTSEnabled` |
 | `CashOutStake.Servicev2` | `OnOddsChange/BetPlacement/Cancellation/Settlement/PartialCashOut/FullCashOut` | maintain active-bet stake cache; republish | EF `BettingContext` + Mongo; preloads active bets |
-| `Cancellation.Service` | `[Likely]` cancellation events | cancel processing | not in CI matrix |
 | `Provider.Service` | `OnBetTimeout/BOCancellation/Cancellation/Settlement` + **Ably** GTS assessment | route to provider; publish `OnBetPlacement` (delayed) | dual channel RabbitMQ + Ably (`ably.io`) |
 | `Operator.Servicev2` | `OnBetTimeout/BOCancellation/Cancellation/Settlement` | provider routing (operator channel) | OpenTelemetry |
-| `Operator.Cashout.Service` | `[Likely]` cashout events | operator cashout | not in CI matrix |
+| `Operator.Cashout.Service` | `[Likely]` cashout events | operator cashout | in CI matrix |
 | `ESportOperator.Service` | `[Unknown]` | eSports operator messaging; `PlatformRepository` | Windows service; not in CI matrix |
 | `CacheSync.Service` | `OnMarketSortOrderChange/SportSortOrderChange/UpdateUserFavorites/Maintenance/ParlayBonusChange/ClientChange/DynamicTranslationChange` | invalidate caches | 7 message types; Windows service |
 | `AgentReports.Service` | `OnBetPlacement/FullCashOut/Settlement/Cancellation/CasinoBetSettlement/ESportBetSettlement` | write reporting DB | Windows service; not in CI matrix |

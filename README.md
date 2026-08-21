@@ -32,16 +32,12 @@ the CI matrix in `.github/workflows/ci.yml` lists what is actually built and dep
 
 ## Target frameworks / prerequisites
 
-- Almost all projects (37) target `netcoreapp3.1` (EOL). `Platform.Shared` is
-  `netstandard2.1`, `Platform.Websocket.API2` is `net7.0`, `Platform.Shared.Test` is
-  `net8.0`.
-- Docker images are built with the .NET SDK 6.0 image and run on the ASP.NET Core 3.1
+- All 40 projects target `net10.0` (since GM-744, 2026-08-20; previously a
+  netcoreapp3.1/netstandard2.1/net7.0/net8.0 spread).
+- Docker images are built with the .NET SDK 10.0 image and run on the ASP.NET Core 10.0
   runtime image (see any `Platform/*/Dockerfile`).
 - To build and run everything locally you therefore need:
-  - A recent .NET SDK (8.0 or later) to build/run `Platform.Websocket.API2` and
-    `Platform.Shared.Test`.
-  - The .NET Core 3.1 runtime (or SDK) installed to run the `netcoreapp3.1` services and
-    `Platform.Sportsbook.API.Test`.
+  - The .NET SDK 10.0.x (the 3.1/6.0/8.0 SDKs are no longer needed).
 - Docker (optional) if you prefer container builds, plus local SQL Server / RabbitMQ /
   MongoDB containers (see "Dependent services").
 - Private NuGet feed: the Dockerfiles register the GitHub Packages feed
@@ -161,7 +157,10 @@ docker run -p 5000:80 \
   platform-api
 ```
 
-Containers listen on port 80. `appsettings.*.json` overrides are deleted from the
+Containers listen on port 80 (each Dockerfile sets `ENV ASPNETCORE_URLS=http://+:80`
+explicitly, because the `aspnet:8.0+` base images default to port 8080; the pin keeps
+the argocd Service `:3000 -> container :80` mapping working). `appsettings.*.json`
+overrides are deleted from the
 published image, so all environment-specific config must come from env vars. This
 mirrors CI (`.github/workflows/ci.yml`), which builds these images and, on release,
 pushes them to AWS ECR for EKS deployment via the sibling `argocd` repo.
@@ -202,7 +201,7 @@ Startup dependencies, traced from `Platform/Platform.Sportsbook.API/Startup.cs` 
      --name github "https://nuget.pkg.github.com/FlyingCockatoo/index.json"
    ```
 
-2. Run the service (needs the .NET Core 3.1 runtime - see "Target frameworks /
+2. Run the service (needs the .NET SDK 10.0.x - see "Target frameworks /
    prerequisites"):
 
    ```
@@ -234,7 +233,8 @@ Startup dependencies, traced from `Platform/Platform.Sportsbook.API/Startup.cs` 
    camelCase with enums as numbers.)
 
 Status: **should work, unverified.** The machine this guide was written on had neither
-the ASP.NET Core 3.1 runtime nor a feed PAT, so steps 2-4 are traced from
+the required .NET runtime (then ASP.NET Core 3.1; .NET 10 since GM-744) nor a feed PAT,
+so steps 2-4 are traced from
 `Startup.cs`, `Properties/launchSettings.json` and the controller/repository source
 rather than executed. If a step fails, please fix this section in your PR.
 
@@ -541,21 +541,19 @@ Plain REST endpoints on the same host (`Controllers/SportsbookController.cs`):
 
 ## Running tests
 
-Two xUnit test projects exist; they target different frameworks and must be run
-separately (see the comment in `Platform.Sportsbook.API.Test.csproj`):
+Two xUnit test projects exist; both target `net10.0`:
 
 ```
-# net8.0 - pure unit tests over the shared kernel
+# pure unit tests over the shared kernel
 dotnet test Platform/Platform.Shared.Test
 
-# netcoreapp3.1 - repository tests with EF Core InMemory; needs the 3.1 runtime
+# repository tests
 dotnet test Platform/Platform.Sportsbook.API.Test
 ```
 
-No external services are required (Sportsbook tests use
-`Microsoft.EntityFrameworkCore.InMemory`). CI does not run tests - it only builds Docker
-images - so run them locally before pushing. New services are expected to ship with a
-matching xUnit test project (see `CLAUDE.md`).
+No external services are required. CI runs both test projects in a PR-only test job
+(`.github/workflows/ci.yml`), but still run them locally before pushing. New services
+are expected to ship with a matching xUnit test project (see `CLAUDE.md`).
 
 ## Dependent services
 

@@ -3,7 +3,7 @@
 "Explain how platform-final is structured and how a [feature] works end-to-end, citing files."
 
 ## Frame the answer with
-- **Style:** microservice, message-driven (.NET Core 3.1); one gateway `Platform.API`; ~18 RabbitMQ
+- **Style:** microservice, message-driven (.NET 10); one gateway `Platform.API`; ~18 RabbitMQ
   workers; SignalR edge (`Websocket.API2`).
 - **Spine:** RabbitMQ topic exchange `e.central`; routing keys `r.bet.*`/`r.wallet.*` (platform),
   `r.oe.*` (odds engines).

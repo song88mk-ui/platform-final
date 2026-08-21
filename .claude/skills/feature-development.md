@@ -18,5 +18,5 @@ Add a backend feature the way this team builds them.
    `/update-docs`.
 
 ## Guardrails
-3.1-compatible; new controller ⇒ filter; parameterized SQL; no new secrets; no new pattern when an
+Builds on .NET 10 (net10.0); new controller ⇒ filter; parameterized SQL; no new secrets; no new pattern when an
 established one exists (don't add AutoMapper/FluentValidation/MediatR/`IOptions<T>`). UI ⇒ platform-web.

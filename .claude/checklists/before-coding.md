@@ -10,5 +10,5 @@
 - [ ] **Data path chosen** (EF/proc/Mongo-read/HTTP) consistent with the area; no Mongo writes.
 - [ ] **Auth:** new controller will get a `[ServiceFilter]`.
 - [ ] **Config/secrets:** values via config/SSM, no hardcoding, no new committed secrets.
-- [ ] **Compatibility:** change stays .NET Core 3.1-compatible.
+- [ ] **Compatibility:** change builds on .NET 10 (`net10.0`).
 - [ ] **Unknowns checked** ([docs/Unknowns.md](../../docs/Unknowns.md)) for anything you're assuming.

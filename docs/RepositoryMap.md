@@ -10,12 +10,12 @@
 Platform/
 ├── Platform.Shared/              ← shared kernel: entities, 8 DbContexts, message contracts,
 │   ├── Data/ (8 contexts)            providers, MessageBroker, MemCache, enums, DTOs
-│   ├── MessageModels/ (30)          (netstandard2.1; referenced by everything)
+│   ├── MessageModels/ (30)          (net10.0; referenced by everything)
 │   ├── Providers/ (MTS, GTS, BGLiveStream + factories)
 │   ├── Repositories/ (BetGenius, GTS, MTS auth/maxstake)
 │   ├── Enums/ (33)  Models/ (189)  Extensions/  Helpers/  Services/  Utility/
 │   └── DatabaseScripts/
-├── Platform.Shared.Test/         ← test project (net8.0)
+├── Platform.Shared.Test/         ← test project
 │
 │  ── EDGE / PUBLIC APIs ──
 ├── Platform.API/                 ← main public integration gateway (auth, bet, wallet, sportsbook)
@@ -37,8 +37,8 @@ Platform/
 │
 │  ── MESSAGING / REAL-TIME ──
 ├── Platform.RabbitMQ.API/        ← HTTP→AMQP publish bridge (/v1/broker/publish)
-├── Platform.WebSocket.API/       ← SignalR hub (MessagePack/Azure SignalR), client push (3.1)
-├── Platform.Websocket.API2/      ← newer SignalR hub rewrite (net7.0)
+├── Platform.WebSocket.API/       ← SignalR hub (MessagePack/Azure SignalR), client push (superseded)
+├── Platform.Websocket.API2/      ← newer SignalR hub rewrite (the one CI ships)
 ├── Platform.WebSocket.Client/    ← sample/test SignalR console client
 │
 │  ── BACKGROUND SERVICES (RabbitMQ workers) ──
@@ -49,7 +49,6 @@ Platform/
 ├── Platform.Settlement.Service/  ← settlement/cancellation/manual settlement (OpenTelemetry)
 ├── Platform.CashOut.Service/     ← full/partial cashout, 100-thread pool, MTS SDK
 ├── Platform.CashOutStake.Servicev2/← maintains active-bet cashout stakes; reacts to OnOddsChange
-├── Platform.Cancellation.Service/← bet cancellation processing
 ├── Platform.Provider.Service/    ← routes bet events to bet providers; Ably realtime GTS assessment
 ├── Platform.Operator.Servicev2/  ← operator-channel bet event → provider routing (OpenTelemetry)
 ├── Platform.Operator.Cashout.Service/ ← operator-channel cashout processing

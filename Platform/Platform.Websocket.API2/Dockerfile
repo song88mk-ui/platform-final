@@ -1,4 +1,4 @@
-FROM mcr.microsoft.com/dotnet/sdk:7.0 AS build
+FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
 
 WORKDIR /source
 
@@ -26,7 +26,9 @@ RUN dotnet publish \
   rm -r appsettings.*.json
 
 
-FROM mcr.microsoft.com/dotnet/aspnet:7.0
+FROM mcr.microsoft.com/dotnet/aspnet:10.0
+ENV ASPNETCORE_URLS=http://+:80
+EXPOSE 80
 WORKDIR /app
 
 COPY --from=build /source/Platform.WebSocket.API/publish .

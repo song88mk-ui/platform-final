@@ -13,6 +13,6 @@ End-to-end procedure for a backend feature in platform-final.
    `IMessageBroker`/`RabbitMQ.API`, consume in a `Worker` (right ack + `CorrelationId`).
 6. **Cross-cutting:** OTel `Activity` + Serilog; read-through `IMemCache` + invalidation if cached.
 7. **Impact:** `/impact-analysis` — verify `Platform.Shared`/contract changes against siblings (R-2).
-8. **Verify:** build (3.1-compatible); `/review-feature`; [.claude/checklists/before-pull-request.md](../checklists/before-pull-request.md).
+8. **Verify:** build (.NET 10 / net10.0); `/review-feature`; [.claude/checklists/before-pull-request.md](../checklists/before-pull-request.md).
 9. **Docs:** `/update-docs`.
 10. **Commit/PR only if asked.**

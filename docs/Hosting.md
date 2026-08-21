@@ -8,17 +8,17 @@
 | Host type | Builder | Projects |
 |-----------|---------|----------|
 | ASP.NET Core (Kestrel) | `Host.CreateDefaultBuilder` + `ConfigureWebHostDefaults` + `UseStartup<Startup>` | all `*.API` except `Websocket.API2` |
-| ASP.NET Core minimal hosting | `WebApplication.CreateBuilder` (top-level) | `Platform.Websocket.API2` (net7.0) |
+| ASP.NET Core minimal hosting | `WebApplication.CreateBuilder` (top-level) | `Platform.Websocket.API2` |
 | Generic Host (worker) | `Host.CreateDefaultBuilder` + `ConfigureServices` + `AddHostedService<Worker>` | 18 services/jobs `[Verified]` |
 | None (console) | `static Main` | `Platform.BetPlacement.Console` |
 
 ## Web server & network binding
 - **Server:** Kestrel (the `ConfigureWebHostDefaults` default). No `UseKestrel`/`ConfigureKestrel`/
   `UseUrls`/`ListenAnyIP` anywhere — **zero custom Kestrel configuration**. **[Verified]**
-- **Port:** comes from the environment, not code. The runtime image
-  `mcr.microsoft.com/dotnet/aspnet:3.1` sets `ASPNETCORE_URLS=http://+:80`, and the Dockerfile
-  `EXPOSE 80`. So containers listen on **:80**. **[Verified]** (Dockerfile) / **[Likely]** (the
-  ASPNETCORE_URLS default of the base image).
+- **Port:** comes from the environment, not code. Since GM-744 (2026-08-20) the runtime image
+  is `mcr.microsoft.com/dotnet/aspnet:10.0`, which defaults to port **8080** — so every
+  Dockerfile now sets `ENV ASPNETCORE_URLS=http://+:80` explicitly, plus `EXPOSE 80`. So
+  containers still listen on **:80**. **[Verified]** (Dockerfile).
 - TLS termination and the `:80→:3000` Service mapping are handled by the ingress / K8s layer
   (sibling `argocd`), not by these processes. **[Likely]** — see [Configuration.md](Configuration.md).
 - **`ForwardedHeaders`** middleware is enabled so the apps trust `X-Forwarded-For`/`-Proto` from
@@ -69,7 +69,10 @@ over **gRPC (HTTP/2) without TLS** to the in-cluster collector. See [Logging.md]
 - No custom `IHostApplicationLifetime` hooks or graceful-drain logic were found. Workers using
   manual ack rely on RabbitMQ redelivery if killed mid-process. **[Verified]**
 
-## Runtime image (recap from Phase 1) `[Verified]`
-Multi-stage Docker: build `dotnet/sdk:6.0` → run `dotnet/aspnet:3.1`, `EXPOSE 80`,
-`CMD ["/usr/bin/dotnet","Platform.<Name>.dll"]`, private GitHub NuGet feed, AWS RDS/DocumentDB
-CA bundle installed, env-specific `appsettings.*.json` stripped from the published output.
+## Runtime image (recap; updated 2026-08-20, GM-744) `[Verified]`
+Multi-stage Docker: build `dotnet/sdk:10.0` → run `dotnet/aspnet:10.0`,
+`ENV ASPNETCORE_URLS=http://+:80` + `EXPOSE 80` (aspnet:8.0+ defaults to :8080 — the pin
+preserves the argocd Service `:3000 → :80` mapping), `CMD ["dotnet","Platform.<Name>.dll"]` (Placement.Servicev2: `entrypoint.sh`; Websocket.API2: `ENTRYPOINT`)
+(portable form), private GitHub NuGet feed, AWS RDS/DocumentDB CA bundle installed
+(fetched via Dockerfile `ADD <url>` + `update-ca-certificates` where needed — curl is not
+in the aspnet:10.0 image), env-specific `appsettings.*.json` stripped from the published output.

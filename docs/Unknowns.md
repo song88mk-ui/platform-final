@@ -30,15 +30,19 @@
   primary. *Resolve by:* the consuming services' routing-key config + ops knowledge.
 
 ## Services not fully traced
-- **U-04** `Cancellation.Service`, `ESportOperator.Service`, `Operator.Cashout.Service` —
+- **U-04** `ESportOperator.Service`, `Operator.Cashout.Service` —
   `Worker.cs` not read in depth; consumed/produced message types are **[Likely]/Unknown**.
+  (`Cancellation.Service` removed from this list 2026-08-20, GM-744: it is a bin/obj-only
+  orphan dir, not a project.)
 - **U-05** `Job.ForexEUR` and `Job.Operator.Score` — loop interval and exact processing
   **Unknown** (only the data sources are known).
 
 ## Build / deploy
-- **U-06** Why ~13 projects (QTech, RedCat*, Oddin, AgentReports*, Cancellation, ESportOperator,
-  Operator.Cashout, WebSocket.API, etc.) are **absent from the CI matrix** — separate pipeline,
-  manual deploy, or inactive? *Resolve by:* checking `argocd` apps + any other CI in the org.
+- **U-06** Why several shipping projects (QTech, RedCat*, Oddin, AgentReports*, ESportOperator,
+  WebSocket.API, etc.) are **absent from the CI matrix** — separate pipeline,
+  manual deploy, or inactive? (Corrected 2026-08-20, GM-744: `Operator.Cashout.Service` **is**
+  in the matrix; `Cancellation.Service` is a bin/obj-only orphan dir, not a project.)
+  *Resolve by:* checking `argocd` apps + any other CI in the org.
 - ~~**U-07** K8s Service port mapping (container :80 vs :3000).~~ **RESOLVED (Phase 5, argocd):**
   K8s service exposes **:3000** (`platform-app` chart), container Kestrel on :80.
 - ~~**U-08** Runtime config injection mechanism.~~ **RESOLVED (Phase 5, argocd/infrastructure):**
@@ -52,7 +56,7 @@
 - ~~**U-19** Whether the production odds WebSocket at `websocket-api.*/platform` is served by
   platform-final's `Websocket.API2` or an odds-engine-2-owned hub.~~ **RESOLVED (maintainer
   confirmed):** the `websocket-api/platform` hub **is platform-final's `Platform.Websocket.API2`**
-  (net7.0); `WebSocket.API` is the superseded 3.1 original. See
+  (then net7.0, now net10.0); `WebSocket.API` is the superseded original. See
   [WebSocketContracts.md](WebSocketContracts.md). *Remaining sub-detail (now narrowed):*
   `Websocket.API2` has **no in-process feeder** (verified — no RabbitMQ consumer/BackgroundService;
   controller only `v1/heartbeat`+`v1/connections`), so the `r.oe.sb.engine.*` → `Publish*` feeder is

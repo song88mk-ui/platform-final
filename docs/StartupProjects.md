@@ -23,7 +23,7 @@ forwarded headers → Swagger → routing → CORS → authorization → endpoin
 Projects: `Platform.API`, `Betting.API`, `Sportsbook.API`, `ClientSportsbook.API`,
 `ClientPlatform.API`, `Client.API`, `Operator.API`, `Wallet.API`, `Oddin.API`, `QTech.API`,
 `RedCat.API`, `RedCatBetting.API`, `RedCatOperator.API`, `AgentReports.API`, `RabbitMQ.API`,
-`WebSocket.API`. **Exception:** `Websocket.API2` uses the `net7.0` **minimal-hosting** style
+`WebSocket.API`. **Exception:** `Websocket.API2` uses the **minimal-hosting** style
 (everything in `Program.cs`, no `Startup.cs`). **[Verified]**
 
 > Some web hosts (`Client.API`, `ClientSportsbook.API`) do **not** configure Serilog in
@@ -69,17 +69,20 @@ and runs nested loops placing test bets. **[Verified]**
 ## Deployment entry points
 
 The set of projects that ship as their own container is the **CI matrix** in
-`.github/workflows/ci.yml` (26 apps), each with a `Dockerfile` whose `CMD` runs
+`.github/workflows/ci.yml` (26 apps, including `Operator.Cashout.Service`), each with a
+`Dockerfile` whose `CMD` runs
 `Platform.<Name>.dll`. **[Verified]**. Projects not in the matrix (QTech, RedCat*, Oddin,
-AgentReports*, Cancellation, ESportOperator, Operator.Cashout, WebSocket.API, Client/sample,
-console, Shared, Shared.Test) are either deployed by another pipeline, deployed manually, or
+AgentReports*, ESportOperator, WebSocket.API, Client/sample,
+console, Shared, tests) are either deployed by another pipeline, deployed manually, or
 inactive — **[Unknown]**; see [Unknowns.md](Unknowns.md).
 
-## Container boot (runtime image) `[Verified]`
-- Base runtime image: `mcr.microsoft.com/dotnet/aspnet:3.1`, `EXPOSE 80`, `WORKDIR /app`.
-- Entry: `CMD ["/usr/bin/dotnet", "Platform.<Name>.dll"]`.
-- Web hosts therefore listen on **port 80** in-container. Internal service DNS (per sibling
-  `argocd`/`backoffice-final` config) targets port **3000** — meaning the K8s Service maps
-  3000→80. **[Likely]** (the 3000 figure comes from sibling config, not this repo).
+## Container boot (runtime image) `[Verified]` (updated 2026-08-20, GM-744)
+- Base runtime image: `mcr.microsoft.com/dotnet/aspnet:10.0`, with an explicit
+  `ENV ASPNETCORE_URLS=http://+:80` (the aspnet:8.0+ images default to port 8080),
+  `EXPOSE 80`, `WORKDIR /app`.
+- Entry: `CMD ["dotnet", "Platform.<Name>.dll"]` (portable form; was `/usr/bin/dotnet`). Exceptions: Placement.Servicev2 runs `entrypoint.sh` (MTS config injection); Websocket.API2 uses `ENTRYPOINT`.
+- Web hosts therefore still listen on **port 80** in-container. Internal service DNS (per
+  sibling `argocd`/`backoffice-final` config) targets port **3000** — meaning the K8s Service
+  maps 3000→80. **[Likely]** (the 3000 figure comes from sibling config, not this repo).
 - `appsettings.*.json` (environment overrides) are **deleted** from the published output in
   the build stage; runtime config is expected from environment/mounted config. **[Verified]**

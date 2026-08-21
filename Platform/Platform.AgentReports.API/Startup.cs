@@ -5,7 +5,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using Microsoft.OpenApi;
+using Microsoft.OpenApi.Models;
 using Platform.AgentReports.API.ActionFilters;
 using Platform.AgentReports.API.Repository;
 using Platform.Shared.Data.Reports;

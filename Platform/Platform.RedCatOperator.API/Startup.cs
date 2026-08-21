@@ -7,6 +7,7 @@ using Microsoft.Extensions.Hosting;
 using Platform.RedCatOperator.API.Telemetry;
 using Platform.RedCatOperator.API.Repositories;
 using Platform.Shared.Data.Platform;
+using Platform.Shared.Telemetry;
 using Platform.Shared.Extensions;
 
 namespace Platform.RedCatOperator.API

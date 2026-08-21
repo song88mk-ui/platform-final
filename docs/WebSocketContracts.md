@@ -52,7 +52,7 @@ Hub `Publish*` methods on platform-final send these named events:
 
 ## Hub ownership & origin of pushes `[Verified]` (hub) / `[Likely]` (feeder)
 - **The production `websocket-api/platform` hub IS platform-final's `Platform.Websocket.API2`**
-  (the live SignalR hub, net10.0 since GM-744). **[Verified — confirmed by maintainer]**. `Platform.WebSocket.API`
+  (the `net7.0` SignalR hub). **[Verified — confirmed by maintainer]**. `Platform.WebSocket.API`
   (the 3.1 original) is superseded; CI ships `Websocket.API2` as image `platform-websocket-api`.
 - **What feeds it:** odds/bet-stop pushes are driven by `r.oe.sb.engine.*` messages originating
   from **odds-engine-2**, which reach the hub's `PublishOddsChangeForMainMarkets` /

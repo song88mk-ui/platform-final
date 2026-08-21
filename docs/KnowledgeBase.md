@@ -53,9 +53,9 @@ Rejected=6000, Cancelled=7000, CashedOut=8000`. **[Verified]**
 - **Business errors return HTTP 400**, not 2xx — check `StatusCode` in the body, not the HTTP code. `[Verified]`
 - Some endpoints **return exception stack traces** in the response body. `[Verified]` (debt)
 - `appsettings.Development.json` is gitignored — local devs need their own. `[Verified]`
-- Build and runtime images are both **10.0** since GM-744 (2026-08-20); all projects target `net10.0`. `[Verified]`
+- Build SDK (6.0) ≠ runtime (3.1): code must stay **3.1-compatible** despite a newer build SDK. `[Verified]`
 - `Platform.Shared` change ⇒ **all** images rebuild and behavior can shift platform-wide. `[Verified]`
-- Two WebSocket APIs exist; **`Websocket.API2`** is the one CI ships as `platform-websocket-api`. `[Verified]`
+- Two WebSocket APIs exist; **`Websocket.API2` (net7.0)** is the one CI ships as `platform-websocket-api`. `[Verified]`
 - Prefer **`odds-engine-2`** over `oddsengine` for any odds-engine reasoning. (project rule)
 - `WalletContext` lives in `Platform.Wallet.API`, not `Platform.Shared`. `[Verified]`
 

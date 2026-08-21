@@ -66,6 +66,7 @@ namespace Platform.WebSocket.API.Repository
                                 { "ConnectedTimestamp", DateTime.UtcNow.ToString() }
                             };
 
+            //_telemetryClient.TrackEvent("e:OnConnectedAsync", properties);
 
             using (var activity = _activitySource.StartActivity("websocket.connect"))
             {
@@ -107,6 +108,7 @@ namespace Platform.WebSocket.API.Repository
                                 { "DisconnectedTimestamp", DateTime.UtcNow.ToString() }
                             };
 
+            //_telemetryClient.TrackEvent("e:OnDisconnectedAsync", properties);
 
             using (var activity = _activitySource.StartActivity("websocket.disconnect"))
             {
@@ -131,6 +133,7 @@ namespace Platform.WebSocket.API.Repository
 
             _logger.LogInformation($"SubscribeToEndpoint: {JsonSerializer.Serialize(properties)}");
 
+            //_telemetryClient.TrackEvent("e:SubscribeToEndpoint", properties);
 
             var client = await GetClient(request.ClientId);
 
@@ -153,6 +156,7 @@ namespace Platform.WebSocket.API.Repository
                             };
             _logger.LogInformation($"UnsubscribeToEndpoint: {JsonSerializer.Serialize(properties)}");
 
+            _telemetryClient.TrackEvent("e:UnsubscribeToEndpoint", properties);
 
             var client = await GetClient(request.ClientId);
 

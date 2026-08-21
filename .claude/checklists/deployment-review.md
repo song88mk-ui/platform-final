@@ -2,7 +2,7 @@
 
 - [ ] **CI image exists** for the project in [.github/workflows/ci.yml](../../.github/workflows/ci.yml)
       (note: several integrations are absent from CI — TD-09; confirm their deploy path).
-- [ ] **Dockerfile** present; multi-stage build SDK 10.0 → runtime aspnet:10.0; `ENV ASPNETCORE_URLS=http://+:80` + `EXPOSE 80`;
+- [ ] **Dockerfile** present; multi-stage build SDK 6.0 → runtime aspnet:3.1; `EXPOSE 80`;
       private NuGet feed (`NUGET_PASSWORD`); DocumentDB CA bundle if it reads Mongo.
 - [ ] **Config externalized:** all secrets/connection strings come from **SSM via External Secrets**
       (`Section__Key` env vars); committed `appsettings.json` is dev/staging fallback only (TD-01).

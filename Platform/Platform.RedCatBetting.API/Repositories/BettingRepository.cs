@@ -1,4 +1,5 @@
-﻿using Platform.Shared.Data.RedCatBetting;
+﻿using Google.Protobuf.WellKnownTypes;
+using Platform.Shared.Data.RedCatBetting;
 using Platform.Shared.Data.RedCatBetting.Entities;
 using Platform.Shared.Enums;
 using Platform.Shared.Extensions;

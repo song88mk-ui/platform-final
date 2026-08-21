@@ -21,5 +21,5 @@ Task<BaseResponseDTO<TResponse>> DoThing(TRequest request, CancellationToken ct 
 remember consumers map it (R-2) — coordinate with platform-web.
 
 ## 4. Checklist
-`/impact-analysis` · `[ServiceFilter]` present · parameterized SQL · no secrets · builds on net10.0 ·
+`/impact-analysis` · `[ServiceFilter]` present · parameterized SQL · no secrets · 3.1-compatible ·
 `/update-docs` (`PublicApiSurface.md` + `knowledge/PlatformApiEndpoints.md`).

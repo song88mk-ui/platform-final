@@ -1,4 +1,4 @@
-FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
+FROM mcr.microsoft.com/dotnet/sdk:9.0 AS build
 
 WORKDIR /source
 
@@ -18,7 +18,9 @@ RUN dotnet nuget add source \
 RUN dotnet restore
 RUN dotnet build \
   --no-restore \
-  --configuration Release
+  --configuration Release \
+  /p:SuppressTfmSupportBuildWarnings=true \
+  /p:CheckEolTargetFramework=false
 
 RUN dotnet publish \
   --no-restore \
@@ -27,8 +29,7 @@ RUN dotnet publish \
   rm -f App.config && \
   rm -f appsettings.*.json
 
-FROM mcr.microsoft.com/dotnet/aspnet:10.0
-ENV ASPNETCORE_URLS=http://+:80
+FROM mcr.microsoft.com/dotnet/aspnet:3.1
 WORKDIR /app
 
 COPY --from=build /source/Platform.Placement.Servicev2/publish .

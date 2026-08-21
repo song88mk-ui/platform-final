@@ -30,7 +30,9 @@ jobs:
       - name: Setup .NET SDKs
         uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
         with:
-          dotnet-version: 10.0.x
+          dotnet-version: |
+            3.1.x
+            8.0.x
 
       - name: Add NuGet source
         run: |
@@ -39,6 +41,16 @@ jobs:
             --password ${{ secrets.NUGET_PASSWORD }} \
             --store-password-in-clear-text \
             --name github "https://nuget.pkg.github.com/FlyingCockatoo/index.json"
+
+      - name: Install libssl1.1 (netcoreapp3.1 runtime dependency)
+        # netcoreapp3.1's test host requires libssl1.1, but Ubuntu dropped it from its repos
+        # as of 24.04 (the current ubuntu-latest), which ships libssl3 only — so it can't be
+        # apt-installed and has to be pulled from Ubuntu's archived security package instead.
+        # Remove this step once Platform.Sportsbook.API.Test is upgraded off netcoreapp3.1.
+        run: |
+          curl -sSL -O http://security.ubuntu.com/ubuntu/pool/main/o/openssl/libssl1.1_1.1.1f-1ubuntu2.24_amd64.deb
+          sudo dpkg -i libssl1.1_1.1.1f-1ubuntu2.24_amd64.deb
+          rm libssl1.1_1.1.1f-1ubuntu2.24_amd64.deb
 
       - name: Test ${{ matrix.project }}
         run: dotnet test Platform/${{ matrix.project }}/${{ matrix.project }}.csproj --configuration Release

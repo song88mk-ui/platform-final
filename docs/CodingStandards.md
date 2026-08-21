@@ -7,8 +7,8 @@
 > [BestPractices.md](BestPractices.md) / [AntiPatterns.md](AntiPatterns.md). Confidence **High [Verified]**.
 
 ## Language & framework
-- C# on **`net10.0`** for all 40 projects (since 2026-08-20, GM-744; previously a
-  netcoreapp3.1/netstandard2.1/net7.0/net8.0 mix). **[Verified]**
+- C# on **`netcoreapp3.1`** (default C# 8.0) for ~36 projects; `Platform.Shared` `netstandard2.1`;
+  `Websocket.API2` `net7.0`; `Shared.Test` `net8.0`. **[Verified]**
 - **No `<Nullable>enable</Nullable>`**, **no `<LangVersion>`** — nullable off; null-safety is manual
   (`string.IsNullOrEmpty/WhiteSpace`). **[Verified]**
 
@@ -46,7 +46,7 @@ CORS is allow-all; `ForwardedHeaders` trusts all upstreams. See [MiddlewarePipel
 `Activity`, call the repository, `switch` on `StatusCode`, return `Ok`/`BadRequest`.
 
 ## Data access `[Verified]`
-EF Core 10 LINQ with `AsNoTracking` for reads; **manual mapping via `.Select`** (no AutoMapper);
+EF Core 5 LINQ with `AsNoTracking` for reads; **manual mapping via `.Select`** (no AutoMapper);
 stored procs for money/reporting; Mongo read-only projection-first; `TransactionScope` (ReadCommitted)
 for multi-write ops; **DB-first** (no migrations). See [PersistencePatterns.md](PersistencePatterns.md).
 
@@ -69,12 +69,10 @@ Two client APIs lack Serilog; some lack OTel. See [Logging.md](Logging.md).
 ## Documentation & tests `[Verified]`
 - Sparse XML doc comments; the boilerplate `// This method gets called by the runtime` left in
   `Startup`. No README beyond a stub (this `docs/` set is the first real documentation).
-- Only `Platform.Shared.Test` and `Platform.Sportsbook.API.Test` exist (run by a PR-only CI
-  test job); broad automated test coverage is not evident.
+- Only `Platform.Shared.Test` exists (net8.0); broad automated test coverage is not evident.
 
 ## Known inconsistencies (not standards) `[Verified]`
-Serilog/OTel adoption uneven; Mongo driver version drift (2.11.6 vs 2.13.1; Swashbuckle and
-EF Core were unified by GM-744, 2026-08-20); `Async` suffix
+Serilog/OTel adoption uneven; Swashbuckle 5.6 vs 6.0; EF/Mongo driver version drift; `Async` suffix
 inconsistent; duplicated `MessageBroker` in some services; misspelled identifiers
 (`InserOrUpdate…`, `Fibonnaci`, `ProcesssBetPlacement`, `OnBOBetCancellaton`). See
 [NamingConventions.md](NamingConventions.md), [AntiPatterns.md](AntiPatterns.md).

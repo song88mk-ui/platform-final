@@ -1,4 +1,4 @@
-FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
+FROM mcr.microsoft.com/dotnet/sdk:6.0 AS build
 
 WORKDIR /source
 
@@ -25,14 +25,13 @@ RUN dotnet publish \
   cd publish && \
   rm -f appsettings.*.json
 
-FROM mcr.microsoft.com/dotnet/aspnet:10.0
-ENV ASPNETCORE_URLS=http://+:80
+FROM mcr.microsoft.com/dotnet/aspnet:3.1
 EXPOSE 80
 WORKDIR /app
 
-# We need the cert to connect to the DocumentDB cluster (ADD instead of curl: curl is not in aspnet:10.0)
-ADD https://truststore.pki.rds.amazonaws.com/global/global-bundle.pem /usr/local/share/ca-certificates/aws-global-bundle.crt
-RUN update-ca-certificates
+# We need the cert to connect to the DocumentDB cluster
+RUN curl -o /usr/local/share/ca-certificates/aws-global-bundle.crt https://truststore.pki.rds.amazonaws.com/global/global-bundle.pem && \
+    update-ca-certificates
 
 COPY --from=build /source/Platform.CashOutStake.Servicev2/publish .
-CMD ["dotnet", "Platform.CashOutStake.Servicev2.dll"]
+CMD ["/usr/bin/dotnet", "Platform.CashOutStake.Servicev2.dll"]

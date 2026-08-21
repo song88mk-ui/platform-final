@@ -1,4 +1,6 @@
-﻿namespace Platform.Shared.Models
+﻿using Newtonsoft.Json;
+
+namespace Platform.Shared.Models
 {
     public class OperatorCasinoBetPlacementRequestDTO
     {

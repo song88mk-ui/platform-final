@@ -37,7 +37,7 @@ namespace Platform.ClientSportsbook.API.Repository
             {
                 var result = await redisDb.StringGetAsync(key.ToLower());
 
-                return result.IsNullOrEmpty ? null : JsonSerializer.Deserialize<TVal>((string)result);
+                return result.IsNullOrEmpty ? null : JsonSerializer.Deserialize<TVal>(result);
             }
 
             return null;

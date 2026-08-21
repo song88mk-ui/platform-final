@@ -25,15 +25,12 @@
 - **Confidence:** **[Verified]** (pattern); exploitability **[Likely]** (input-trust dependent).
 - **Suggested investigation:** trace whether interpolated values are caller-controlled.
 
-### TD-02 — End-of-life runtime (.NET Core 3.1 / netstandard2.1) — **Resolved** (2026-08-20, GM-744)
-- **Evidence (historical):** ~36 projects `netcoreapp3.1`; Shared `netstandard2.1`; old transitive
-  deps; partial net7/net8 moves.
+### TD-02 — End-of-life runtime (.NET Core 3.1 / netstandard2.1)
+- **Evidence:** ~36 projects `netcoreapp3.1`; Shared `netstandard2.1`; old transitive deps; partial
+  net7/net8 moves.
 - **Files:** all `*.csproj`.
 - **Confidence:** **[Verified]**.
-- **Resolution:** all 40 projects now target `net10.0`; EF Core unified at 10.0.11,
-  Microsoft.Extensions.* at 10.0.11, Swashbuckle at 10.2.3. Wire-format-sensitive packages
-  (RabbitMQ.Client 5.2.0, MongoDB.Driver 2.11.6/2.13.1, Newtonsoft.Json 12.0.3,
-  Sportradar.MTS.SDKCore 2.4.1.2) deliberately unchanged for cross-repo safety.
+- **Suggested investigation:** CVE scan of the locked dependency set; 3.1-only API inventory.
 
 ### TD-03 — Hardcoded credentials/endpoints (`BetPlacement.Console`)
 - **Evidence:** staging gateway URL + `x-client-id`/`x-operator-token`/`x-api-key`/IP hardcoded.
@@ -49,13 +46,11 @@
 
 ## Medium severity
 
-### TD-05 — Build-SDK / runtime version mismatch — **Resolved** (2026-08-20, GM-744)
-- **Evidence (historical):** Dockerfiles built on `dotnet/sdk:6.0`, ran on `dotnet/aspnet:3.1`.
+### TD-05 — Build-SDK / runtime version mismatch
+- **Evidence:** Dockerfiles build on `dotnet/sdk:6.0`, run on `dotnet/aspnet:3.1`.
 - **Files:** `Platform.*/Dockerfile`.
 - **Confidence:** **[Verified]**.
-- **Resolution:** all 31 Dockerfiles now build on `dotnet/sdk:10.0` and run on
-  `dotnet/aspnet:10.0`, with `ENV ASPNETCORE_URLS=http://+:80` pinned in the runtime stage
-  (aspnet:8.0+ defaults to port 8080) and portable `CMD ["dotnet", "<App>.dll"]` (exceptions: Placement.Servicev2 runs `entrypoint.sh`; Websocket.API2 uses `ENTRYPOINT`).
+- **Suggested investigation:** check for any 6.0-only API usage that could fail at runtime.
 
 ### TD-06 — Hand-rolled 100-thread fan-out consumers
 - **Evidence:** raw `new Thread` + `BlockingCollection` round-robin.
@@ -73,28 +68,21 @@
 
 ### TD-08 — Inconsistent cross-cutting adoption
 - **Evidence:** `Client.API`/`ClientSportsbook.API` lack Serilog; `Client.TopMarket` lacks OTel;
-  ~~Swashbuckle 5.6 vs 6.0; EF Core patch drift~~ (resolved 2026-08-20, GM-744: Swashbuckle
-  unified 10.2.3, EF Core unified 10.0.11); MongoDB driver drift (2.11.6 vs 2.13.1) remains
-  (deliberately untouched by GM-744); `Async` suffix uneven.
+  Swashbuckle 5.6 vs 6.0; EF Core patch + MongoDB driver drift (2.11.6 vs 2.13.1); `Async` suffix uneven.
 - **Files:** those projects' `Program.cs`/`.csproj`.
 - **Confidence:** **[Verified]**.
 - **Suggested investigation:** observability-coverage + dependency-version audit.
 
 ### TD-09 — Shipping integrations absent from CI
-- **Evidence:** QTech, RedCat*, Oddin, AgentReports*, ESportOperator,
-  WebSocket.API (v1) not in the CI image matrix (`Operator.Cashout.Service` **is** in the matrix;
-  `Cancellation.Service` is a bin/obj-only orphan dir, not a project). Because CI never built them,
-  6 of these projects carried an unnoticed compile break since commit `95add342` (stale
-  `using Platform.Shared.Telemetry;`, missing `Infra.Extensions.Telemetry` ref) — fixed 2026-08-20,
-  GM-744, but the CI gap itself remains.
+- **Evidence:** QTech, RedCat*, Oddin, AgentReports*, Cancellation, ESportOperator, Operator.Cashout,
+  WebSocket.API (v1) not in the CI image matrix.
 - **Files:** `.github/workflows/ci.yml` vs project list.
 - **Confidence:** **[Verified]** (absence); deploy path **[Unknown]**.
 - **Suggested investigation:** check argocd/other pipelines for how these are built/deployed (U-06).
 
 ### TD-10 — Thin automated-test net
-- **Evidence:** only `Platform.Shared.Test` and `Platform.Sportsbook.API.Test` (run by a PR-only CI
-  test job); broad coverage not evident.
-- **Files:** `Platform.Shared.Test/*`, `Platform.Sportsbook.API.Test/*`.
+- **Evidence:** only `Platform.Shared.Test`; broad coverage not evident.
+- **Files:** `Platform.Shared.Test/*`.
 - **Confidence:** **[Likely]**.
 - **Suggested investigation:** measure coverage; identify untested high-risk paths (settlement/cashout/placement).
 

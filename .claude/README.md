@@ -45,5 +45,5 @@ don't invent behavior.
 1. `Platform.Shared` change = platform-wide rebuild (R-1).
 2. Cross-repo contracts are convention-only — verify against siblings (R-2).
 3. Auth = per-controller ActionFilters; no global fallback (R-6).
-4. No Mongo writes here; parameterize SQL; no committed/printed secrets; builds on .NET 10 (net10.0).
+4. No Mongo writes here; parameterize SQL; no committed/printed secrets; stay 3.1-compatible.
 5. Wait for approval before architectural changes; production is read-only by default (Phase 12).

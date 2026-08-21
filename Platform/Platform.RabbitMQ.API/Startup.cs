@@ -10,7 +10,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
-using Microsoft.OpenApi;
+using Microsoft.OpenApi.Models;
 using Platform.RabbitMQ.API.Telemetry;
 using Platform.Shared.Utility;
 using Platform.Shared.Extensions;

@@ -1,4 +1,4 @@
-FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
+FROM mcr.microsoft.com/dotnet/sdk:6.0 AS build
 
 WORKDIR /source
 
@@ -25,10 +25,9 @@ RUN dotnet publish \
   cd publish && \
   rm -f appsettings.*.json
 
-FROM mcr.microsoft.com/dotnet/aspnet:10.0
-ENV ASPNETCORE_URLS=http://+:80
+FROM mcr.microsoft.com/dotnet/aspnet:3.1
 EXPOSE 80
 WORKDIR /app
 
 COPY --from=build /source/Platform.ClientPlatform.API/publish .
-CMD ["dotnet", "Platform.ClientPlatform.API.dll"]
+CMD ["/usr/bin/dotnet", "Platform.ClientPlatform.API.dll"]

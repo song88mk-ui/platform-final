@@ -18,6 +18,6 @@
 
 ## Impact & docs
 - [ ] `/impact-analysis` done; cross-repo contracts verified against odds-engine-2/platform-web (R-2).
-- [ ] Builds on .NET 10 (`net10.0`). Tests updated if applicable (`Shared.Test` and `Sportsbook.API.Test` run in CI on PRs).
+- [ ] Builds (.NET Core 3.1-compatible). Tests updated if applicable (only `Shared.Test` exists).
 - [ ] `/update-docs` — affected `docs/` updated with confidence tags + evidence.
 - [ ] Commit/PR only if the user asked; hooks not bypassed.

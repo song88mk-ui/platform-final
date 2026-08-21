@@ -12,7 +12,7 @@ The compile-time graph is a **star**: every project depends only on `Platform.Sh
 
 ```
                        ┌──────────────────┐
-   all 37 deployables ─┤  Platform.Shared │ (net10.0)
+   all 37 deployables ─┤  Platform.Shared │ (netstandard2.1)
                        └──────────────────┘
                                 ▲
    service hosts also ── *.Service.Repository / *.Service.Telemetry (per service)
@@ -24,7 +24,7 @@ Representative `.csproj` references — **[Verified]**:
 - `Platform.Settlement.Service` → `Platform.Shared`, `…Service.Repository`, `…Service.Telemetry`
 - `Platform.CashOutStake.Servicev2` → `Platform.Shared`, `Platform.Shared.Data.Betting`, `…Servicev2.Repository`
 
-Consequence: a change to `Platform.Shared` recompiles and (since CI builds all 26 matrix images unconditionally)
+Consequence: a change to `Platform.Shared` recompiles and (per CI's affected-files check)
 **rebuilds every image** — CI's changed-files filter includes `Platform/Platform.Shared/**`
 for every app. **[Verified]** — `.github/workflows/ci.yml`.
 
@@ -82,7 +82,7 @@ Producers/consumers of the key `On*` contracts (from `Platform.Shared/MessageMod
 
 | Dependency | Used by | Mechanism |
 |------------|---------|-----------|
-| **SQL Server** (8 DBs) | most APIs/services | EF Core 10 (`Microsoft.EntityFrameworkCore.SqlServer`) |
+| **SQL Server** (8 DBs) | most APIs/services | EF Core 5 (`Microsoft.EntityFrameworkCore.SqlServer`) |
 | **MongoDB** | Sportsbook.API, QTech.API, CashOutStake.Servicev2 | `MongoDB.Driver` |
 | **Redis** | ClientSportsbook.API | `StackExchange.Redis` |
 | **RabbitMQ** | all services + RabbitMQ.API | `RabbitMQ.Client` 5.2.0 |
@@ -96,25 +96,20 @@ Producers/consumers of the key `On*` contracts (from `Platform.Shared/MessageMod
 
 | Package | Version | Where |
 |---------|---------|-------|
-| `Microsoft.EntityFrameworkCore(.SqlServer)` | 10.0.11 (unified, GM-744) | shared + per-project |
-| `Microsoft.Extensions.*` | 10.0.11 | shared + per-project |
-| `RabbitMQ.Client` | 5.2.0 (deliberately unchanged — wire-format safety) | Shared + services |
-| `MongoDB.Driver` / `MongoDB.Bson` | 2.11.6 (some 2.13.1) (deliberately unchanged) | Sportsbook, Casino, CashOutStake |
-| `Newtonsoft.Json` | 12.0.3 (deliberately unchanged) | nearly all |
-| `Sportradar.MTS.SDKCore` | 2.4.1.2 (deliberately unchanged) | Shared |
-| `Serilog` / `Serilog.AspNetCore` | 4.3.0 / 10.0.0 (unchanged) | nearly all |
-| `Swashbuckle.AspNetCore.*` | 10.2.3 (unified, GM-744) | APIs |
-| `System.Runtime.Caching` | 10.0.11 | Shared |
-| `Infra.Extensions.Telemetry` | 0.0.1-1 (unchanged) | private GitHub feed |
-| `OpenTelemetry.Api` (hand-rolled refs) | 1.14.0 / 1.14.0-beta.2 | Shared |
+| `Microsoft.EntityFrameworkCore(.SqlServer)` | 5.0.x (varies 5.0.2–5.0.17 per project) | shared + per-project |
+| `RabbitMQ.Client` | 5.2.0 | Shared + services |
+| `MongoDB.Driver` / `MongoDB.Bson` | 2.11.6 (some 2.13.1) | Sportsbook, Casino, CashOutStake |
+| `Sportradar.MTS.SDKCore` | 2.4.1.2 | Shared |
+| `Serilog` / `Serilog.AspNetCore` | 4.3.0 / 10.0.0 | nearly all |
+| `Swashbuckle.AspNetCore.*` | 5.6.3 / 6.0.x | APIs |
+| `Infra.Extensions.Telemetry` | 0.0.1-1 | private GitHub feed |
+| `OpenTelemetry.Api` | 1.14.0 | Shared |
 
-> Version drift was largely eliminated by GM-744 (2026-08-20): EF Core, Microsoft.Extensions.*
-> and Swashbuckle are unified. The MongoDB driver still differs (2.11.6 vs 2.13.1) — left
-> untouched on purpose for cross-repo wire-format safety. Tracked in
-> [TechnicalDebt.md](TechnicalDebt.md) (TD-08).
+> **Version drift** is present: EF Core patch versions differ across projects, MongoDB driver
+> differs (2.11.6 vs 2.13.1). Tracked in [TechnicalDebt.md](TechnicalDebt.md).
 
-## 6. The shared-kernel build coupling
+## 6. The "affected files" build coupling
 
-Because CI builds all 26 matrix images unconditionally (no path filtering) and every image compiles `Platform.Shared`, the shared kernel is
+Because every app's CI build triggers on changes to `Platform.Shared/**`, the shared kernel is
 both the **greatest reuse asset** and the **largest blast-radius** in the repo. Any modification
 there is, by construction, a platform-wide change. **[Verified]**

@@ -5,12 +5,10 @@
 ## Solution file
 
 - Single solution: [`Platform/Platform.sln`](../Platform/Platform.sln).
-- **40 projects.** **[Verified]** (`find Platform -name "*.csproj" | wc -l` = 40).
-  Note: `Platform.Cancellation.Service/` is **not** a project — it is an orphan directory
-  containing only `bin`/`obj` leftovers (no `.csproj`, no solution entry). **[Verified]**
+- **39 projects.** **[Verified]** (`find Platform -name "*.csproj" | wc -l` = 39).
 - **Flat structure: the solution defines no solution folders, no nested-project grouping,
   and no "Solution Items".** **[Verified]** — `Platform.sln` contains no
-  `NestedProjects` section and no folder-type `Project(...)` entries. All 40 projects sit at
+  `NestedProjects` section and no folder-type `Project(...)` entries. All 39 projects sit at
   the solution root. Logical grouping exists only by project-name prefix convention
   (`Platform.*`), not by IDE folders.
 
@@ -27,19 +25,21 @@ platform-final/
 ├── docs/                ← this knowledge base (Phase 1 output)
 └── Platform/
     ├── Platform.sln
-    └── <40 project folders> (plus the bin/obj-only orphan dir Platform.Cancellation.Service)
+    └── <39 project folders>
 ```
 
-## Target frameworks
+## Target frameworks (the real heterogeneity)
 
 | Target | Count | Projects |
 |--------|------:|----------|
-| `net10.0` | 40 | **All projects** (APIs, services, jobs, console, `Platform.Shared`, tests) |
+| `netcoreapp3.1` | 36 | All APIs, services, jobs, console (except those below) |
+| `netstandard2.1` | 1 | **`Platform.Shared`** (the shared kernel — must stay netstandard to be referenced by all) |
+| `net7.0` | 1 | **`Platform.Websocket.API2`** (newer SignalR rewrite) |
+| `net8.0` | 1 | **`Platform.Shared.Test`** (test project) |
 
-**[Verified]** via `grep TargetFramework Platform/*/*.csproj`. Unified by the .NET 10
-upgrade (2026-08-20, GM-744); previously a heterogeneous mix of `netcoreapp3.1` (EOL),
-`netstandard2.1` (`Platform.Shared`), `net7.0` (`Websocket.API2`) and `net8.0`
-(`Shared.Test`) — see [TechnicalDebt.md](TechnicalDebt.md) TD-02 (resolved).
+**[Verified]** via `grep TargetFramework Platform/*/*.csproj`. This mix is a notable fact:
+the platform is predominantly on the **end-of-life** `netcoreapp3.1`, with two projects
+already moved forward. See [TechnicalDebt.md](TechnicalDebt.md).
 
 ## Project SDK types
 
@@ -64,7 +64,7 @@ See [RepositoryMap.md](RepositoryMap.md) for the full annotated list and
 | **Jobs** (timed/loop workers) | 4 | `Job.CCF`, `Job.ForexEUR`, `Job.Operator.Score`, `Job.Resettlement` |
 | **Console** (utility/load test) | 1 | `BetPlacement.Console` |
 | **Shared library** | 1 | `Platform.Shared` |
-| **Test** | 2 | `Platform.Shared.Test`, `Platform.Sportsbook.API.Test` |
+| **Test** | 1 | `Platform.Shared.Test` |
 | **Client/sample** | 1 | `Platform.WebSocket.Client` |
 
 ## Per-service sub-projects
@@ -76,27 +76,20 @@ in references) / **[Likely]** (naming):
 - `*.Service.Telemetry` — OpenTelemetry instrumentation (e.g. `Platform.Provider.Service.Telemetry`).
 
 > These sub-projects are **not** separate solution entries with their own `.csproj` at the
-> 40 count in all cases — some are folders/namespaces inside the host project. This is an
+> 39 count in all cases — some are folders/namespaces inside the host project. This is an
 > inconsistency tracked in [Unknowns.md](Unknowns.md) (exact split of `.Repository`/`.Telemetry`
 > into projects vs folders was not exhaustively traced for all 13 services).
 
 ## Build & CI mapping
 
 `.github/workflows/ci.yml` builds a **subset** of 26 projects as Docker images (matrix
-`app.path` → `app.image`); `Platform.Operator.Cashout.Service` **is** in the matrix.
-**[Verified]** A PR-only `test` job runs `Platform.Shared.Test` and
-`Platform.Sportsbook.API.Test` on the .NET SDK 10.0.x. **[Verified]** Projects present in
-the solution but **absent from the build matrix** (i.e. not deployed as their own image):
-`Platform.AgentReports.API`, `Platform.AgentReports.Service`,
-`Platform.ESportOperator.Service`, `Platform.Oddin.API`,
+`app.path` → `app.image`). **[Verified]** Projects present in the solution but **absent from
+the CI matrix** (i.e. not deployed as their own image) include:
+`Platform.AgentReports.API`, `Platform.AgentReports.Service`, `Platform.Cancellation.Service`,
+`Platform.ESportOperator.Service`, `Platform.Oddin.API`, `Platform.Operator.Cashout.Service`,
 `Platform.QTech.API`, `Platform.RedCat.API`, `Platform.RedCatBetting.API`,
 `Platform.RedCatOperator.API`, `Platform.WebSocket.API` (note: `Websocket.API2` builds as
 `platform-websocket-api`), `Platform.WebSocket.Client`, `Platform.BetPlacement.Console`,
-`Platform.Shared`, `Platform.Shared.Test`, `Platform.Sportsbook.API.Test` (the two test
-projects run in the test job instead). **[Verified]** by diffing the CI matrix against
+`Platform.Shared`, `Platform.Shared.Test`. **[Verified]** by diffing the CI matrix against
 the project list. Why some shipping integrations (QTech, RedCat, Oddin, AgentReports) are not
-in CI is **[Unknown]** — see [Unknowns.md](Unknowns.md). (Because CI never builds them, six of
-these — Oddin.API, QTech.API, RedCat.API, RedCatBetting.API, RedCatOperator.API,
-WebSocket.API — had carried an unnoticed compile break since commit `95add342` (stale
-`using Platform.Shared.Telemetry;`, missing `Infra.Extensions.Telemetry` reference); fixed
-in GM-744, 2026-08-20.)
+in CI is **[Unknown]** — see [Unknowns.md](Unknowns.md).

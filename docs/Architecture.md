@@ -7,9 +7,9 @@
 ## 1. Architecture style
 
 `platform-final` is a **microservice / message-driven distributed system** built on
-**.NET 10** (all projects target `net10.0` since GM-744, 2026-08-20 — see
+**.NET Core 3.1** (with one `net7.0` and one `net8.0` outlier — see
 [SolutionStructure.md](SolutionStructure.md)). It is **not** a single deployable monolith:
-the solution contains **40 projects** that compile into ~26 independently deployed Docker
+the solution contains **39 projects** that compile into ~26 independently deployed Docker
 images (see [.github/workflows/ci.yml](../.github/workflows/ci.yml)).
 
 Two complementary communication styles coexist: **[Verified]**
@@ -38,10 +38,10 @@ Application/Access Repository/ (IXxxRepository + XxxRepository)
 Shared kernel      Platform.Shared  (entities, DbContexts, message contracts,
                                      providers, MessageBroker, MemCache, enums)
    ▼
-Infrastructure     SQL Server (EF Core 10), MongoDB, RabbitMQ, Redis, external HTTP
+Infrastructure     SQL Server (EF Core 5), MongoDB, RabbitMQ, Redis, external HTTP
 ```
 
-- The **only shared library** is `Platform.Shared` (`net10.0`). Every other project
+- The **only shared library** is `Platform.Shared` (`netstandard2.1`). Every other project
   references it. **[Verified]** — see [DependencyGraph.md](DependencyGraph.md).
 - There is **no separate Domain/Application/Infrastructure assembly split** — `Platform.Shared`
   is a broad "shared kernel" containing entities, EF Core `DbContext`s, DTOs, enums, message
@@ -106,7 +106,7 @@ Key message contracts live in `Platform.Shared/MessageModels/` (`OnBetPlacement`
 
 ## 5. Real-time edge
 
-`Platform.WebSocket.API` and `Platform.Websocket.API2` (both `net10.0`) are
+`Platform.WebSocket.API` (`netcoreapp3.1`) and `Platform.Websocket.API2` (`net7.0`) are
 **SignalR hubs** (`Hub<IPlatformEvent>`) using **MessagePack** binary protocol and, in
 production, **Azure SignalR Service**. They expose a `/platform` hub with `SubscribeTo*` /
 `UnsubscribeTo*` methods (betslip odds, bet status, cashout, wallet, payable, favorites) and
@@ -167,18 +167,14 @@ See [ImplementationPatterns.md](ImplementationPatterns.md) and
 - Images are deployed to **EKS** via the sibling **`argocd`** GitOps repo; the central
   RabbitMQ cluster and databases are provisioned by the sibling **`infrastructure`** repo.
   **[Likely]** — see [CrossRepositoryDependencies.md](CrossRepositoryDependencies.md).
-- Multi-stage Dockerfile: **build on `dotnet/sdk:10.0`**, **run on `dotnet/aspnet:10.0`**
-  with an explicit `ENV ASPNETCORE_URLS=http://+:80` (the `aspnet:8.0+` images default to
-  port 8080; the pin preserves the argocd Service `:3000 → container :80` mapping),
+- Multi-stage Dockerfile: **build on `dotnet/sdk:6.0`**, **run on `dotnet/aspnet:3.1`**,
   private GitHub NuGet feed (`FlyingCockatoo`), AWS RDS/DocumentDB CA bundle installed.
-  **[Verified]** — `Platform.Sportsbook.API/Dockerfile` (updated GM-744, 2026-08-20).
+  **[Verified]** — `Platform.Sportsbook.API/Dockerfile`.
 
 ## 9. Architectural risks (summary — detail in TechnicalDebt.md)
 
-- ~~**EOL runtime**: .NET Core 3.1 and netstandard2.1 are out of support.~~ **Resolved**
-  (2026-08-20, GM-744): everything now targets `net10.0`.
-- ~~**Build/runtime SDK mismatch**: build SDK 6.0, runtime ASP.NET 3.1.~~ **Resolved**
-  (2026-08-20, GM-744): build and runtime images are both 10.0.
+- **EOL runtime**: .NET Core 3.1 and netstandard2.1 are out of support.
+- **Build/runtime SDK mismatch**: build SDK 6.0, runtime ASP.NET 3.1.
 - **Committed plaintext secrets** in many `appsettings.json`.
 - **Two parallel WebSocket implementations** (`WebSocket.API` vs `Websocket.API2`).
 - **Two parallel odds engines** in the ecosystem (`odds-engine-2` preferred; `oddsengine` obsolete).

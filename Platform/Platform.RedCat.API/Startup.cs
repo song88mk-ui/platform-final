@@ -3,9 +3,10 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using Microsoft.OpenApi;
+using Microsoft.OpenApi.Models;
 using Platform.RedCat.API.Extensions;
 using Platform.RedCat.API.Telemetry;
+using Platform.Shared.Telemetry;
 using Platform.Shared.Extensions;
 
 namespace Platform.RedCat.API

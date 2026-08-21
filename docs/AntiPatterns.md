@@ -79,18 +79,16 @@ Only `UseDeveloperExceptionPage` (dev). Error shaping depends on per-controller 
 unguarded action leaks a bare 500. **[Verified]**
 
 ## Platform / lifecycle
-### AP-16 — EOL runtime + build/runtime SDK mismatch (TD-02/TD-05) — **Resolved** (2026-08-20, GM-744)
-~~About 36 projects on EOL `netcoreapp3.1`; Docker builds on SDK 6.0 but runs on aspnet 3.1; ad-hoc partial
-moves to net7/net8.~~ All 40 projects now target `net10.0`; Docker builds and runs on 10.0 images.
+### AP-16 — EOL runtime + build/runtime SDK mismatch (TD-02/TD-05)
+~36 projects on EOL `netcoreapp3.1`; Docker builds on SDK 6.0 but runs on aspnet 3.1; ad-hoc partial
+moves to net7/net8. **[Verified]**
 
 ### AP-17 — Shipping integrations absent from CI (TD-09)
-QTech/RedCat*/Oddin/AgentReports*/ESportOperator have no CI image build;
-deploy path for some is unverified. **[Verified]/[Unknown]** (Note: `Operator.Cashout.Service`
-**is** in the CI matrix; `Cancellation.Service` is a bin/obj-only orphan dir, not a project.)
+QTech/RedCat*/Oddin/AgentReports*/Cancellation/ESportOperator/Operator.Cashout have no CI image build;
+deploy path for some is unverified. **[Verified]/[Unknown]**
 
 ### AP-18 — Minimal automated tests
-Only `Platform.Shared.Test` and `Platform.Sportsbook.API.Test` (both run by a PR-only CI test job);
-broad coverage not evident — refactoring safety relies on the `/Reference`
+Only `Platform.Shared.Test`; broad coverage not evident — refactoring safety relies on the `/Reference`
 snapshot + manual care. **[Likely]**
 
 ## Hygiene

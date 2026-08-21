@@ -5,12 +5,13 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using Microsoft.OpenApi;
+using Microsoft.OpenApi.Models;
 using Platform.Oddin.API.Repository;
 using Platform.Oddin.API.Telemetry;
 using Platform.Shared.Data.ESportBetting;
 using Platform.Shared.Data.Platform;
 using Platform.Shared.Utility;
+using Platform.Shared.Telemetry;
 using Platform.Shared.Extensions;
 
 namespace Platform.Oddin.API

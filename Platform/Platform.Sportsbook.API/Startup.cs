@@ -5,7 +5,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using Microsoft.OpenApi;
+using Microsoft.OpenApi.Models;
 using Platform.Shared.Data.Sportsbook;
 using Platform.Sportsbook.API.Repository;
 using Platform.Sportsbook.API.Telemetry;

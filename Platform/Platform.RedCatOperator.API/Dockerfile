@@ -10,7 +10,7 @@ WORKDIR /source/Platform.RedCatOperator.API
 
 RUN dotnet restore
 RUN dotnet build --configuration Release
-RUN dotnet publish -o publish && \
+RUN dotnet publish -c Release -o publish && \
   cd publish && rm -f appsettings.Development.json
 
 FROM mcr.microsoft.com/dotnet/aspnet:3.1

@@ -20,6 +20,7 @@ RUN dotnet build \
   --no-restore \
   --configuration Release
 RUN dotnet publish \
+  -c Release \
   --no-restore \
   -o publish && \
   cd publish && \

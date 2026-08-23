@@ -23,6 +23,7 @@ RUN dotnet build \
   /p:CheckEolTargetFramework=false
 
 RUN dotnet publish \
+  -c Release \
   --no-restore \
   -o publish && \
   cd publish && \

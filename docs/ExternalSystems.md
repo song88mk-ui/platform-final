@@ -38,9 +38,9 @@
 ## Cloud / platform infrastructure `[Verified-sibling]`
 | System | Role |
 |--------|------|
-| **AWS EKS** | runs all containers (Kestrel :80 → K8s service :3000) |
+| **AWS EKS** | runs all containers (Kestrel :80 → K8s service :3000; since GM-744 the :80 binding comes from an explicit `ENV ASPNETCORE_URLS=http://+:80` in each Dockerfile — aspnet:10.0 would otherwise default to :8080) |
 | **AWS ECR** | image registry; per-env accounts dev `418541840646` / stg `172065883315` / prd `525375333516` |
-| **AWS SSM Parameter Store + External Secrets Operator** | runtime secret/config injection as `Section__Key` env vars (ClusterSecretStore `parameterstore`) |
+| **AWS SSM Parameter Store + External Secrets Operator** | runtime secret/config injection as `Section__Key` env vars (ClusterSecretStore `parameterstore`). **Deployment prerequisite (GM-744):** SQL Server connection strings in SSM must add `TrustServerCertificate=True` (Microsoft.Data.SqlClient 4+ defaults `Encrypt=true`) — the committed `appsettings*.json` fallbacks already have it |
 | **ArgoCD (+ Image Updater)** | GitOps deploy + auto image-tag sync |
 | **Cloudflare** | DNS + edge; `CF-Connecting-IP`/`CF-IPCountry` headers consumed by filters; ALB + ACM TLS |
 | **OpenTelemetry collector / Tempo / Prometheus / Loki** | traces/metrics/logs (OTLP gRPC h2c); `monitoring` namespace | 

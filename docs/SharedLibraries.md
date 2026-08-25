@@ -4,12 +4,12 @@
 > factory, and enums (read directly); **[Likely]** for individual entity field semantics.
 
 `Platform.Shared` is the **only** shared library in the repository and the de-facto **shared
-kernel**. Target: `netstandard2.1` (so it can be referenced by `netcoreapp3.1`, `net7.0`, and
-`net8.0` consumers alike). Referenced by all other projects. **[Verified]**
+kernel**. Target: `net10.0` (since 2026-08-20, GM-744; previously `netstandard2.1` so the
+mixed 3.1/7.0/8.0 consumers could all reference it). Referenced by all other projects. **[Verified]**
 
-`Platform.Shared.csproj` packages: EF Core 5 (+ SqlServer), `Microsoft.Extensions.Configuration.*`,
-`Microsoft.Extensions.Http`, `MongoDB.Bson`, `RabbitMQ.Client` 5.2.0, `Sportradar.MTS.SDKCore`
-2.4.1.2, `System.Runtime.Caching`, `System.Text.Json`, `OpenTelemetry.Api`. **[Verified]**
+`Platform.Shared.csproj` (net8.0) packages: EF Core 8.0.30 (+ SqlServer), `Microsoft.Extensions.Configuration.*`
+10.0.11, `Microsoft.Extensions.Http`, `MongoDB.Bson`, `RabbitMQ.Client` 5.2.0, `Sportradar.MTS.SDKCore`
+2.4.1.2, `System.Runtime.Caching` 10.0.11, `OpenTelemetry.Api` (`System.Text.Json` is framework-inbox on net10.0, no longer a PackageReference). **[Verified]**
 
 ## Folder inventory `[Verified]` (file counts)
 

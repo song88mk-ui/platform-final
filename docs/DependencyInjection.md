@@ -8,7 +8,7 @@
 - **Built-in `Microsoft.Extensions.DependencyInjection` only.** No third-party container
   (no Autofac/Lamar/etc.). **[Verified]** — no such packages in any `.csproj`.
 - Registration locations: **web** → `Startup.ConfigureServices`; **workers** →
-  `Program.ConfigureServices((ctx,services)=>…)`; **net7.0 Websocket.API2** → inline in
+  `Program.ConfigureServices((ctx,services)=>…)`; **Websocket.API2** (minimal hosting) → inline in
   `Program.cs`. **[Verified]**
 
 ## Lifetimes — observed conventions

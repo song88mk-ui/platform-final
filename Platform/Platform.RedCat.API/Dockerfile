@@ -1,5 +1,5 @@
 # song88/plt-rc-api
-FROM mcr.microsoft.com/dotnet/sdk:6.0 AS build
+FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
 
 WORKDIR /source
 
@@ -13,9 +13,10 @@ RUN dotnet build --configuration Release
 RUN dotnet publish -c Release -o publish && \
   cd publish && rm -f appsettings.Development.json
 
-FROM mcr.microsoft.com/dotnet/aspnet:3.1
+FROM mcr.microsoft.com/dotnet/aspnet:10.0
+ENV ASPNETCORE_URLS=http://+:80
 EXPOSE 80
 WORKDIR /app
 
 COPY --from=build /source/Platform.RedCat.API/publish .
-CMD ["/usr/bin/dotnet", "Platform.RedCat.API.dll"]
+CMD ["dotnet", "Platform.RedCat.API.dll"]

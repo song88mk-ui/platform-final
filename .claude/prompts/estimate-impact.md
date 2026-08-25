@@ -3,7 +3,7 @@
 "What breaks / rebuilds / needs verification if I change X?"
 
 ## Answer using the blast-radius lens (`/impact-analysis`)
-1. **Compile-time:** is X in `Platform.Shared`? → **all 37 dependents rebuild** (CI affected-files).
+1. **Compile-time:** is X in `Platform.Shared`? → **all 37 dependents rebuild** (CI builds all 26 matrix images on every push to main/PR; no affected-files detection).
    Otherwise only the project + its consumers.
 2. **Contract?** message field / routing key / Mongo or SQL column / SignalR method / `StatusCode` →
    list the **sibling repos** affected (odds-engine-2, platform-web, oddsfeed, backoffice) — no

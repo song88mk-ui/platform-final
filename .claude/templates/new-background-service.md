@@ -2,7 +2,7 @@
 
 Mirror an existing `*.Service` (e.g. `Settlement.Service`).
 
-## 1. Project: `Microsoft.NET.Sdk.Worker`, `netcoreapp3.1`, reference `Platform.Shared`.
+## 1. Project: `Microsoft.NET.Sdk.Worker`, `net10.0`, reference `Platform.Shared`.
 
 ## 2. `Program.cs`
 ```csharp

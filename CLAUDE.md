@@ -14,11 +14,11 @@ Song88 platform. Derived from the repository (see [`docs/`](docs/README.md), a 1
 This file is the quick operating manual; `docs/` is the authoritative deep reference.
 
 ## What this repo is
-- **39-project .NET solution** ([`Platform/Platform.sln`](Platform/Platform.sln)) — a
+- **40-project .NET solution** ([`Platform/Platform.sln`](Platform/Platform.sln)) — a
   **microservice, message-driven sportsbook backend**. Headless: **no UI here** (the UI is the
   sibling `platform-web` Blazor app).
-- **~36 projects on `netcoreapp3.1`** (EOL), `Platform.Shared` on `netstandard2.1`,
-  `Websocket.API2` on `net7.0`, `Shared.Test` on `net8.0`.
+- **36 projects on `net10.0`; `Platform.Shared` + 3 Mongo services (`Sportsbook.API`, `QTech.API`, `CashOutStake.Servicev2`) on `net8.0`** (MongoDB.Driver 2.11.6 LINQ breaks on .NET 10; upgraded from `netcoreapp3.1`/`netstandard2.1`/`net7.0`/`net8.0`
+  under GM-744); EF Core 8.0.30 (LTS - EF 10 needs net10, Shared is net8), Docker: sdk:10.0 build, aspnet:10.0 runtime (aspnet:8.0 for Sportsbook.API/CashOutStake.Servicev2).
 - Deployed as Docker images → AWS ECR → EKS via the sibling `argocd` repo.
 
 ## The 30-second architecture
@@ -36,8 +36,8 @@ This file is the quick operating manual; `docs/` is the authoritative deep refer
 
 ## Critical rules (read before changing anything)
 1. **`Platform.Shared` is the shared kernel with platform-wide blast radius.** A change there rebuilds
-   **every** image (CI affected-files includes `Platform.Shared/**`). Treat its `MessageModels/`,
-   `Data/` entities, and enums as **public API**. (R-1)
+   **every** image (CI builds all 26 matrix images on every push to main and every PR — there is no affected-files
+   detection). Treat its `MessageModels/`, `Data/` entities, and enums as **public API**. (R-1)
 2. **Cross-repo contracts are duplicated by convention, with no shared package and no contract test.**
    Renaming a message field, routing key, Mongo/SQL column, or SignalR method name is an **up-to-4-repo
    silent break** (platform-final ↔ odds-engine-2 ↔ platform-web, + oddsfeed/backoffice). (R-2,
@@ -100,9 +100,12 @@ Follow these steps in order on every task (Phase 12 standing rule):
 9. **Wait for approval before architectural changes** (anything touching `Platform.Shared`, a cross-repo
    contract, a new pattern, or a new project/service).
 10. **Implement the smallest possible change.**
-11. **Validate** compilation (.NET Core 3.1-compatible) and behavior (run the relevant checklist).
+11. **Validate** compilation (.NET 10 / `net10.0`) and behavior (run the relevant checklist).
 12. **Update documentation** if architectural knowledge changed (`/update-docs`; keep CLAUDE.md/AGENTS.md/
-    commands/skills/playbooks in sync).
+    commands/skills/playbooks in sync). **Also update `README.md` in the same change whenever the change
+    affects anything the README documents** (projects/frameworks, prerequisites, build/run/test
+    instructions, configuration, endpoints) — the README must never describe a repo state that no
+    longer exists.
 13. **Summarize** changes, risks, and validation results.
 
 ## Engineering principles (MANDATORY)
@@ -137,7 +140,7 @@ Follow these steps in order on every task (Phase 12 standing rule):
 
 ## Scope & build reminders (repo-specific)
 - Subject is **platform-final** (backend); UI work belongs to **platform-web**.
-- Code must stay **3.1-compatible** (build SDK is 6.0; runtime is 3.1).
+- Code targets **.NET 10** (`net10.0`), except `Platform.Shared` + the 3 Mongo services (`Sportsbook.API`, `QTech.API`, `CashOutStake.Servicev2`) on **`net8.0`** (MongoDB.Driver 2.11.6 breaks on net10 — ADR-14). Build SDK is 10.0; runtime images 10.0 (8.0 for the two net8 services with Dockerfiles).
 - **Confirm the live variant** before editing duplicated code (`*.Service` vs `*.Servicev2`,
   `WebSocket.API` vs `Websocket.API2`).
 

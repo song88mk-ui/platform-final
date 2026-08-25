@@ -1475,7 +1475,7 @@ namespace Platform.Sportsbook.API.Repository
             var newFixtures = fixtures.Result;
             var newMarkets = markets.Result;
             var newSelections = selections.Result;
-            var newBettingStatus = bettingStatus.Result;
+            var newBettingStatus = bettingStatus.Result == null ? new BettingStatus { IsBeSo = false } : bettingStatus.Result;
 
             if (newSelections.Count == 0)
             {

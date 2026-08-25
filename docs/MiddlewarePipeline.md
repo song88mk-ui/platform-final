@@ -24,7 +24,7 @@ Most other APIs use the **same order minus response compression**:
 `Wallet.API`, `ClientSportsbook.API`, `RedCat*`, `QTech.API`, `Oddin.API`, `RabbitMQ.API`,
 `AgentReports.API`, …).
 
-`Websocket.API2` (net7.0 minimal hosting) follows the same order and additionally
+`Websocket.API2` (minimal hosting) follows the same order and additionally
 `MapHub<…>("/platform")`. **[Verified]**
 
 ## Component-by-component

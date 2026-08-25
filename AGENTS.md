@@ -18,7 +18,7 @@ is the agent-oriented summary — read [CLAUDE.md](CLAUDE.md) first.
 2. **Cross-repo contracts are convention-only** (no shared package, no contract test). A field/key/
    SignalR-method rename silently breaks up to 4 repos — verify alignment with odds-engine-2 &
    platform-web before changing. (R-2, [docs/Contracts.md](docs/Contracts.md))
-3. **Code must stay .NET Core 3.1-compatible** (build SDK is 6.0; runtime is 3.1).
+3. **Code targets .NET 10 (`net10.0`)**, except Platform.Shared + the 3 Mongo services on **`net8.0`** (MongoDB.Driver 2.11.6 net10 incompatibility, ADR-14). Build SDK 10.0 (GM-744).
 4. **Never write MongoDB** from platform-final (odds-engine-2 owns the catalogue).
 5. **Never commit or print secrets.** Don't reproduce values from `appsettings.json`.
 6. **Every new controller needs a `[ServiceFilter(typeof(<Filter>))]`** — there is no global auth fallback.
@@ -28,7 +28,7 @@ is the agent-oriented summary — read [CLAUDE.md](CLAUDE.md) first.
 Understand → **search repo** (`/find-*`) → **consult docs** → **trace end-to-end** (`/trace-*`) →
 identify reusable components → **explain the proposed solution** → identify risks & assumptions
 (`/impact-analysis`) → **ask clarifying questions when unclear** → **wait for approval before
-architectural changes** → implement the **smallest possible change** → **validate** (build 3.1-compatible
+architectural changes** → implement the **smallest possible change** → **validate** (build on .NET 10
 + behavior + checklist) → **update docs/CLAUDE.md/AGENTS.md/commands/skills** if architecture changed →
 **summarize changes, risks, validation**. Full text: [CLAUDE.md](CLAUDE.md) §Permanent development workflow.
 

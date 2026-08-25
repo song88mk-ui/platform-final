@@ -15,7 +15,7 @@
 ## Workspace inventory & stack
 | Sibling | Stack | Role vs platform-final | Evidence |
 |---------|-------|------------------------|----------|
-| **platform-final** | .NET Core 3.1 (+net7/8) | this repo — core sportsbook backend | — |
+| **platform-final** | .NET 10 + .NET 8 for Mongo services (GM-744) | this repo — core sportsbook backend | — |
 | **platform-web** | .NET 7 Blazor Server | **consumer** (player BFF) of the gateway + WebSocket | [Verified-sibling] |
 | **odds-engine-2** | .NET 8 (+ netstandard2.1) | **producer** of the live catalogue + odds (writes Mongo, feeds WS) | [Verified-sibling] |
 | **bet-genius** | .NET 8/7/3.1 | Genius Sports feed; **GTS bet validation + livestream** provider | [Verified-sibling] |

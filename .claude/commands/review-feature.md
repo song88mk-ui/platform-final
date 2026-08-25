@@ -12,7 +12,7 @@ Review a feature/change for correctness + conformance to platform-final conventi
 4. **Caching:** read-through + prefix; invalidation event wired into `CacheSync.Service` if config/curation.
 5. **Messaging:** correct ack mode; `CorrelationId`; routing key namespaced correctly.
 6. **Observability:** Serilog + OTel `Activity`; trace context propagated through MQ.
-7. **Safety:** no leaked stack traces (TD-04); no new committed secrets (TD-01); 3.1-compatible.
+7. **Safety:** no leaked stack traces (TD-04); no new committed secrets (TD-01); builds on .NET 10 (net10.0).
 8. Run [.claude/checklists/before-pull-request.md](../checklists/before-pull-request.md).
 
 Output findings with file:line + a conformance verdict.

@@ -243,5 +243,60 @@ namespace Platform.Shared.Test.Providers
             Assert.Equal(BetAcceptance.Rejected, result.Acceptance);
             Assert.StartsWith("1027", result.Reason);
         }
+
+        [Fact]
+        public async Task ValidateCashoutAsync_AssessmentDelayed_ReturnsPending()
+        {
+            var auth = new FakeGtsAuthRepository();
+            var repo = new FakeGtsRepository
+            {
+                // GTS in-play bet delay: isBetAllowed=false + betAssessmentResult=AssessmentDelayed
+                // is NOT a rejection — the verdict arrives via Ably (GM-767).
+                CashoutAssessmentResponse = new BaseResponseDTO<ProviderAssessmentResponseDTO>
+                {
+                    StatusCode = StatusCode.Success,
+                    Result = new ProviderAssessmentResponseDTO { IsBetAllowed = false, IsPending = true }
+                }
+            };
+            var provider = CreateProvider(auth, repo);
+            var (message, bet, selections) = CreateCashoutInput();
+
+            var result = await provider.ValidateCashoutAsync(message, bet, selections, true, 0m, 0m);
+
+            Assert.Equal(BetAcceptance.Pending, result.Acceptance);
+        }
+
+        [Fact]
+        public async Task ValidateCashoutAsync_DelayedVerdictAccepted_SkipsAssessment()
+        {
+            var auth = new FakeGtsAuthRepository();
+            var repo = new FakeGtsRepository();
+            var provider = CreateProvider(auth, repo);
+            var (message, bet, selections) = CreateCashoutInput();
+            message.DelayedBetAcceptance = BetAcceptance.Accepted;
+
+            var result = await provider.ValidateCashoutAsync(message, bet, selections, true, 0m, 0m);
+
+            Assert.Equal(BetAcceptance.Accepted, result.Acceptance);
+            Assert.Null(repo.LastCashoutAssessmentRequest);
+            Assert.Equal(0, auth.Calls);
+        }
+
+        [Fact]
+        public async Task ValidateCashoutAsync_DelayedVerdictRejected_RejectsWithReason()
+        {
+            var auth = new FakeGtsAuthRepository();
+            var repo = new FakeGtsRepository();
+            var provider = CreateProvider(auth, repo);
+            var (message, bet, selections) = CreateCashoutInput();
+            message.DelayedBetAcceptance = BetAcceptance.Rejected;
+            message.DelayedMessage = "Liability threshold breached";
+
+            var result = await provider.ValidateCashoutAsync(message, bet, selections, true, 0m, 0m);
+
+            Assert.Equal(BetAcceptance.Rejected, result.Acceptance);
+            Assert.Equal("Liability threshold breached", result.Reason);
+            Assert.Null(repo.LastCashoutAssessmentRequest);
+        }
     }
 }

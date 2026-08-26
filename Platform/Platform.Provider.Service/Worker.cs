@@ -310,13 +310,43 @@ namespace Platform.Provider.Service
                 if (message == null)
                     return;
 
-                Guid.TryParse(message.BetId.Replace("test",""), out var betId);
+                var rawBetId = message.BetId.Replace("test", "");
 
                 var delayedMessage = string.Empty;
                 if (!message.IsBetAllowed)
                     if (message.Legs?.Any() ?? false)
-                        delayedMessage = message.Legs.FirstOrDefault(l => l.RejectReason != null).RejectReason?.ReasonMessage ?? string.Empty;
+                        delayedMessage = message.Legs.FirstOrDefault(l => l.RejectReason != null)?.RejectReason?.ReasonMessage ?? string.Empty;
 
+                // Delayed verdicts for cashout eligibility assessments carry the "cashout-"
+                // prefixed betId (GTS Back-End Integration doc). Relay them to CashOut.Service,
+                // which parked the cashout on AssessmentDelayed — they are NOT placements.
+                if (rawBetId.StartsWith("cashout", StringComparison.OrdinalIgnoreCase))
+                {
+                    var cashoutBetIdRaw = rawBetId.Substring("cashout".Length).TrimStart('-', '_');
+                    if (!Guid.TryParse(cashoutBetIdRaw, out var cashoutBetId))
+                    {
+                        _logger.LogWarning("Ably cashout verdict with unparseable betId: {betId} - skipped", message.BetId);
+                        return;
+                    }
+
+                    _messageBroker.Publish(new OnBetCashOutDelayedVerdict
+                    {
+                        BetId = cashoutBetId,
+                        Accepted = message.IsBetAllowed,
+                        Reason = delayedMessage
+                    }, "OnBetCashOutDelayedVerdict", "r.bet.cashout", Guid.NewGuid().ToString().ToUpper());
+
+                    _logger.LogInformation("Published delayed cashout verdict | BetId={betId} Accepted={accepted}", cashoutBetId, message.IsBetAllowed);
+
+                    activity?.SetStatus(ActivityStatusCode.Ok);
+                    return;
+                }
+
+                if (!Guid.TryParse(rawBetId, out var betId))
+                {
+                    _logger.LogWarning("Ably assessment verdict with unparseable betId: {betId} - skipped", message.BetId);
+                    return;
+                }
 
                 var onBetPlacement = new OnBetPlacement();
                 onBetPlacement.ChannelTypeId = (int)ChannelType.BG;

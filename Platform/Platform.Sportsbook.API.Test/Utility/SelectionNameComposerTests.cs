@@ -3,7 +3,7 @@ using Xunit;
 
 namespace Platform.Sportsbook.API.Test.Utility
 {
-    // Template-id semantics (SeTeId "30"/"31" = Over/Under, "1"/"4" = sign-flip handicap sides) are
+    // Template-id semantics (SeTeId "30"/"31" = Over/Under, "1"/"4"/"25" = sign-flip handicap sides) are
     // verified against bet-genius/BG.Receiver.Service/Repositories/OddsFeedRepository.cs and live
     // Mongo Selection documents -- not guessed. Real examples used below:
     //   SeTeId "30"/"31" -> SeNa "Over"/"Under" (multiple live Selection docs).
@@ -62,6 +62,30 @@ namespace Platform.Sportsbook.API.Test.Utility
             var result = SelectionNameComposer.Compose("-1.50", "Team B", "2", isHandicap: true);
 
             Assert.Equal("Team B(-1.50)", result);
+        }
+
+        // Individual-sport head-to-head handicaps (tennis, table tennis, darts, snooker) carry
+        // SeTeId 25 = "Player 1" / 26 = "Player 2" (verified against live staging selections, e.g.
+        // SeNa "Yamalapalli, S(-1.50)" with SeTeNa "Player 1"). Player 1 gives the handicap and
+        // flips the sign; Player 2 keeps the raw sign (INC-19).
+        [Theory]
+        [InlineData("-1.50", "25", "Yamalapalli, S(+1.50)")]
+        [InlineData("1.50", "25", "Yamalapalli, S(-1.50)")]
+        public void Compose_Player1Template_FlipsSign(string line, string selectionTemplateId, string expected)
+        {
+            var result = SelectionNameComposer.Compose(line, "Yamalapalli, S", selectionTemplateId, isHandicap: true);
+
+            Assert.Equal(expected, result);
+        }
+
+        [Theory]
+        [InlineData("-1.50", "26", "Opponent, A(-1.50)")]
+        [InlineData("1.50", "26", "Opponent, A(+1.50)")]
+        public void Compose_Player2Template_KeepsRawSign(string line, string selectionTemplateId, string expected)
+        {
+            var result = SelectionNameComposer.Compose(line, "Opponent, A", selectionTemplateId, isHandicap: true);
+
+            Assert.Equal(expected, result);
         }
 
         [Fact]

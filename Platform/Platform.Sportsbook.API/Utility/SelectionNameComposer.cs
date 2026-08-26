@@ -13,7 +13,10 @@ namespace Platform.Sportsbook.API.Utility
     public static class SelectionNameComposer
     {
         private static readonly List<string> OverUnderTemplateIds = new List<string> { "30", "31" };
-        private static readonly List<string> SignFlipHandicapTemplateIds = new List<string> { "1", "4" };
+        // Vendor outcome ids of the side that gives the handicap: 1 = Home, 4 = Favorite,
+        // 25 = Player 1 (individual-sport head-to-head handicaps, e.g. tennis/table tennis; INC-19).
+        // The paired side (3/5/26) carries the vendor line's raw sign.
+        private static readonly List<string> SignFlipHandicapTemplateIds = new List<string> { "1", "4", "25" };
 
         public static string Compose(string line, string selectionName, string selectionTemplateId, bool isHandicap)
         {

@@ -1,5 +1,6 @@
 ﻿using Platform.Shared.Data.Betting.Entities;
 using Platform.Shared.Enums;
+using Platform.Shared.Providers;
 using System;
 using System.Collections.Generic;
 
@@ -24,6 +25,11 @@ namespace Platform.Shared.MessageModels
         public decimal NonTaxedPayout { get; set; }
         public bool HasLive { get; set; }
         public string Endpoint { get; set; }
+        // Set when re-entering after a GTS "AssessmentDelayed" verdict arrived via Ably
+        // (same pattern as OnBetPlacement) — the provider gate then honors the verdict
+        // instead of re-assessing.
+        public BetAcceptance? DelayedBetAcceptance { get; set; }
+        public string DelayedMessage { get; set; }
         public List<CashedOutProbabilities> Probabilities { get; set; }
     }
 

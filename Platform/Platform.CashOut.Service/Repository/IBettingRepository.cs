@@ -6,5 +6,6 @@ namespace Platform.CashOut.Service.Repository
     public interface IBettingRepository
     {
         void ProcessCashOut(OnCashoutBetSettlement message, IMessageBroker messageBroker, string correlationId);
+        void ProcessCashOutDelayedVerdict(OnBetCashOutDelayedVerdict verdict, IMessageBroker messageBroker, string correlationId);
     }
 }

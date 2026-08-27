@@ -13,6 +13,7 @@ using Platform.Shared.Providers;
 using Platform.Shared.Utility;
 using Sportradar.MTS.SDK.Entities.Enums;
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
@@ -30,11 +31,31 @@ namespace Platform.CashOut.Service.Repository
         private readonly ILogger<BettingRepository> _logger;
         private readonly IConfiguration _configuration;
         private readonly IServiceScopeFactory _scopeFactory;
+
+        // Cashouts whose GTS assessment answered "AssessmentDelayed": parked here until the
+        // verdict arrives via Ably -> Provider.Service -> OnBetCashOutDelayedVerdict, or until
+        // the TTL expires (then declined so the client UI is released). In-memory on purpose:
+        // the window is ~betDelay (seconds); a restart loses the entry and the player retries.
+        private sealed class PendingCashout
+        {
+            public OnCashoutBetSettlement Message { get; init; }
+            public IMessageBroker MessageBroker { get; init; }
+            public string CorrelationId { get; init; }
+            public DateTime ParkedAtUtc { get; init; }
+        }
+
+        private static readonly ConcurrentDictionary<Guid, PendingCashout> _pendingCashouts = new ConcurrentDictionary<Guid, PendingCashout>();
+        private static readonly TimeSpan _pendingCashoutTtl = TimeSpan.FromSeconds(30);
+        private readonly Timer _pendingCashoutSweeper;
+
         public BettingRepository(IConfiguration configuration, ILogger<BettingRepository> logger, IServiceScopeFactory scopeFactory)
         {
             _configuration = configuration;
             _logger = logger;
             _scopeFactory = scopeFactory;
+
+            // Singleton service, so one sweeper for the process lifetime.
+            _pendingCashoutSweeper = new Timer(_ => SweepExpiredPendingCashouts(), null, TimeSpan.FromSeconds(10), TimeSpan.FromSeconds(10));
         }
 
         private void ProcessCashOutSettlement(OnCashoutBetSettlement message, IMessageBroker messageBroker, string correlationId)
@@ -109,7 +130,20 @@ namespace Platform.CashOut.Service.Repository
                                 cashoutPercent = (originalStake - remainingStake) / originalStake;
                             }
 
-                            result = ValidateCashoutWithProvider(message, bet, selections, isFullCashout, cashoutPercent, prevCashoutAmount);
+                            var providerResult = ValidateCashoutWithProvider(message, bet, selections, isFullCashout, cashoutPercent, prevCashoutAmount);
+
+                            if (providerResult.Item1 == BetAcceptance.Pending)
+                            {
+                                // GTS AssessmentDelayed: the real verdict arrives via Ably in
+                                // ~betDelay seconds. Park the cashout (no writes were made; the
+                                // transaction rolls back) and resume in ProcessCashOutDelayedVerdict.
+                                ParkPendingCashout(message, messageBroker, correlationId);
+                                return;
+                            }
+
+                            result = new Tuple<CashoutAcceptance, string>(
+                                providerResult.Item1 == BetAcceptance.Accepted ? CashoutAcceptance.Accepted : CashoutAcceptance.Rejected,
+                                providerResult.Item2);
 
                             if (result.Item1 == CashoutAcceptance.Accepted)
                             {
@@ -529,9 +563,10 @@ namespace Platform.CashOut.Service.Repository
 
         // Resolves the bet's provider (BG -> GTSBetProvider, SR -> MtsBetProvider) and runs
         // its pre-acceptance cash-out gate. A decline stops the cashout before any money
-        // moves, feeding the existing declined path (OnBetStatus -> r.bet.betstatus.{clientcode}).
+        // moves, feeding the existing declined path (OnBetStatus -> r.bet.betstatus.{clientcode});
+        // Pending means a GTS delayed assessment whose verdict arrives via Ably.
         // Fail-fast: resolver/provider errors reject the cashout; the player can retry.
-        private Tuple<CashoutAcceptance, string> ValidateCashoutWithProvider(OnCashoutBetSettlement message, Bet bet, List<BetSelection> selections, bool isFullCashout, decimal cashoutPercent, decimal prevCashoutAmount)
+        private Tuple<BetAcceptance, string> ValidateCashoutWithProvider(OnCashoutBetSettlement message, Bet bet, List<BetSelection> selections, bool isFullCashout, decimal cashoutPercent, decimal prevCashoutAmount)
         {
             try
             {
@@ -544,14 +579,72 @@ namespace Platform.CashOut.Service.Repository
 
                 _logger.LogInformation("ValidateCashoutWithProvider: {betId} channel {channelTypeId} -> {acceptance} ({reason})", message.BetId, message.ChannelTypeId, providerResult.Acceptance, providerResult.Reason);
 
-                return new Tuple<CashoutAcceptance, string>(
-                    providerResult.Acceptance == BetAcceptance.Accepted ? CashoutAcceptance.Accepted : CashoutAcceptance.Rejected,
-                    providerResult.Reason);
+                return new Tuple<BetAcceptance, string>(providerResult.Acceptance, providerResult.Reason);
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "ValidateCashoutWithProvider Error for bet {betId}", message.BetId);
-                return new Tuple<CashoutAcceptance, string>(CashoutAcceptance.Rejected, $"10000 - {ex.Message}");
+                return new Tuple<BetAcceptance, string>(BetAcceptance.Rejected, $"10000 - {ex.Message}");
+            }
+        }
+
+        private void ParkPendingCashout(OnCashoutBetSettlement message, IMessageBroker messageBroker, string correlationId)
+        {
+            _pendingCashouts[message.BetId] = new PendingCashout
+            {
+                Message = message,
+                MessageBroker = messageBroker,
+                CorrelationId = correlationId,
+                ParkedAtUtc = DateTime.UtcNow
+            };
+
+            _logger.LogInformation("{@betId} - Cashout parked awaiting GTS delayed verdict", message.BetId);
+        }
+
+        public void ProcessCashOutDelayedVerdict(OnBetCashOutDelayedVerdict verdict, IMessageBroker messageBroker, string correlationId)
+        {
+            if (!_pendingCashouts.TryRemove(verdict.BetId, out var pending))
+            {
+                // Expired, lost to a restart, or a duplicate verdict — nothing to resume.
+                _logger.LogWarning("{@betId} - Delayed cashout verdict had no parked cashout (expired/restarted/duplicate) - ignored", verdict.BetId);
+                return;
+            }
+
+            pending.Message.DelayedBetAcceptance = verdict.Accepted ? BetAcceptance.Accepted : BetAcceptance.Rejected;
+            pending.Message.DelayedMessage = verdict.Reason;
+
+            // Re-enter settlement directly: the live re-quote already ran on the original pass,
+            // and the provider gate will honor DelayedBetAcceptance instead of re-assessing.
+            ProcessCashOutSettlement(pending.Message, messageBroker, correlationId);
+        }
+
+        private void SweepExpiredPendingCashouts()
+        {
+            foreach (var entry in _pendingCashouts)
+            {
+                if (DateTime.UtcNow - entry.Value.ParkedAtUtc < _pendingCashoutTtl)
+                    continue;
+
+                if (!_pendingCashouts.TryRemove(entry.Key, out var expired))
+                    continue;
+
+                try
+                {
+                    expired.MessageBroker.Publish(new OnBetStatus
+                    {
+                        ClientId = expired.Message.ClientId.ToString().ToUpper(),
+                        UserId = expired.Message.UserId,
+                        BetId = expired.Message.BetId.ToString().ToUpper(),
+                        BetStatus = BetStatus.Running,
+                        Message = "Cashout request has been declined"
+                    }, "OnBetStatus", $"r.bet.betstatus.{expired.Message.ClientCode.ToLower()}", expired.CorrelationId, 10);
+
+                    _logger.LogWarning("{@betId} - Cashout declined: GTS delayed verdict not received within {ttlSeconds}s", expired.Message.BetId, _pendingCashoutTtl.TotalSeconds);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "{@betId} - Failed publishing expiry decline for parked cashout", expired.Message.BetId);
+                }
             }
         }
 

@@ -205,6 +205,17 @@ namespace Platform.Shared.Providers.GTS
                     Reason = "1024 - Cashout Accepted (GTS disabled for VS)"
                 };
 
+            // Delayed-verdict re-entry: the GTS AssessmentDelayed verdict arrived via Ably
+            // (relayed by Platform.Provider.Service) — honor it instead of re-assessing.
+            if (message.DelayedBetAcceptance != null)
+                return new BetProviderResult
+                {
+                    Acceptance = message.DelayedBetAcceptance == BetAcceptance.Accepted ? BetAcceptance.Accepted : BetAcceptance.Rejected,
+                    Reason = message.DelayedBetAcceptance == BetAcceptance.Accepted
+                        ? "1024 - Cashout Accepted (GTS delayed verdict)"
+                        : (string.IsNullOrEmpty(message.DelayedMessage) ? "GTS Cashout Assessment Rejected" : message.DelayedMessage)
+                };
+
             var testClientCodes = (_configuration["Custom:TestBetClientCodes"] ?? string.Empty)
                 .Split(',', StringSplitOptions.RemoveEmptyEntries);
 
@@ -230,6 +241,16 @@ namespace Platform.Shared.Providers.GTS
                 {
                     Acceptance = BetAcceptance.Rejected,
                     Reason = $"1027 - GTS Cashout Assessment Failed ({assessment.Message})"
+                };
+
+            // In-play markets with a configured GTS bet delay answer "AssessmentDelayed" —
+            // not a rejection: the real verdict arrives via Ably a few seconds later.
+            // Return Pending so CashOut.Service parks the cashout until the verdict.
+            if (assessment.Result.IsPending)
+                return new BetProviderResult
+                {
+                    Acceptance = BetAcceptance.Pending,
+                    Reason = "GTS Cashout Assessment Delayed"
                 };
 
             return assessment.Result.IsBetAllowed

@@ -20,6 +20,16 @@ namespace Platform.Shared.MessageModels
         public decimal NonTaxedPayout { get; set; }
         public bool IsAudit { get; set; } = false;
         public bool IsResettle { get; set; } = false;
+
+        // Cumulative cashout figures across every cashout of the bet, set by
+        // Platform.CashOut.Service on OnBetFullCashOut/OnBetPartialCashOut publishes.
+        // Bet.TrueStake/Payout only carry post-cashout per-event values, while the GTS
+        // bet update needs totals (totalStake, cashedOutTotalStake, cashedOutAmount).
+        // Null on messages from other publishers and on pre-enrichment messages still
+        // in flight; consumers must skip cashout reporting when these are null.
+        public decimal? OriginalTrueStake { get; set; }
+        public decimal? CashedOutTotalTrueStake { get; set; }
+        public decimal? CashedOutTotalAmount { get; set; }
     }
 
     public class OnBetSettlementPartial : OnBetSettlement

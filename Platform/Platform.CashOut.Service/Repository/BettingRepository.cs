@@ -176,6 +176,20 @@ namespace Platform.CashOut.Service.Repository
 
                                 var payload = new OnBetSettlement();
                                 payload.ChannelTypeId = message.ChannelTypeId;
+
+                                // Cumulative cashout figures for the provider update: `partialCashout`
+                                // holds the prior audit rows and `bet` still carries pre-event values
+                                // (SettleBet reduces them below). A full cashout consumes the whole
+                                // remaining TrueStake; a partial consumes only its percentage of it.
+                                payload.OriginalTrueStake = partialCashout.Any()
+                                    ? partialCashout.First().TrueStake
+                                    : bet.TrueStake;
+                                payload.CashedOutTotalAmount = partialCashout.Sum(p => p.CashoutAmount) + message.CashOutStake;
+                                payload.CashedOutTotalTrueStake = partialCashout.Sum(p => p.TrueStakeUsed)
+                                    + (message.CashoutType == CashoutType.Partial
+                                        ? bet.TrueStake * message.CashOutStakePercent
+                                        : bet.TrueStake);
+
                                 OnBetSettlementPartial partialPayload = null;
                                 if (message.CashoutType == CashoutType.Partial)
                                 {
@@ -187,6 +201,9 @@ namespace Platform.CashOut.Service.Repository
                                         TrueStake = bet.TrueStake * message.CashOutStakePercent,
                                         TaxedStake = message.TaxedStake,
                                         NonTaxedPayout = message.NonTaxedPayout,
+                                        OriginalTrueStake = payload.OriginalTrueStake,
+                                        CashedOutTotalTrueStake = payload.CashedOutTotalTrueStake,
+                                        CashedOutTotalAmount = payload.CashedOutTotalAmount,
                                     };
                                 }
 

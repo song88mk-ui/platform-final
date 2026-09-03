@@ -278,22 +278,19 @@ namespace Platform.Shared.Providers.GTS
                 if (bet.BetSelections.Any(c => c.SportId.IsVirtualSportId()))
                     return;
 
-                if (cashoutType == CashoutType.Partial)
+                // GTS requires cumulative cashedOutTotalStake/cashedOutAmount across all cashouts
+                // of the bet. Messages published before the enrichment (still in flight during a
+                // deploy) lack them; sending non-cumulative figures would corrupt GTS's view, so
+                // those are skipped exactly as before.
+                if (cashoutType == CashoutType.Partial && bet.CashedOutTotalTrueStake == null)
                 {
-                    // GTS requires cumulative cashedOutTotalStake/cashedOutAmount across all cashouts
-                    // of the bet. OnBetPartialCashOut only carries the current event's figures, so a
-                    // correct partial update cannot be built here yet (needs message enrichment).
-                    _logger.LogWarning("ProcessCashout: partial cashout for bet {betId} not forwarded to GTS — cumulative cashout figures are not available on the message", bet.Bet?.BetId);
+                    _logger.LogWarning("ProcessCashout: partial cashout for bet {betId} not forwarded to GTS - message lacks the cumulative cashout figures", bet.Bet?.BetId);
                     return;
                 }
 
-                if (bet.Bet?.IsPartialCashout == true)
+                if (bet.Bet?.IsPartialCashout == true && bet.CashedOutTotalTrueStake == null)
                 {
-                    // Full cashout after earlier partial cashouts: the bet row now holds the
-                    // reduced stake and only the final payout, while GTS requires cumulative
-                    // cashedOutTotalStake/cashedOutAmount — sending non-cumulative figures would
-                    // corrupt its view, so skip until the message carries the cumulative values.
-                    _logger.LogWarning("ProcessCashout: bet {betId} had prior partial cashouts — GTS update skipped (cumulative cashout figures are not available on the message)", bet.Bet.BetId);
+                    _logger.LogWarning("ProcessCashout: bet {betId} had prior partial cashouts - GTS update skipped (message lacks the cumulative cashout figures)", bet.Bet.BetId);
                     return;
                 }
 
@@ -312,18 +309,45 @@ namespace Platform.Shared.Providers.GTS
 
                 // The cash-out eligibility assessment runs pre-acceptance in Platform.CashOut.Service
                 // (ValidateCashoutAsync via the provider resolver) — by the time this message arrives
-                // the cashout is approved and settled, so the only remaining step is the bet update:
-                // full cashout is reported as Settled with the cashedOutTotalStake/cashedOutAmount
-                // fields. Bet.Payout holds the cashout amount.
+                // the cashout is approved and settled, so the only remaining step is the bet update.
+                // Full cashout is reported as Settled; a partial leaves the bet Running, which maps
+                // to an Open update (payout and leg payoutPrice stay null until final settlement).
+                var isSettled = cashoutType == CashoutType.Full;
+
+                GtsCashout gtsCashout;
+                if (bet.CashedOutTotalTrueStake != null)
+                {
+                    // Enriched message: GTS wants totals across all cashouts of the bet, while
+                    // Bet.TrueStake holds only the remaining stake once partials happened (and
+                    // Bet.Payout only the final event's amount) - restore the original stake for
+                    // totalStake, and report a fully cashed-out bet's payout as everything paid
+                    // across its cashouts (equals cashedOutAmount, as in the pure-full case).
+                    bet.Bet.TrueStake = bet.OriginalTrueStake ?? bet.Bet.TrueStake;
+                    if (isSettled)
+                        bet.Bet.Payout = bet.CashedOutTotalAmount ?? bet.Bet.Payout;
+
+                    gtsCashout = new GtsCashout
+                    {
+                        CashedOutTotalStake = bet.CashedOutTotalTrueStake.Value,
+                        CashedOutAmount = bet.CashedOutTotalAmount ?? 0m
+                    };
+                }
+                else
+                {
+                    // Pre-enrichment full cashout with no prior partials: the bet row already
+                    // carries the cumulative figures. Bet.Payout holds the cashout amount.
+                    gtsCashout = new GtsCashout
+                    {
+                        CashedOutTotalStake = bet.Bet.TrueStake,
+                        CashedOutAmount = bet.Bet.Payout
+                    };
+                }
+
                 var sendBet = await _gtsRepo.SendBet(token.Result.Token, new SendBet()
                 {
                     Bet = bet.Bet,
                     BetSelections = bet.BetSelections
-                }, testPrefix, true, new GtsCashout
-                {
-                    CashedOutTotalStake = bet.Bet.TrueStake,
-                    CashedOutAmount = bet.Bet.Payout
-                });
+                }, testPrefix, isSettled, gtsCashout);
 
                 if (sendBet.StatusCode != StatusCode.Success)
                 {
@@ -331,7 +355,7 @@ namespace Platform.Shared.Providers.GTS
                     return;
                 }
 
-                _logger.LogInformation("ProcessCashout: bet {betId} reported to GTS as cashed out", bet.Bet.BetId);
+                _logger.LogInformation("ProcessCashout: bet {betId} reported to GTS ({cashoutType} cashout)", bet.Bet.BetId, cashoutType);
             }
             catch (Exception ex)
             {

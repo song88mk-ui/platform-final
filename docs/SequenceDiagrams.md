@@ -144,8 +144,8 @@ sequenceDiagram
     CashOut->>SQL: write PartialCashoutAudit; update Bet
     CashOut-->>Gateway: result (or 142 value changed → reconfirm)
     Gateway-->>PW: BaseResponseDTO<BetCashoutModel>
-    CashOut->>Provider: OnBetFullCashOut (r.bet.operator)
-    Provider->>GTS: POST …/bets — Settled + cashedOutTotalStake/cashedOutAmount<br/>(legs stay Open, payoutPrice null)
+    CashOut->>Provider: OnBetFullCashOut / OnBetPartialCashOut (r.bet.operator,<br/>with cumulative OriginalTrueStake/CashedOutTotalTrueStake/CashedOutTotalAmount)
+    Provider->>GTS: POST …/bets — full: Settled, partial: Open<br/>+ cumulative cashedOutTotalStake/cashedOutAmount, totalStake = original stake<br/>(legs stay Open, payoutPrice null)
 ```
 
 ## 6. Settlement (async, server-side)

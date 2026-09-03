@@ -174,12 +174,13 @@ namespace Platform.Shared.Test.Providers
         }
 
         [Fact]
-        public async Task ProcessCashout_PartialCashoutType_DoesNotSendToGts()
+        public async Task ProcessCashout_PartialWithoutCumulativeFigures_DoesNotSendToGts()
         {
             var auth = new FakeGtsAuthRepository();
             var repo = new FakeGtsRepository();
             var provider = CreateProvider(auth, repo);
 
+            // Pre-enrichment message still in flight: no cumulative figures, must skip.
             await provider.ProcessCashout(new OnBetSettlement
             {
                 Bet = new Bet { BetId = Guid.NewGuid(), ClientCode = "S88" },
@@ -190,14 +191,14 @@ namespace Platform.Shared.Test.Providers
         }
 
         [Fact]
-        public async Task ProcessCashout_FullAfterPriorPartials_DoesNotSendToGts()
+        public async Task ProcessCashout_FullAfterPriorPartialsWithoutCumulativeFigures_DoesNotSendToGts()
         {
             var auth = new FakeGtsAuthRepository();
             var repo = new FakeGtsRepository();
             var provider = CreateProvider(auth, repo);
 
-            // Bet had earlier partial cashouts: stake/payout are no longer the cumulative
-            // figures GTS requires, so the update must be skipped.
+            // Bet had earlier partial cashouts and the message carries no cumulative
+            // figures: stake/payout alone understate what GTS requires, so skip.
             await provider.ProcessCashout(new OnBetSettlement
             {
                 Bet = new Bet { BetId = Guid.NewGuid(), ClientCode = "S88", IsPartialCashout = true },
@@ -205,6 +206,79 @@ namespace Platform.Shared.Test.Providers
             }, CashoutType.Full, "corr-1");
 
             Assert.Null(repo.LastSendBet);
+        }
+
+        [Fact]
+        public async Task ProcessCashout_PartialWithCumulativeFigures_SendsOpenUpdateWithCumulativeTotals()
+        {
+            var auth = new FakeGtsAuthRepository();
+            var repo = new FakeGtsRepository();
+            var provider = CreateProvider(auth, repo);
+
+            // Second partial cashout of a 150 bet: first used 60 TrueStake (paid 55),
+            // this one uses 37.5 (paid 33). Bet row already holds the reduced stake.
+            var settlement = new OnBetSettlementPartial
+            {
+                Bet = new Bet
+                {
+                    BetId = Guid.NewGuid(),
+                    ClientCode = "S88",
+                    TrueStake = 52.5m,
+                    Payout = 99.75m,
+                    BetStatusId = (int)BetStatus.Running,
+                    IsPartialCashout = true
+                },
+                BetSelections = new List<BetSelection> { new BetSelection { SportId = 1, BetSelectionStatusId = (int)BetStatus.Running } },
+                OriginalTrueStake = 150m,
+                CashedOutTotalTrueStake = 97.5m,
+                CashedOutTotalAmount = 88m
+            };
+
+            await provider.ProcessCashout(settlement, CashoutType.Partial, "corr-1");
+
+            Assert.NotNull(repo.LastSendBet);
+            Assert.False(repo.LastSendBet!.Value.IsSettled);
+            Assert.Equal(97.5m, repo.LastSendBet!.Value.Cashout.CashedOutTotalStake);
+            Assert.Equal(88m, repo.LastSendBet!.Value.Cashout.CashedOutAmount);
+            // totalStake sent to GTS derives from Bet.TrueStake: must be the original stake.
+            Assert.Equal(150m, repo.LastSendBet!.Value.Request.Bet.TrueStake);
+        }
+
+        [Fact]
+        public async Task ProcessCashout_FullAfterPriorPartialsWithCumulativeFigures_SendsSettledCumulativeUpdate()
+        {
+            var auth = new FakeGtsAuthRepository();
+            var repo = new FakeGtsRepository();
+            var provider = CreateProvider(auth, repo);
+
+            // Final full cashout of the 52.5 remaining after 97.5 was cashed out in
+            // partials (paid 88); this event pays 60. Payout reported to GTS is the
+            // total paid across all cashouts, matching cashedOutAmount.
+            var settlement = new OnBetSettlement
+            {
+                Bet = new Bet
+                {
+                    BetId = Guid.NewGuid(),
+                    ClientCode = "S88",
+                    TrueStake = 52.5m,
+                    Payout = 60m,
+                    BetStatusId = (int)BetStatus.CashedOut,
+                    IsPartialCashout = true
+                },
+                BetSelections = new List<BetSelection> { new BetSelection { SportId = 1, BetSelectionStatusId = (int)BetStatus.CashedOut } },
+                OriginalTrueStake = 150m,
+                CashedOutTotalTrueStake = 150m,
+                CashedOutTotalAmount = 148m
+            };
+
+            await provider.ProcessCashout(settlement, CashoutType.Full, "corr-1");
+
+            Assert.NotNull(repo.LastSendBet);
+            Assert.True(repo.LastSendBet!.Value.IsSettled);
+            Assert.Equal(150m, repo.LastSendBet!.Value.Cashout.CashedOutTotalStake);
+            Assert.Equal(148m, repo.LastSendBet!.Value.Cashout.CashedOutAmount);
+            Assert.Equal(150m, repo.LastSendBet!.Value.Request.Bet.TrueStake);
+            Assert.Equal(148m, repo.LastSendBet!.Value.Request.Bet.Payout);
         }
 
         [Fact]

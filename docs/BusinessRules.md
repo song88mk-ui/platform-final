@@ -94,10 +94,14 @@ Encoded by `StatusCode` 104–117 and `BetConfig`. **[Verified]** (codes) / **[L
    errors — fail-fast) → cashout declined, no money moves, `OnBetStatus` pushed to the client.
    Providers self-gate on `Custom:IsProviderEnabled`. **[Verified]** (GM-398).
 6. **Provider bet update (post-settlement)** — `Provider.Service` consumes
-   `OnBetFullCashOut` from `r.bet.operator` and reports the bet to GTS as `Settled` with
-   `cashedOutTotalStake`/`cashedOutAmount`/`payout`; legs stay `Open` with `payoutPrice=null`
-   (per Genius Sports guidance). Partial cashout is not yet forwarded (message lacks cumulative
-   figures). **[Verified]** (GM-398).
+   `OnBetFullCashOut`/`OnBetPartialCashOut` from `r.bet.operator` and reports the bet to GTS
+   with `cashedOutTotalStake`/`cashedOutAmount`/`payout`; legs stay `Open` with `payoutPrice=null`
+   (per Genius Sports guidance). `CashOut.Service` stamps cumulative figures
+   (`OriginalTrueStake`/`CashedOutTotalTrueStake`/`CashedOutTotalAmount`) on both messages from
+   the `PartialCashoutAudit` rows: a partial cashout is reported as an `Open` update (no payout),
+   a full cashout as `Settled` with `totalStake` restored to the original stake and `payout` equal
+   to the total paid across all cashouts. Messages lacking the cumulative fields (pre-enrichment,
+   in flight during deploy) are skipped with a warning. **[Verified]** (GM-398, GM-790).
 
 ## I. Settlement rules
 1. **Grading** sets `BetSelectionStatusId` per leg, then the `Bet` status:

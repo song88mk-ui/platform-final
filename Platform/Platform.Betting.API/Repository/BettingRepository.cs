@@ -3528,6 +3528,7 @@ namespace Platform.Betting.API.Repository
                         {
                             BetSelectionId = s.BetSelectionId,
                             IsLive = s.IsLive,
+                            Price = s.Price,
                             Probability = s.Probability,
                             WonProbability = s.WonProbability,
                             LostProbability = s.LostProbability,
@@ -3568,6 +3569,7 @@ namespace Platform.Betting.API.Repository
                         {
                             BetSelectionId = s.BetSelectionId,
                             IsLive = s.IsLive,
+                            Price = s.Price,
                             Probability = s.Probability,
                             WonProbability = s.WonProbability,
                             LostProbability = s.LostProbability,
@@ -3663,6 +3665,7 @@ namespace Platform.Betting.API.Repository
                 {
                     BetSelectionId = s.BetSelectionId,
                             IsLive = s.IsLive,
+                    Price = s.Price,
                     Probability = s.Probability,
                     WonProbability = s.WonProbability,
                     LostProbability = s.LostProbability,

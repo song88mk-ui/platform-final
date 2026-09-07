@@ -399,6 +399,8 @@ namespace Platform.Shared.Repositories
         // stale when a prematch fixture goes live, so prefer the quote-time per-leg liveness in
         // `probabilities` (matched by BetSelectionId); fall back to the bet-level isInPlay flag,
         // then to the stored fixture status.
+        // price per leg: same preference — the quote-time current price from `probabilities`
+        // (what the confirmed offer was computed from), falling back to placement-time odds.
         public async Task<BaseResponseDTO<ProviderAssessmentResponseDTO>> CashoutAssessment(string authToken, OnBetSettlement request, string testPrefix = "", bool isInPlay = false, List<CashedOutProbabilities> probabilities = null)
         {
             using (var activity = _activitySource.StartActivity("gts.cashout.assessment"))
@@ -445,7 +447,7 @@ namespace Platform.Shared.Repositories
                         {
                             selectionId = s.SelectionSpecifier.Split(':').LastOrDefault(),
                             gameState = GetCashoutGameState(s, isInPlay, probabilities),
-                            price = s.Odds
+                            price = GetCashoutPrice(s, probabilities)
                         }).ToList(),
                         priceChangeRule = "AcceptAny"
                     };
@@ -749,6 +751,18 @@ namespace Platform.Shared.Repositories
                 return probability.IsLive ? "InPlay" : "PreMatch";
 
             return isInPlay ? "InPlay" : GetGameState(selection.FixtureStatusId);
+        }
+
+        // Per-leg price for the cashout assessment: the quote-time current price (the price
+        // the confirmed offer was computed from) wins; without it, fall back to the stored
+        // placement-time odds. GTS validates the submitted prices against its own current
+        // prices (bookmaker price-variation limit), so placement odds structurally fail for
+        // in-play legs once the market has drifted past the limit.
+        private decimal GetCashoutPrice(BetSelection selection, List<CashedOutProbabilities> probabilities)
+        {
+            var probability = probabilities?.FirstOrDefault(p => p.BetSelectionId == selection.BetSelectionId);
+
+            return probability?.Price > 0 ? probability.Price.Value : selection.Odds;
         }
 
         private string GetPriceChangeRule(OddsChangeType oddsChangeType)

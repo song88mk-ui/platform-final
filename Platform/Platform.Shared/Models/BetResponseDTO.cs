@@ -71,5 +71,8 @@ namespace Platform.Shared.Models
         public double Probability { get; set; }
         public int CashOutStatusId { get; set; }
         public int BetSelectionStatusId { get; set; }
+        // Current decimal price at quote time; null when the serving
+        // Sportsbook.API predates the field.
+        public decimal? Price { get; set; }
     }
 }

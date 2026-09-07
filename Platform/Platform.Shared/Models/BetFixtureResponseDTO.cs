@@ -38,6 +38,9 @@ namespace Platform.Shared.Models
         public double HalfWonProbability { get; set; }
         public double HalfLostProbability { get; set; }
         public int SelectionStatusId { get; set; }
+        // Current decimal price at quote time; null when the serving
+        // Sportsbook.API predates the field.
+        public decimal? Price { get; set; }
     }
 
     public class BetFixtureSelectionResponseDTO

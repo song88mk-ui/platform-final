@@ -46,5 +46,11 @@ namespace Platform.Shared.MessageModels
         public double HalfLostProbability { get; set; }
         public double Probability { get; set; }
         public int CashOutStatusId { get; set; }
+        // Current decimal price at quote time — the price the confirmed cashout offer
+        // was computed from. The GTS cashout assessment must send this, not the
+        // placement-time odds: GTS validates submitted prices against its own current
+        // prices (price variation limit), so placement odds structurally fail for
+        // in-play bets. Null when published by a pre-field Betting.API.
+        public decimal? Price { get; set; }
     }
 }

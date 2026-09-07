@@ -286,6 +286,7 @@ namespace Platform.Betting.API.Repository
                                 BetSelectionId = selection.BetSelectionId,
                                 IsLive = selectionProbability.FixtureStatusId == (int)FixtureStatus.Live,
                                 CashOutStatusId = 1,
+                                Price = selectionProbability.Price,
                                 Probability = selectionProbability.Probability,
                                 WonProbability = selectionProbability.WonProbability,
                                 LostProbability = selectionProbability.LostProbability,

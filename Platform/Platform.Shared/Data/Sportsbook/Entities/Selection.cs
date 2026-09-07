@@ -98,6 +98,7 @@ namespace Platform.Shared.Data.Sportsbook.Entities
         public long MaId { get; set; }
         public int MaStId { get; set; }
         public bool IsAc { get; set; }
+        public decimal Od { get; set; }
         public double Pr { get; set; }
         public double WoPr { get; set; }
         public double LoPr { get; set; }

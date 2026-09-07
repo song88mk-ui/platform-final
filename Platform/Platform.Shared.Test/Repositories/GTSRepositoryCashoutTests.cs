@@ -252,6 +252,69 @@ namespace Platform.Shared.Test.Repositories
         }
 
         [Fact]
+        public async Task CashoutAssessment_UsesQuoteTimeCurrentPricePerLeg()
+        {
+            var handler = new CapturingHandler(HttpStatusCode.OK, "{\"isBetAllowed\":true}");
+            var repository = CreateRepository(handler);
+
+            var driftedLeg = CreateSelection((int)BetStatus.CashedOut, specifier: "sr:market:drifted-leg", odds: 1.98m);
+            driftedLeg.BetSelectionId = Guid.NewGuid();
+            var unquotedLeg = CreateSelection((int)BetStatus.CashedOut, specifier: "sr:market:unquoted-leg", odds: 2.65m);
+            unquotedLeg.BetSelectionId = Guid.NewGuid();
+
+            // The market moved from 1.98 to 1.80 since placement. GTS rejects submitted
+            // prices that drift past its variation limit, so the assessment must carry the
+            // quote-time current price the confirmed offer was computed from — not the
+            // placement odds. A leg without a quote-time price falls back to placement odds.
+            await repository.CashoutAssessment("token", new MessageModels.OnBetSettlement
+            {
+                Bet = CreateCashedOutBet(),
+                BetSelections = new List<BetSelection> { driftedLeg, unquotedLeg }
+            }, probabilities: new List<MessageModels.CashedOutProbabilities>
+            {
+                new MessageModels.CashedOutProbabilities { BetSelectionId = driftedLeg.BetSelectionId, IsLive = true, Price = 1.80m }
+            });
+
+            var request = Assert.Single(handler.Requests);
+            using var json = JsonDocument.Parse(request.Body);
+            var legs = json.RootElement.GetProperty("legs").EnumerateArray().ToList();
+
+            Assert.Equal(1.80m, legs[0].GetProperty("price").GetDecimal());
+            Assert.Equal(2.65m, legs[1].GetProperty("price").GetDecimal());
+        }
+
+        [Fact]
+        public async Task CashoutAssessment_NullOrZeroQuotePriceFallsBackToPlacementOdds()
+        {
+            var handler = new CapturingHandler(HttpStatusCode.OK, "{\"isBetAllowed\":true}");
+            var repository = CreateRepository(handler);
+
+            var nullPriceLeg = CreateSelection((int)BetStatus.CashedOut, specifier: "sr:market:null-price-leg", odds: 1.98m);
+            nullPriceLeg.BetSelectionId = Guid.NewGuid();
+            var zeroPriceLeg = CreateSelection((int)BetStatus.CashedOut, specifier: "sr:market:zero-price-leg", odds: 2.65m);
+            zeroPriceLeg.BetSelectionId = Guid.NewGuid();
+
+            // Price is null when Betting.API predates the field, and 0 must never be sent
+            // as a price — both fall back to the stored placement odds.
+            await repository.CashoutAssessment("token", new MessageModels.OnBetSettlement
+            {
+                Bet = CreateCashedOutBet(),
+                BetSelections = new List<BetSelection> { nullPriceLeg, zeroPriceLeg }
+            }, probabilities: new List<MessageModels.CashedOutProbabilities>
+            {
+                new MessageModels.CashedOutProbabilities { BetSelectionId = nullPriceLeg.BetSelectionId, IsLive = true },
+                new MessageModels.CashedOutProbabilities { BetSelectionId = zeroPriceLeg.BetSelectionId, IsLive = true, Price = 0m }
+            });
+
+            var request = Assert.Single(handler.Requests);
+            using var json = JsonDocument.Parse(request.Body);
+            var legs = json.RootElement.GetProperty("legs").EnumerateArray().ToList();
+
+            Assert.Equal(1.98m, legs[0].GetProperty("price").GetDecimal());
+            Assert.Equal(2.65m, legs[1].GetProperty("price").GetDecimal());
+        }
+
+        [Fact]
         public async Task CashoutAssessment_ExcludesLegsSettledBeforeTheCashout()
         {
             var handler = new CapturingHandler(HttpStatusCode.OK, "{\"isBetAllowed\":true}");

@@ -13,4 +13,5 @@ public interface IPlatformEvent
     Task OnCashOutChange(OutgoingCashOutChange message);
     Task OnWalletChange(OutgoingWalletChange message);
     Task OnPayableChange(OutgoingPayableChange message);
+    Task OnWebPropsChange(OutgoingWebPropsChange message);
 }

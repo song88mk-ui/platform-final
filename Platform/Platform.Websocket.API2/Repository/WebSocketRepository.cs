@@ -113,6 +113,7 @@ namespace Platform.WebSocket.API2.Repository
 
                     await Groups.AddToGroupAsync(Context.ConnectionId, $"endpoint:{client.Item2}:{request.ChannelKey}");
                     await Groups.AddToGroupAsync(Context.ConnectionId, $"onbetstopglobal:{client.Item2}");
+                    await Groups.AddToGroupAsync(Context.ConnectionId, $"onwebpropschange:{client.Item2}");
                 }
         }
 
@@ -510,6 +511,23 @@ namespace Platform.WebSocket.API2.Repository
             _logger.LogInformation("Sending to {target}", $"onpayablechange:{clientCode}:{message.UsId.ToLower()}");
 
             await Clients.Group($"onpayablechange:{clientCode}:{message.UsId.ToLower()}").OnPayableChange(message);
+        }
+
+        public async Task PublishWebPropsChange(string clientCode, OutgoingWebPropsChange message)
+        {
+            if (_eventCounter.Enabled)
+                _eventCounter.Add(1, new KeyValuePair<string, object?>("event", "PublishWebPropsChange"));
+
+            var properties = new Dictionary<string, string>
+            {
+                { "clientCode", clientCode },
+                { "requestParameters", JsonSerializer.Serialize(message) },
+                { "RequestTimestamp", DateTime.UtcNow.ToString() }
+            };
+
+            _logger.LogDebug("{event} {@properties}", "PublishWebPropsChange", properties);
+
+            await Clients.Group($"onwebpropschange:{clientCode}").OnWebPropsChange(message);
         }
 
         public string? GetClientIp()

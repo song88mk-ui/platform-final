@@ -145,13 +145,26 @@ namespace Platform.Shared.Providers.GTS
             }
         }
 
-        public async void ProcessSettlement(OnBetSettlement bet, string correlationId)
+        // Returns Task (not async void) so the caller can hold its DI scope open until the GTS call
+        // completes, the same reason ProcessCashout does.
+        public async Task ProcessSettlement(OnBetSettlement bet, string correlationId)
         {
 
             _logger.LogInformation($"ProcessSettlement start");
 
             if (!Convert.ToBoolean(_configuration["Custom:IsProviderEnabled"]))
                 return;
+
+            // GM-800 follow-up: forward only settlements that changed the bet. Settlement.Service sets
+            // IsAudit = true when the pass produced a new bet status (or a new payout once all legs are
+            // settled) and false when a leg settles on a bet whose outcome is already decided, e.g. a
+            // Won leg on a Lost parlay or the final leg that leaves it Lost. GTS gets the first decisive
+            // settlement and any later status change (Lost to Won on resettlement), not the legs in between.
+            if (!bet.IsAudit)
+            {
+                _logger.LogInformation("ProcessSettlement: bet {betId} unchanged by this settlement (IsAudit false) - not forwarded to GTS", bet.Bet?.BetId);
+                return;
+            }
 
             var testClientCodes = (_configuration["Custom:TestBetClientCodes"] ?? string.Empty)
                 .Split(',', StringSplitOptions.RemoveEmptyEntries);

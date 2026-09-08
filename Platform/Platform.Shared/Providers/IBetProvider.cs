@@ -21,7 +21,8 @@ namespace Platform.Shared.Providers
         Task<BetProviderResult> ValidateCashoutAsync(OnCashoutBetSettlement message, Bet bet, List<BetSelection> selections, bool isFullCashout, decimal cashoutPercent, decimal prevCashoutAmount);
 
         void ProcessCancellation(Guid betId, string limitId, string clientCode, string correlationId, bool isBackOfficeTrigger = false);
-        void ProcessSettlement(OnBetSettlement bet, string correlationId);
+        // Returns Task (not async void) for the same reason as ProcessCashout below.
+        Task ProcessSettlement(OnBetSettlement bet, string correlationId);
         // Returns Task (not async void) so the caller can hold its DI scope open until the
         // provider call completes — otherwise the scoped HttpClient is disposed mid-flight
         // and the update to the provider is silently lost.

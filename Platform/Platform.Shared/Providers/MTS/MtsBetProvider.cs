@@ -179,9 +179,10 @@ namespace Platform.Shared.Providers.MTS
                 }
             }
         }
-        public void ProcessSettlement(OnBetSettlement bet, string correlationId)
+        public Task ProcessSettlement(OnBetSettlement bet, string correlationId)
         {
-            //return new NotImplementedException();
+            // No-op: MTS settlements are not forwarded.
+            return Task.CompletedTask;
         }
 
         public Task ProcessCashout(OnBetSettlement bet, CashoutType cashoutType, string correlationId)

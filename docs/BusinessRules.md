@@ -116,6 +116,14 @@ Encoded by `StatusCode` 104–117 and `BetConfig`. **[Verified]** (codes) / **[L
    result; failed settlements are retried by `Job.Resettlement` (Fibonacci backoff, `RetryCount<8`)
    and BO can `resendsettlement`. **[Verified]**.
 6. **Audit** — every state change snapshots `BetAudit`/`BetSelectionAudit`. **[Verified]**.
+7. **GTS forwarding only on bet change** - `Settlement.Service` publishes `OnBetSettlement` with
+   `IsAudit = true` only when the settlement pass changed the bet (new status, or new payout in
+   `ApplyAllSettled`); a leg settling on a bet whose outcome is already decided (a Won leg on a Lost
+   parlay, or the final leg that leaves it Lost) publishes with `IsAudit = false`.
+   `GTSBetProvider.ProcessSettlement` forwards to GTS only when `IsAudit` is true, so GTS receives the
+   first decisive settlement and any later status change (Lost to Won on resettlement), not the legs
+   in between. `Operator.Servicev2` keys its own behaviour on the same flag. **[Verified]** (GM-800
+   follow-up).
 
 ## J. History / query rules
 1. **Date window** — `FromDate < ToDate` → else `152`; **max 24h per request** → `153`. **[Verified]** (codes).

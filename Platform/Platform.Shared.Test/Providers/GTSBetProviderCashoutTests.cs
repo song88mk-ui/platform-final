@@ -152,6 +152,75 @@ namespace Platform.Shared.Test.Providers
             Assert.Equal("Liability threshold breached", result.Reason);
         }
 
+        // GM-800 follow-up: a settlement is forwarded to GTS only when it changed the bet. Settlement.Service
+        // marks that with IsAudit = true (first decisive leg, or a later status change on resettlement);
+        // legs settling on an already-decided parlay arrive with IsAudit = false and must not reach GTS.
+        [Fact]
+        public async Task ProcessSettlement_BetOutcomeChanged_SendsSettledUpdate()
+        {
+            var auth = new FakeGtsAuthRepository();
+            var repo = new FakeGtsRepository();
+            var provider = CreateProvider(auth, repo);
+
+            // First leg of the parlay settled Lost: the bet just became Lost.
+            await provider.ProcessSettlement(new OnBetSettlement
+            {
+                Bet = new Bet { BetId = Guid.NewGuid(), ClientCode = "S88", BetStatusId = (int)BetStatus.Lost },
+                BetSelections = new List<BetSelection>
+                {
+                    new BetSelection { SportId = 1, BetSelectionStatusId = (int)BetStatus.Lost },
+                    new BetSelection { SportId = 1, BetSelectionStatusId = (int)BetStatus.Running }
+                },
+                IsAudit = true
+            }, "corr-1");
+
+            Assert.NotNull(repo.LastSendBet);
+            Assert.True(repo.LastSendBet!.Value.IsSettled);
+        }
+
+        [Fact]
+        public async Task ProcessSettlement_LegSettledWithoutBetChange_DoesNotSendToGts()
+        {
+            var auth = new FakeGtsAuthRepository();
+            var repo = new FakeGtsRepository();
+            var provider = CreateProvider(auth, repo);
+
+            // Remaining leg of an already-Lost parlay settled: status and payout unchanged.
+            await provider.ProcessSettlement(new OnBetSettlement
+            {
+                Bet = new Bet { BetId = Guid.NewGuid(), ClientCode = "S88", BetStatusId = (int)BetStatus.Lost },
+                BetSelections = new List<BetSelection>
+                {
+                    new BetSelection { SportId = 1, BetSelectionStatusId = (int)BetStatus.Lost },
+                    new BetSelection { SportId = 1, BetSelectionStatusId = (int)BetStatus.Won }
+                },
+                IsAudit = false
+            }, "corr-1");
+
+            Assert.Null(repo.LastSendBet);
+            Assert.Equal(0, auth.Calls); // skipped before any GTS traffic
+        }
+
+        [Fact]
+        public async Task ProcessSettlement_StatusChangedOnResettlement_SendsSettledUpdate()
+        {
+            var auth = new FakeGtsAuthRepository();
+            var repo = new FakeGtsRepository();
+            var provider = CreateProvider(auth, repo);
+
+            // Lost leg re-graded to Won: the bet flips from Lost to Won, so GTS must be told.
+            await provider.ProcessSettlement(new OnBetSettlement
+            {
+                Bet = new Bet { BetId = Guid.NewGuid(), ClientCode = "S88", BetStatusId = (int)BetStatus.Won, IsResettled = true },
+                BetSelections = new List<BetSelection> { new BetSelection { SportId = 1, BetSelectionStatusId = (int)BetStatus.Won } },
+                IsAudit = true,
+                IsResettle = true
+            }, "corr-1");
+
+            Assert.NotNull(repo.LastSendBet);
+            Assert.True(repo.LastSendBet!.Value.IsSettled);
+        }
+
         [Fact]
         public async Task ProcessCashout_FullCashout_SendsSettledBetUpdateWithCashoutFigures()
         {

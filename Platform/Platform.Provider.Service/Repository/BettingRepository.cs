@@ -24,7 +24,8 @@ namespace Platform.Provider.Service.Repository
 
         public void ProcessBetSettlement(OnBetSettlement message, IBetProvider provider, string correlationId)
         {
-            provider.ProcessSettlement(message, correlationId);
+            // Block until the provider call completes (same reason as ProcessBetCashout below).
+            provider.ProcessSettlement(message, correlationId).GetAwaiter().GetResult();
         }
 
         public void ProcessBetCashout(OnBetSettlement message, CashoutType cashoutType, IBetProvider provider, string correlationId)

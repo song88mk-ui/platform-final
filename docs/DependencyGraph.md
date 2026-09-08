@@ -105,7 +105,7 @@ Producers/consumers of the key `On*` contracts (from `Platform.Shared/MessageMod
 | `Serilog` / `Serilog.AspNetCore` | 4.3.0 / 10.0.0 (unchanged) | nearly all |
 | `Swashbuckle.AspNetCore.*` | 10.2.3 (unified, GM-744) | APIs |
 | `System.Runtime.Caching` | 10.0.11 | Shared |
-| `Infra.Extensions.Telemetry` | 0.0.1-1 (unchanged) | private GitHub feed |
+| `Infra.Extensions.Telemetry` | 0.1.0-3 (unchanged) | private GitHub feed |
 | `OpenTelemetry.Api` (hand-rolled refs) | 1.14.0 / 1.14.0-beta.2 | Shared |
 
 > Version drift was largely eliminated by GM-744 (2026-08-20): EF Core, Microsoft.Extensions.*

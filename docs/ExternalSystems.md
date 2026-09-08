@@ -49,7 +49,7 @@
 | System | Role |
 |--------|------|
 | **GitHub NuGet feed** (`nuget.pkg.github.com/FlyingCockatoo`) | private packages; Docker build needs `NUGET_PASSWORD` |
-| **`Infra.Extensions.Telemetry`** (0.0.1-1, private) | the OpenTelemetry `AddTelemetry` extension used across services |
+| **`Infra.Extensions.Telemetry`** (0.1.0-3, private) | the OpenTelemetry `AddTelemetry` extension used across services |
 | **`Sportradar.MTS.SDKCore`** (2.4.1.2) | MTS SDK |
 
 ## External-call inventory (outbound HTTP from platform-final) `[Verified]`

@@ -113,6 +113,7 @@ app.UseCors("AllowAllOrigins");
 
 app.UseResponseCompression();
 
+#pragma warning disable ASP0014
 app.UseEndpoints(endpoints =>
 {
     endpoints.MapHub<WebSocketRepository>("/platform", options =>
@@ -123,6 +124,7 @@ app.UseEndpoints(endpoints =>
     });
     endpoints.MapControllers();
 });
+#pragma warning restore ASP0014
 
 //app.UseHttpsRedirection();
 

@@ -62,16 +62,17 @@ namespace Platform.Settlement.Service
 
         private IEnumerable<string> ExtractTraceFromBasicProperties(IBasicProperties props, string key)
         {
-          try
-          {
-            if (props.Headers.TryGetValue(key, out var value))
+            try
             {
-              var bytes = value as byte[];
-              return new[] { Encoding.UTF8.GetString(bytes) };
+                if (props.Headers.TryGetValue(key, out var value))
+                {
+                    var bytes = value as byte[];
+                    return new[] { Encoding.UTF8.GetString(bytes) };
+                }
             }
-          } catch (Exception) {}
+            catch (Exception) { }
 
-          return Enumerable.Empty<string>();
+            return Enumerable.Empty<string>();
         }
 
         private void MessageReceivedEvent(object sender, BasicDeliverEventArgs e)

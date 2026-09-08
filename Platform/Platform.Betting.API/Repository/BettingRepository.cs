@@ -3664,7 +3664,7 @@ namespace Platform.Betting.API.Repository
                 Probabilities = cashOut.Probabilities.Select(s => new CashedOutProbabilities
                 {
                     BetSelectionId = s.BetSelectionId,
-                            IsLive = s.IsLive,
+                    IsLive = s.IsLive,
                     Price = s.Price,
                     Probability = s.Probability,
                     WonProbability = s.WonProbability,

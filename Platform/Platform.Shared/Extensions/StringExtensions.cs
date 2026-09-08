@@ -7,7 +7,7 @@ namespace Platform.Shared.Extensions
 
         public static OGRequestDTO ToOGParam(this string input)
         {
-            if(string.IsNullOrEmpty(input))
+            if (string.IsNullOrEmpty(input))
                 return null;
 
             var ogParam = input.Split('|');
@@ -29,7 +29,7 @@ namespace Platform.Shared.Extensions
             if (string.IsNullOrEmpty(input))
                 return string.Empty;
 
-            if(input.ToUpper().Equals("CANCELLED"))
+            if (input.ToUpper().Equals("CANCELLED"))
                 return "Rollbacked";
 
             if (input.ToUpper().Equals("VOID"))

@@ -57,11 +57,11 @@ namespace Platform.API.Repository
             _memCache.DeleteCache(key);
 
             return new BaseResponseDTO<bool>
-                {
-                    StatusCode = StatusCode.Success,
-                    Message = StatusCode.Success.ToString(),
-                    Result = true
-                };
+            {
+                StatusCode = StatusCode.Success,
+                Message = StatusCode.Success.ToString(),
+                Result = true
+            };
         }
 
         public PlatformRepository(IOperatorRepository operatorRepository, IBettingRepository bettingRepository, ISportsbookRepository sportsbookRepository, ICasinoRepository casinoRepository, PlatformContext platformContext, IMemCache memCache, IConfiguration configuration, IMessageBroker messageBroker, Instrumentation instrumentation, ILogger<PlatformRepository> logger)
@@ -4665,7 +4665,7 @@ namespace Platform.API.Repository
         {
             if (request.CacheType == CacheType.Client)
             {
-                if(request.PurgeAll)
+                if (request.PurgeAll)
                     _memCache.DeleteCacheByPrefix("cc");
                 else
                     _memCache.DeleteCache(request.CacheKey);
@@ -4983,7 +4983,7 @@ namespace Platform.API.Repository
 
             var clientCodes = string.IsNullOrEmpty(request.ClientCodes) ? new List<string>() : request.ClientCodes.Split(',').ToList();
             var clientIds = string.Empty;
-            if(clientCodes.Any())
+            if (clientCodes.Any())
             {
                 var clientResult = await _platformContext.Client.Where(c => clientCodes.Contains(c.ClientCode)).ToListAsync();
                 if (clientResult == null || clientResult.Count == 0)

@@ -23,7 +23,8 @@ namespace Platform.Shared.Helpers
                 default:
                     retval = odds;
                     break;
-            };
+            }
+            ;
 
             return retval;
         }

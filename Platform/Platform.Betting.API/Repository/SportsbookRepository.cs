@@ -277,7 +277,7 @@ namespace Platform.Betting.API.Repository
                             if (selectionProbability.FixtureStatusId == (int)FixtureStatus.Live)
                                 hasLive = true;
 
-                            if ( selection.Probability != selectionProbability.Probability)
+                            if (selection.Probability != selectionProbability.Probability)
                                 hasProbabilityChanged = true;
 
 

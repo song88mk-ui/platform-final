@@ -78,7 +78,7 @@ namespace Platform.API.Controllers
             if (!string.IsNullOrEmpty(remoteIp))
             {
                 if (remoteIp.StartsWith(kubePrefix))
-                        return remoteIp.Substring(kubePrefix.Length);
+                    return remoteIp.Substring(kubePrefix.Length);
                 return remoteIp;
             }
 

@@ -39,7 +39,8 @@ namespace Platform.BetInfo.Service
 
         protected override Task ExecuteAsync(CancellationToken stoppingToken)
         {
-            try {
+            try
+            {
                 _messageBroker.ConnectWithManualAck();
                 _messageBroker.MessageReceived += MessageReceivedEvent;
             }

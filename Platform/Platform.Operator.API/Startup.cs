@@ -27,7 +27,7 @@ namespace Platform.Operator.API
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddSingleton<Instrumentation>();
-            services.AddTelemetry(new TelemetrySettings (
+            services.AddTelemetry(new TelemetrySettings(
                 ServiceName: Instrumentation.ActivitySourceName,
                 ActivitySourceName: Instrumentation.ActivitySourceName,
                 MeterName: Instrumentation.MeterName

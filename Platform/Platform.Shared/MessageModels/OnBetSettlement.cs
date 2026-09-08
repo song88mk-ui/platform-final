@@ -34,7 +34,7 @@ namespace Platform.Shared.MessageModels
 
     public class OnBetSettlementPartial : OnBetSettlement
     {
-        public decimal CashoutStake {  get; set; }
+        public decimal CashoutStake { get; set; }
         public decimal CashoutStakePercent { get; set; }
         public decimal Stake { get; set; }
         public decimal TrueStake { get; set; }

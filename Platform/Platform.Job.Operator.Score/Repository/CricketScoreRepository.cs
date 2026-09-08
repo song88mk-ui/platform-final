@@ -39,15 +39,15 @@ namespace Platform.Job.Operator.Score.Repository
                 {
                     var result = JsonSerializer.Deserialize<CricketScoreResponseDTO>(response.Content.ReadAsStringAsync().Result, _jsonOptions);
 
-                    if(result != null && result.Score != null)
+                    if (result != null && result.Score != null)
                     {
                         var inning1 = "0/0";
                         var inning2 = "0/0";
                         var inningOvers = string.Empty;
                         var innings = result.Score.Innings;
-                        if(innings != null)
+                        if (innings != null)
                         {
-                            foreach(var inning in innings)
+                            foreach (var inning in innings)
                             {
                                 if (inning.InningsNumber == 1)
                                     inning1 = $"{inning.Runs}/{inning.Wickets}";

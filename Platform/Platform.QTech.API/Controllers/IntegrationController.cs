@@ -106,7 +106,7 @@ namespace Platform.QTech.API.Controllers
                 request.TableId = string.Empty;
 
             if (request.JpContributions == null)
-                request.JpContributions =  new JackpotContribution[] { };
+                request.JpContributions = new JackpotContribution[] { };
 
             if (request.ClientRoundId == null)
                 request.ClientRoundId = string.Empty;

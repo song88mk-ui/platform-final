@@ -962,7 +962,7 @@ namespace Platform.API.Repository
                 };
             }
         }
-        public async Task<BaseResponseDTO<TWResponseDTO>> GetSelectionDetails (TWFixtureMarketSelectionDetailsRequestDTO request)
+        public async Task<BaseResponseDTO<TWResponseDTO>> GetSelectionDetails(TWFixtureMarketSelectionDetailsRequestDTO request)
         {
             try
             {

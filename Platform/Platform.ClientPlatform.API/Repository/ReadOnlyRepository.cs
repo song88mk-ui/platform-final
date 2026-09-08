@@ -75,7 +75,7 @@ namespace Platform.ClientPlatform.API.Repository
                 _httpClient.DefaultRequestHeaders.Add("x-language-code", languageCode);
 
                 var queryString = string.Empty;
-                if(request != null)
+                if (request != null)
                 {
                     if (!string.IsNullOrEmpty(request.ParticipantName))
                         queryString = queryString + $"participantName={request.ParticipantName}&";

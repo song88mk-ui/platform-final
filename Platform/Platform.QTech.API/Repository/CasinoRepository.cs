@@ -336,7 +336,7 @@ namespace Platform.QTech.API.Repository
 
                     if (transactionIds.Contains(request.TxnId) == false)
                     {
-                        transactionIds.Add($"{request.TxnId}|{walletResponse.Result.Balance}" );
+                        transactionIds.Add($"{request.TxnId}|{walletResponse.Result.Balance}");
 
                         round.TransactionIds = JsonSerializer.Serialize(transactionIds);
                     }
@@ -472,7 +472,7 @@ namespace Platform.QTech.API.Repository
 
                     if (transactionIds.Contains(request.TxnId) == false)
                     {
-                        transactionIds.Add($"{request.TxnId}|{walletResponse.Result.Balance}" );
+                        transactionIds.Add($"{request.TxnId}|{walletResponse.Result.Balance}");
 
                         round.TransactionIds = JsonSerializer.Serialize(transactionIds);
                     }
@@ -615,7 +615,7 @@ namespace Platform.QTech.API.Repository
 
                     if (transactionIds.Contains(request.TxnId) == false)
                     {
-                        transactionIds.Add($"{request.TxnId}|{walletResponse.Result.Balance}" );
+                        transactionIds.Add($"{request.TxnId}|{walletResponse.Result.Balance}");
 
                         round.TransactionIds = JsonSerializer.Serialize(transactionIds);
                     }
@@ -757,7 +757,7 @@ namespace Platform.QTech.API.Repository
             {
                 _memCache.DeleteCache("qttoken");
 
-                 return await GetLobbyURL(request);
+                return await GetLobbyURL(request);
             }
             else
             {

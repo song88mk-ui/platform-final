@@ -56,7 +56,7 @@ namespace Platform.Job.ForexEUR.Repository
 
             using (var context = new PlatformContext(optionsBuilder.Options))
             {
-                foreach(var rate in result.Rates)
+                foreach (var rate in result.Rates)
                 {
                     _logger.LogDebug($"Updating [{rate.Key}]");
                     var currency = context.ForexEUR.Find(rate.Key);

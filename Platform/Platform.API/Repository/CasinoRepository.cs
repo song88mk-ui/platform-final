@@ -79,7 +79,7 @@ namespace Platform.API.Repository
                 return new BaseResponseDTO<CasinoBetHistoryResponseDTO>
                 {
                     StatusCode = StatusCode.Error,
-                    Message = $"{StatusCode.Error.ToString().Replace('_',' ')} ({ex.Message})"
+                    Message = $"{StatusCode.Error.ToString().Replace('_', ' ')} ({ex.Message})"
                 };
             }
         }

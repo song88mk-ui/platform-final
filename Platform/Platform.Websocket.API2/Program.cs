@@ -22,7 +22,7 @@ builder.Host.UseSerilog((context, _, serilog) =>
 
 // Add services to the container.
 builder.Services.AddSingleton<Instrumentation>();
-builder.Services.AddTelemetry(new TelemetrySettings (
+builder.Services.AddTelemetry(new TelemetrySettings(
     ServiceName: Instrumentation.ActivitySourceName,
     ActivitySourceName: Instrumentation.ActivitySourceName,
     MeterName: Instrumentation.MeterName

@@ -63,7 +63,7 @@ namespace Platform.API
             });
 
             services.AddSingleton<Instrumentation>();
-            services.AddTelemetry(new TelemetrySettings (
+            services.AddTelemetry(new TelemetrySettings(
                 ServiceName: Platform.API.Telemetry.Instrumentation.ACTIVITY_SOURCE_NAME,
                 ActivitySourceName: Platform.API.Telemetry.Instrumentation.ACTIVITY_SOURCE_NAME,
                 MeterName: Platform.API.Telemetry.Instrumentation.METER_NAME

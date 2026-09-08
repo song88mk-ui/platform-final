@@ -38,13 +38,13 @@ namespace Platform.ClientSportsbook.API.Repository
                 IPCountryCode = clientKeyFilter.IpCountryCode
             };
 
-            if(request != null)
+            if (request != null)
             {
                 if (!string.IsNullOrEmpty(request.ParticipantName))
                 {
                     payload.ParticipantName = request.ParticipantName;
                 }
-                if(request.ToFixtureStartDate != null)
+                if (request.ToFixtureStartDate != null)
                 {
                     payload.ToFixtureStartDate = request.ToFixtureStartDate;
                 }
@@ -89,7 +89,7 @@ namespace Platform.ClientSportsbook.API.Repository
         }
         public async Task<BaseResponseDTO<TWLimitedResponseDTO>> GetActiveFixtureDetails(ClientKeyFilter clientKeyFilter, string fixtureId)
         {
-            if(!long.TryParse(fixtureId, out var id))
+            if (!long.TryParse(fixtureId, out var id))
             {
                 return new BaseResponseDTO<TWLimitedResponseDTO>
                 {

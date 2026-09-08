@@ -99,9 +99,9 @@ namespace Platform.Shared.Utility
                 {
                     byte[] bytes = hasher.ComputeHash(Encoding.UTF8.GetBytes(Environment.MachineName));
                     StringBuilder sb = new StringBuilder();
-                    foreach(byte b in bytes)
+                    foreach (byte b in bytes)
                         sb.Append(b.ToString("x2"));
-                    suffix = sb.ToString().Substring(0,5);
+                    suffix = sb.ToString().Substring(0, 5);
                 }
             }
 
@@ -115,18 +115,18 @@ namespace Platform.Shared.Utility
                         _logger.LogInformation("Connecting to RabbitMQ on [{host}:{port}; TlsEnabled: {tlsEnabled}",
                                 _hostName, _hostPort, _hostPort == 5671 ? true : false);
 
-                        _connectionFactory = new ConnectionFactory
-                        {
-                            HostName = _hostName,
-                            Port = _hostPort,
-                            UserName = _userName,
-                            Password = _password,
-                            VirtualHost = _virtualHost,
-                            RequestedHeartbeat = 60,
-                            NetworkRecoveryInterval = TimeSpan.FromSeconds(5),
-                            Ssl = new SslOption { Enabled = _hostPort == 5671 ? true : false, ServerName = _hostName },
-                            ClientProperties = clientProperties
-                        };
+                    _connectionFactory = new ConnectionFactory
+                    {
+                        HostName = _hostName,
+                        Port = _hostPort,
+                        UserName = _userName,
+                        Password = _password,
+                        VirtualHost = _virtualHost,
+                        RequestedHeartbeat = 60,
+                        NetworkRecoveryInterval = TimeSpan.FromSeconds(5),
+                        Ssl = new SslOption { Enabled = _hostPort == 5671 ? true : false, ServerName = _hostName },
+                        ClientProperties = clientProperties
+                    };
 
                     _connection = _connectionFactory.CreateConnection();
 
@@ -239,18 +239,18 @@ namespace Platform.Shared.Utility
                         _logger.LogInformation("Connecting to RabbitMQ on [{host}:{port}; TlsEnabled: {tlsEnabled}; ManualAck",
                                 _hostName, _hostPort, _hostPort == 5671 ? true : false);
 
-                        _connectionFactory = new ConnectionFactory
-                        {
-                            HostName = _hostName,
-                            Port = _hostPort,
-                            UserName = _userName,
-                            Password = _password,
-                            VirtualHost = _virtualHost,
-                            RequestedHeartbeat = 60,
-                            NetworkRecoveryInterval = TimeSpan.FromSeconds(5),
-                            Ssl = new SslOption { Enabled = _hostPort == 5671 ? true : false, ServerName = _hostName },
-                            ClientProperties = clientProperties,
-                        };
+                    _connectionFactory = new ConnectionFactory
+                    {
+                        HostName = _hostName,
+                        Port = _hostPort,
+                        UserName = _userName,
+                        Password = _password,
+                        VirtualHost = _virtualHost,
+                        RequestedHeartbeat = 60,
+                        NetworkRecoveryInterval = TimeSpan.FromSeconds(5),
+                        Ssl = new SslOption { Enabled = _hostPort == 5671 ? true : false, ServerName = _hostName },
+                        ClientProperties = clientProperties,
+                    };
 
                     _connection = _connectionFactory.CreateConnection();
 
@@ -317,18 +317,18 @@ namespace Platform.Shared.Utility
                         _logger.LogInformation("Connecting to RabbitMQ on [{host}:{port}; TlsEnabled: {tlsEnabled}; AutoAck",
                                 _hostName, _hostPort, _hostPort == 5671 ? true : false);
 
-                        _connectionFactory = new ConnectionFactory
-                        {
-                            HostName = _hostName,
-                            Port = _hostPort,
-                            UserName = _userName,
-                            Password = _password,
-                            VirtualHost = _virtualHost,
-                            RequestedHeartbeat = 60,
-                            NetworkRecoveryInterval = TimeSpan.FromSeconds(5),
-                            Ssl = new SslOption { Enabled = _hostPort == 5671 ? true : false, ServerName = _hostName },
-                            ClientProperties = clientProperties
-                        };
+                    _connectionFactory = new ConnectionFactory
+                    {
+                        HostName = _hostName,
+                        Port = _hostPort,
+                        UserName = _userName,
+                        Password = _password,
+                        VirtualHost = _virtualHost,
+                        RequestedHeartbeat = 60,
+                        NetworkRecoveryInterval = TimeSpan.FromSeconds(5),
+                        Ssl = new SslOption { Enabled = _hostPort == 5671 ? true : false, ServerName = _hostName },
+                        ClientProperties = clientProperties
+                    };
 
                     _connection = _connectionFactory.CreateConnection();
 
@@ -404,7 +404,8 @@ namespace Platform.Shared.Utility
                 if (activity != null)
                 {
                     contextToInject = activity.Context;
-                } else if (Activity.Current != null)
+                }
+                else if (Activity.Current != null)
                 {
                     contextToInject = Activity.Current.Context;
                 }
@@ -440,7 +441,8 @@ namespace Platform.Shared.Utility
                 if (activity != null)
                 {
                     contextToInject = activity.Context;
-                } else if (Activity.Current != null)
+                }
+                else if (Activity.Current != null)
                 {
                     contextToInject = Activity.Current.Context;
                 }
@@ -478,7 +480,8 @@ namespace Platform.Shared.Utility
                 if (activity != null)
                 {
                     contextToInject = activity.Context;
-                } else if (Activity.Current != null)
+                }
+                else if (Activity.Current != null)
                 {
                     contextToInject = Activity.Current.Context;
                 }
@@ -508,7 +511,8 @@ namespace Platform.Shared.Utility
                 if (activity != null)
                 {
                     contextToInject = activity.Context;
-                } else if (Activity.Current != null)
+                }
+                else if (Activity.Current != null)
                 {
                     contextToInject = Activity.Current.Context;
                 }
@@ -529,7 +533,8 @@ namespace Platform.Shared.Utility
                 if (props.Headers == null)
                     props.Headers = new Dictionary<string, object>();
                 props.Headers[key] = value;
-            } catch (Exception) {}
+            }
+            catch (Exception) { }
         }
 
         public void Dispose()
@@ -545,7 +550,7 @@ namespace Platform.Shared.Utility
             if (_connection != null && _connection.IsOpen)
                 return _connection;
 
-            lock(_lock)
+            lock (_lock)
             {
                 Connect(); //
                 if (_connection == null || !_connection.IsOpen)

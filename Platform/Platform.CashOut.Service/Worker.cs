@@ -821,7 +821,7 @@ namespace Platform.CashOut.Service
                         _bettingRepository.ProcessCashOut(onCashoutBetSettlement, _messageBroker, correlationId ?? Guid.NewGuid().ToString());
                         _messageBroker.Acknowledge(e);
                         break;
-                        //
+                    //
                     case "OnBetPartialCashOut":
                         var onPartialCashoutBetSettlement = JsonSerializer.Deserialize<OnCashoutBetSettlement>(payload);
                         _bettingRepository.ProcessCashOut(onPartialCashoutBetSettlement, _messageBroker, correlationId ?? Guid.NewGuid().ToString());

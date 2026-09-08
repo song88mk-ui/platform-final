@@ -2404,10 +2404,10 @@ namespace Platform.AgentReports.API.Repository
             foreach (var pt in productType)
             {
                 var products = pt.Select(s => new
-                    {
-                        ProductId = pt.Key.ProductTypeId == (int)Product.Sportsbook ? s.GameType : s.ProviderName,
-                        ProductName = s.ProviderName
-                    }).GroupBy(g => g.ProductName).OrderBy(o => pt.Key.ProductTypeId == (int)Product.Sportsbook ? $"Z{o.Key.PadLeft(5, '0')}" : o.Key).ToList();
+                {
+                    ProductId = pt.Key.ProductTypeId == (int)Product.Sportsbook ? s.GameType : s.ProviderName,
+                    ProductName = s.ProviderName
+                }).GroupBy(g => g.ProductName).OrderBy(o => pt.Key.ProductTypeId == (int)Product.Sportsbook ? $"Z{o.Key.PadLeft(5, '0')}" : o.Key).ToList();
 
                 var newPt = new ProductType
                 {

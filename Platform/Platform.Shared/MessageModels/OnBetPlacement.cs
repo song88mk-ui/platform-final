@@ -28,7 +28,7 @@ namespace Platform.Shared.MessageModels
     public class BetSelectionMessageExtenstion
     {
         public BetSelection BetSelection { get; set; }
-        public int MarketSelectionCount { get;set; }
+        public int MarketSelectionCount { get; set; }
     }
     public class OnBetPlacementError
     {

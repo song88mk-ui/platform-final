@@ -5,7 +5,7 @@ using System.Text;
 
 namespace Platform.Shared.Data.Betting.Entities
 {
-   public class StakeLimitFixture
+    public class StakeLimitFixture
     {
         public string UserId { get; set; }
 

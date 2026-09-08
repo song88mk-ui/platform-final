@@ -66,7 +66,7 @@ namespace Platform.QTech.API
             services.AddDbContext<PlatformContext>(o => o.UseSqlServer(Configuration["ConnectionStrings:Platform"]));
             services.AddDbContext<CasinoBettingContext>(o => o.UseSqlServer(Configuration["ConnectionStrings:CasinoBetting"]));
             services.AddSingleton<Instrumentation>();
-            services.AddTelemetry(new TelemetrySettings (
+            services.AddTelemetry(new TelemetrySettings(
                 ServiceName: Instrumentation.ActivitySourceName,
                 ActivitySourceName: Instrumentation.ActivitySourceName,
                 MeterName: Instrumentation.MeterName

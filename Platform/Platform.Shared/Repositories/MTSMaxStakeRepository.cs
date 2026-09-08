@@ -61,7 +61,7 @@ namespace Platform.Shared.Repositories
                 var betId = Guid.NewGuid().ToString();
 
                 var bets = new List<MTSBetDTO>();
-                if(isBetBuilder == true)
+                if (isBetBuilder == true)
                 {
                     bets.Add(new MTSBetDTO
                     {

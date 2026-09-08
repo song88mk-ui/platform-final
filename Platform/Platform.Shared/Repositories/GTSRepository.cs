@@ -41,7 +41,7 @@ namespace Platform.Shared.Repositories
         [Obsolete("Please use GetMaxStake2 since getmaxstake doesnt support currency")]
         public async Task<BaseResponseDTO<ProviderStakeResponseDTO>> GetMaxStakeOld(string authToken, BetRequestDTO request)
         {
-            using(var activity = _activitySource.StartActivity("gts.maxstake.old"))
+            using (var activity = _activitySource.StartActivity("gts.maxstake.old"))
             {
                 activity?.SetTag("provider.enabled", _configuration["Custom:IsProviderEnabled"]);
 
@@ -147,7 +147,7 @@ namespace Platform.Shared.Repositories
 
         public async Task<BaseResponseDTO<ProviderStakeResponseDTO>> GetMaxStake(string authToken, BetRequestDTO request)
         {
-            using(var activity = _activitySource.StartActivity("gts.maxstake"))
+            using (var activity = _activitySource.StartActivity("gts.maxstake"))
             {
                 activity?.SetTag("provider.enabled", _configuration["Custom:IsProviderEnabled"]);
 
@@ -261,7 +261,7 @@ namespace Platform.Shared.Repositories
 
         public async Task<BaseResponseDTO<ProviderAssessmentResponseDTO>> Assessment(string authToken, OnBetPlacement request, string testPrefix = "")
         {
-            using(var activity = _activitySource.StartActivity("gts.assessment"))
+            using (var activity = _activitySource.StartActivity("gts.assessment"))
             {
                 activity?.SetTag("provider.enabled", _configuration["Custom:IsProviderEnabled"]);
 
@@ -306,7 +306,7 @@ namespace Platform.Shared.Repositories
                     activity?.SetTag("gts.bookmaker.id", bookmakerId);
 
                     var totalStake = ConvertToEur(request.Bet.TrueStake, request.Bet.ExchangeRate);
-                     
+
                     var payload = new
                     {
                         betId = $"{testPrefix}{request.Bet.BetId.ToString().ToUpper()}",
@@ -331,7 +331,7 @@ namespace Platform.Shared.Repositories
                     {
                         var initialResult = JsonSerializer.Deserialize<GTSAssessmentResponseDTO>(await response.Content.ReadAsStringAsync(), _jsonOptions);
 
-                        if(initialResult.IsBetAllowed == false)
+                        if (initialResult.IsBetAllowed == false)
                             _logger.LogError($"Assessment Result: {JsonSerializer.Serialize(initialResult)}");
 
                         activity?.SetTag("gts.assessment.result", initialResult);
@@ -523,7 +523,7 @@ namespace Platform.Shared.Repositories
 
         public async Task<BaseResponseDTO<string>> SendBet(string authToken, SendBet request, string testPrefix = "", bool isSettled = false, GtsCashout cashout = null)
         {
-            using(var activity = _activitySource.StartActivity("gts.bet.placement"))
+            using (var activity = _activitySource.StartActivity("gts.bet.placement"))
             {
                 _httpClient.DefaultRequestHeaders.Clear();
                 _httpClient.DefaultRequestHeaders.Add("Authorization", $"Bearer {authToken}");
@@ -668,7 +668,7 @@ namespace Platform.Shared.Repositories
                     {
                         var content = await response.Content.ReadAsStringAsync();
 
-                        var initialResult = string.Empty; 
+                        var initialResult = string.Empty;
                         if (string.IsNullOrWhiteSpace(content))
                         {
                             // Handle empty response explicitly
@@ -790,7 +790,7 @@ namespace Platform.Shared.Repositories
             return status switch
             {
                 (int)BetStatus.Lost => 0m,
-                (int)BetStatus.HalfWon => ((odds - 1)/2) + 1,
+                (int)BetStatus.HalfWon => ((odds - 1) / 2) + 1,
                 (int)BetStatus.HalfLost => 0.5m,
                 (int)BetStatus.Won => odds,
                 (int)BetStatus.Void => 1,

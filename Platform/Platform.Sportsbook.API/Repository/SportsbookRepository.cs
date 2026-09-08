@@ -2930,7 +2930,7 @@ namespace Platform.Sportsbook.API.Repository
                 IsBetStop = s.IsSu,
                 IsBetStopGlobal = bettingStatus.IsBeSo,
                 IsBetBuilder = IsBetBuilder(s.SpId, s.FiTyId, s.FiStId, betBuilderMarketTemplates),
-                    SortOrder = sortOrder.TryGetValue((s.SpId, s.SegId, s.LeId), out var so) && so != 0 ? so : 1000
+                SortOrder = sortOrder.TryGetValue((s.SpId, s.SegId, s.LeId), out var so) && so != 0 ? so : 1000
             }).OrderBy(o => o.SortOrder).ThenBy(o => o.SegmentName).ThenBy(o => o.LeagueName).ThenBy(o => o.FixtureStartDate).ThenBy(o => o.FixtureName).ToList();
 
             var initialResult = new List<TempFixtureDTO>();
@@ -3133,9 +3133,9 @@ namespace Platform.Sportsbook.API.Repository
             }
             else
             {
-            var sortOrder = GetLeagueOrder(request.ClientId).Where(c => c.SportId == request.SportId)
-                .GroupBy(c => (c.SportId, c.SegmentId, c.LeagueId))
-                .ToDictionary(g => g.Key, g => g.First().SortOrder);
+                var sortOrder = GetLeagueOrder(request.ClientId).Where(c => c.SportId == request.SportId)
+                    .GroupBy(c => (c.SportId, c.SegmentId, c.LeagueId))
+                    .ToDictionary(g => g.Key, g => g.First().SortOrder);
 
                 result = fixtures.Select(s => new TempFixtureDTO
                 {

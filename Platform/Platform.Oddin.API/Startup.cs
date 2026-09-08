@@ -63,7 +63,7 @@ namespace Platform.Oddin.API
             services.AddDbContext<ESportBettingContext>(o => o.UseSqlServer(Configuration["ConnectionStrings:ESportBetting"]));
 
             services.AddSingleton<Instrumentation>();
-            services.AddTelemetry(new TelemetrySettings (
+            services.AddTelemetry(new TelemetrySettings(
                 ServiceName: Instrumentation.ActivitySourceName,
                 ActivitySourceName: Instrumentation.ActivitySourceName,
                 MeterName: Instrumentation.MeterName

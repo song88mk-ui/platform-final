@@ -33,8 +33,8 @@ namespace Platform.Operator.API.Repository
                 Password = request.Password,
                 Provider = "1002",
                 UserAgent = request.UserAgent,
-                IpAddress= request.IpAddress,
-                Country= request.Country
+                IpAddress = request.IpAddress,
+                Country = request.Country
             });
 
             if (loginResponse.StatusCode != Enums.AuthStatusCode.Success)

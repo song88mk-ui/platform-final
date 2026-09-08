@@ -91,7 +91,8 @@ namespace Platform.Oddin.API.Controllers
                     return Ok(result);
                 default:
                     return BadRequest(result);
-            };
+            }
+            ;
         }
     }
 }

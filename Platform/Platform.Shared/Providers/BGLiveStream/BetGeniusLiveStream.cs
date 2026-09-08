@@ -38,7 +38,7 @@ namespace Platform.Shared.Providers.BGLiveStream
                 var liveStreams = JsonSerializer.Deserialize<List<BGLiveStreamDto>>(liveStream);
                 var liveStreamDto = liveStreams?.FirstOrDefault();
 
-                if(liveStreamDto == null)
+                if (liveStreamDto == null)
                 {
                     _logger.LogError($"GetLiveStream: empty liveStreamDto");
                     return string.Empty;

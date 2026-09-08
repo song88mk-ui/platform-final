@@ -691,7 +691,7 @@ namespace Platform.AgentReports.Service.Repository
 
                 context.SaveChanges();
             }
-            else if(isExtended == false)
+            else if (isExtended == false)
             {
                 preCashBalance = runningBalance.CashBalance;
                 preTrueCashBalance = runningBalance.TrueCashBalance;
@@ -734,7 +734,7 @@ namespace Platform.AgentReports.Service.Repository
                 runningBalanceEntity = context.RunningBalance.Update(runningBalance).Entity;
             }
 
-            if(isExtended == false)
+            if (isExtended == false)
             {
                 context.RunningBalanceTransaction.Add(new RunningBalanceTransaction
                 {
@@ -1331,7 +1331,7 @@ namespace Platform.AgentReports.Service.Repository
                         ProviderName = product.ProviderName,
                         PositionTakingDetails = JsonConvert.SerializeObject(GetPTFinal(agent, agents)),
                         CasinoDetails = JsonConvert.SerializeObject(GetCasinoDetails(message, product))
-            });
+                    });
             }
         }
 
@@ -1512,7 +1512,7 @@ namespace Platform.AgentReports.Service.Repository
         private ProductLookup UpdateProductLookup(AgentReportsContext context, string category, string gameId)
         {
             var categoryType = GetProduct(category);
-            var gameType = category.Replace("CASINO/LIVECASINO/","").Replace("CASINO/VIRTUAL_SPORTS/", "").Replace("CASINO/", "");
+            var gameType = category.Replace("CASINO/LIVECASINO/", "").Replace("CASINO/VIRTUAL_SPORTS/", "").Replace("CASINO/", "");
             var provider = !string.IsNullOrEmpty(gameId) ? gameId.Split("-").FirstOrDefault() : string.Empty;
             var productName = !string.IsNullOrEmpty(gameId) ? gameId.Split("-").LastOrDefault() : string.Empty;
 
@@ -1701,7 +1701,7 @@ namespace Platform.AgentReports.Service.Repository
                     TransactionDate = DateTime.UtcNow
                 });
 
-                if(agent.UserType == Shared.Enums.UserType.Player)
+                if (agent.UserType == Shared.Enums.UserType.Player)
                 {
                     messageBroker.Publish(new OnPayableChange
                     {

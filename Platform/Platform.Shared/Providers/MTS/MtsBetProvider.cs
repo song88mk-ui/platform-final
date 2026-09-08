@@ -99,10 +99,10 @@ namespace Platform.Shared.Providers.MTS
             if (token.StatusCode != StatusCode.Success)
                 return new ProviderStakeResult
                 {
-                  IsSuccess = false,
-                  MaxStake = 0,
-                  StatusCode = (int)token.StatusCode,
-                  Message = "MTS_AUTH_FAILED"
+                    IsSuccess = false,
+                    MaxStake = 0,
+                    StatusCode = (int)token.StatusCode,
+                    Message = "MTS_AUTH_FAILED"
                 };
 
 
@@ -136,19 +136,19 @@ namespace Platform.Shared.Providers.MTS
 
             return result.StatusCode == StatusCode.Success
                 ? new ProviderStakeResult
-                    {
-                        IsSuccess = true,
-                        MaxStake = result.Result.Stake,
-                        StatusCode = (int)result.StatusCode,
-                        Message = result.StatusCode.ToString()
+                {
+                    IsSuccess = true,
+                    MaxStake = result.Result.Stake,
+                    StatusCode = (int)result.StatusCode,
+                    Message = result.StatusCode.ToString()
                 }
                 : new ProviderStakeResult
-                    {
-                        IsSuccess = false,
-                        MaxStake = 0,
-                        StatusCode = (int)result.StatusCode,
-                        Message = !string.IsNullOrEmpty(result.Message) ? result.Message : "MTS_MAXSTAKE_FAILED"
-                    };
+                {
+                    IsSuccess = false,
+                    MaxStake = 0,
+                    StatusCode = (int)result.StatusCode,
+                    Message = !string.IsNullOrEmpty(result.Message) ? result.Message : "MTS_MAXSTAKE_FAILED"
+                };
         }
 
         public void ProcessCancellation(Guid betId, string limitId, string clientCode, string correlationId, bool isBackOfficeTrigger = false)

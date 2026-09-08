@@ -94,7 +94,7 @@ namespace Platform.Shared.Providers.GTS
 
             if (providerResult.IsBetAllowed)
             {
-                
+
                 var sendBet = await _gtsRepo.SendBet(token.Result.Token, new SendBet()
                 {
                     Bet = bet.Bet,
@@ -158,7 +158,7 @@ namespace Platform.Shared.Providers.GTS
 
             string testPrefix = testClientCodes.Contains(bet.Bet.ClientCode, StringComparer.OrdinalIgnoreCase)
                 ? "test" : string.Empty;
-            
+
             if (bet.BetSelections.Any(c => c.SportId.IsVirtualSportId()))
                 return;
 

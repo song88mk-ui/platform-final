@@ -65,7 +65,7 @@ namespace Platform.API.Controllers
                                 { "response", result }
                             };
 
-            foreach(var prop in properties)
+            foreach (var prop in properties)
                 activity?.SetTag(prop.Key, prop.Value);
 
             switch (result.StatusCode)
@@ -108,7 +108,7 @@ namespace Platform.API.Controllers
                                 { "response", result }
                             };
 
-            foreach(var prop in properties)
+            foreach (var prop in properties)
                 activity?.SetTag(prop.Key, prop.Value);
 
             switch (result.StatusCode)
@@ -148,7 +148,7 @@ namespace Platform.API.Controllers
                                 { "message", result.Message }
                             };
 
-            foreach(var prop in properties)
+            foreach (var prop in properties)
                 activity?.SetTag(prop.Key, prop.Value);
 
             switch (result.StatusCode)
@@ -207,7 +207,7 @@ namespace Platform.API.Controllers
                                 { "response", JsonSerializer.Serialize(result) }
                             };
 
-                foreach(var prop in properties)
+                foreach (var prop in properties)
                     activity?.SetTag(prop.Key, prop.Value);
 
                 switch (result.StatusCode)
@@ -252,7 +252,7 @@ namespace Platform.API.Controllers
                                 { "response", result }
                             };
 
-                foreach(var prop in properties)
+                foreach (var prop in properties)
                     activity?.SetTag(prop.Key, prop.Value);
 
                 return BadRequest(result);
@@ -294,7 +294,7 @@ namespace Platform.API.Controllers
                                 { "message", result.Message }
                             };
 
-            foreach(var prop in properties)
+            foreach (var prop in properties)
                 activity?.SetTag(prop.Key, prop.Value);
 
             switch (result.StatusCode)
@@ -334,7 +334,7 @@ namespace Platform.API.Controllers
                                 { "message", result.Message }
                             };
 
-            foreach(var prop in properties)
+            foreach (var prop in properties)
                 activity?.SetTag(prop.Key, prop.Value);
 
             switch (result.StatusCode)
@@ -373,7 +373,7 @@ namespace Platform.API.Controllers
                                 { "statusCode", result.StatusCode }
                             };
 
-            foreach(var prop in properties)
+            foreach (var prop in properties)
                 activity?.SetTag(prop.Key, prop.Value);
 
             switch (result.StatusCode)
@@ -445,7 +445,7 @@ namespace Platform.API.Controllers
                                 { "message", ((dynamic)result).Message }
                             };
 
-            foreach(var prop in properties)
+            foreach (var prop in properties)
                 activity?.SetTag(prop.Key, prop.Value);
 
             switch (((dynamic)result).StatusCode)
@@ -497,7 +497,7 @@ namespace Platform.API.Controllers
                                 { "message", ((dynamic)result).Message }
                             };
 
-            foreach(var prop in properties)
+            foreach (var prop in properties)
                 activity?.SetTag(prop.Key, prop.Value);
 
             switch (((dynamic)result).StatusCode)
@@ -537,7 +537,7 @@ namespace Platform.API.Controllers
                                 { "message", result.Message }
                             };
 
-            foreach(var prop in properties)
+            foreach (var prop in properties)
                 activity?.SetTag(prop.Key, prop.Value);
 
             switch (result.StatusCode)
@@ -581,7 +581,7 @@ namespace Platform.API.Controllers
                                 { "message", result.Message }
                             };
 
-            foreach(var prop in properties)
+            foreach (var prop in properties)
                 activity?.SetTag(prop.Key, prop.Value);
 
             switch (result.StatusCode)
@@ -629,7 +629,7 @@ namespace Platform.API.Controllers
                                 { "message", result.Message }
                             };
 
-            foreach(var prop in properties)
+            foreach (var prop in properties)
                 activity?.SetTag(prop.Key, prop.Value);
 
             switch (result.StatusCode)
@@ -678,7 +678,7 @@ namespace Platform.API.Controllers
                                 { "message", result.Message }
                             };
 
-            foreach(var prop in properties)
+            foreach (var prop in properties)
                 activity?.SetTag(prop.Key, prop.Value);
 
             switch (result.StatusCode)
@@ -719,7 +719,7 @@ namespace Platform.API.Controllers
                                 { "message", result.Message }
                             };
 
-            foreach(var prop in properties)
+            foreach (var prop in properties)
                 activity?.SetTag(prop.Key, prop.Value);
 
             switch (result.StatusCode)
@@ -760,7 +760,7 @@ namespace Platform.API.Controllers
                                 { "message", result.Message }
                             };
 
-            foreach(var prop in properties)
+            foreach (var prop in properties)
                 activity?.SetTag(prop.Key, prop.Value);
 
             switch (result.StatusCode)
@@ -801,7 +801,7 @@ namespace Platform.API.Controllers
                                 { "message", result.Message }
                             };
 
-            foreach(var prop in properties)
+            foreach (var prop in properties)
                 activity?.SetTag(prop.Key, prop.Value);
 
             switch (result.StatusCode)
@@ -841,7 +841,7 @@ namespace Platform.API.Controllers
                                 { "message", result.Message }
                             };
 
-            foreach(var prop in properties)
+            foreach (var prop in properties)
                 activity?.SetTag(prop.Key, prop.Value);
 
             switch (result.StatusCode)
@@ -881,7 +881,7 @@ namespace Platform.API.Controllers
                                 { "message", result.Message }
                             };
 
-            foreach(var prop in properties)
+            foreach (var prop in properties)
                 activity?.SetTag(prop.Key, prop.Value);
 
             switch (result.StatusCode)
@@ -921,7 +921,7 @@ namespace Platform.API.Controllers
                                 { "message", result.Message }
                             };
 
-            foreach(var prop in properties)
+            foreach (var prop in properties)
                 activity?.SetTag(prop.Key, prop.Value);
 
             switch (result.StatusCode)
@@ -961,7 +961,7 @@ namespace Platform.API.Controllers
                                 { "message", result.Message }
                             };
 
-            foreach(var prop in properties)
+            foreach (var prop in properties)
                 activity?.SetTag(prop.Key, prop.Value);
 
             switch (result.StatusCode)
@@ -989,7 +989,7 @@ namespace Platform.API.Controllers
 
             var result = await _platformRepository.GetUserFavorites2(apiKey, clientId, languageCode, operatorToken, ipCountryCode, OGParameters);
 
-            var parameters = new {};
+            var parameters = new { };
 
             var properties = new Dictionary<string, object>
                             {
@@ -1005,7 +1005,7 @@ namespace Platform.API.Controllers
                                 { "message", result.Message }
                             };
 
-            foreach(var prop in properties)
+            foreach (var prop in properties)
                 activity?.SetTag(prop.Key, prop.Value);
 
             switch (result.StatusCode)
@@ -1049,7 +1049,7 @@ namespace Platform.API.Controllers
                                 { "message", result.Message }
                             };
 
-            foreach(var prop in properties)
+            foreach (var prop in properties)
                 activity?.SetTag(prop.Key, prop.Value);
 
             switch (result.StatusCode)
@@ -1092,7 +1092,7 @@ namespace Platform.API.Controllers
                                 { "message", result.Message }
                             };
 
-            foreach(var prop in properties)
+            foreach (var prop in properties)
                 activity?.SetTag(prop.Key, prop.Value);
 
             switch (result.StatusCode)
@@ -1135,7 +1135,7 @@ namespace Platform.API.Controllers
                                 { "message", result.Message }
                             };
 
-            foreach(var prop in properties)
+            foreach (var prop in properties)
                 activity?.SetTag(prop.Key, prop.Value);
 
             switch (result.StatusCode)
@@ -1178,7 +1178,7 @@ namespace Platform.API.Controllers
                                 { "message", result.Message }
                             };
 
-            foreach(var prop in properties)
+            foreach (var prop in properties)
                 activity?.SetTag(prop.Key, prop.Value);
 
             switch (result.StatusCode)
@@ -1219,7 +1219,7 @@ namespace Platform.API.Controllers
                                 { "message", result.Message }
                             };
 
-            foreach(var prop in properties)
+            foreach (var prop in properties)
                 activity?.SetTag(prop.Key, prop.Value);
 
             switch (result.StatusCode)
@@ -1263,7 +1263,7 @@ namespace Platform.API.Controllers
                                 { "message", result.Message }
                             };
 
-            foreach(var prop in properties)
+            foreach (var prop in properties)
                 activity?.SetTag(prop.Key, prop.Value);
 
             switch (result.StatusCode)
@@ -1309,7 +1309,7 @@ namespace Platform.API.Controllers
                                 { "message", result.Message }
                             };
 
-            foreach(var prop in properties)
+            foreach (var prop in properties)
                 activity?.SetTag(prop.Key, prop.Value);
 
             switch (result.StatusCode)
@@ -1357,7 +1357,7 @@ namespace Platform.API.Controllers
                                 { "message", result.Message }
                             };
 
-            foreach(var prop in properties)
+            foreach (var prop in properties)
                 activity?.SetTag(prop.Key, prop.Value);
 
             switch (result.StatusCode)
@@ -1404,7 +1404,7 @@ namespace Platform.API.Controllers
                                 { "message", result.Message }
                             };
 
-            foreach(var prop in properties)
+            foreach (var prop in properties)
                 activity?.SetTag(prop.Key, prop.Value);
 
             switch (result.StatusCode)
@@ -1453,7 +1453,7 @@ namespace Platform.API.Controllers
                                 { "message", result.Message }
                             };
 
-            foreach(var prop in properties)
+            foreach (var prop in properties)
                 activity?.SetTag(prop.Key, prop.Value);
 
             switch (result.StatusCode)
@@ -1500,7 +1500,7 @@ namespace Platform.API.Controllers
                                 { "message", result.Message }
                             };
 
-            foreach(var prop in properties)
+            foreach (var prop in properties)
                 activity?.SetTag(prop.Key, prop.Value);
 
             switch (result.StatusCode)
@@ -1549,7 +1549,7 @@ namespace Platform.API.Controllers
                                 { "message", result.Message }
                             };
 
-            foreach(var prop in properties)
+            foreach (var prop in properties)
                 activity?.SetTag(prop.Key, prop.Value);
 
             switch (result.StatusCode)
@@ -1597,7 +1597,7 @@ namespace Platform.API.Controllers
                                 { "message", result.Message }
                             };
 
-            foreach(var prop in properties)
+            foreach (var prop in properties)
                 activity?.SetTag(prop.Key, prop.Value);
 
             switch (result.StatusCode)
@@ -1647,7 +1647,7 @@ namespace Platform.API.Controllers
                                 { "message", result.Message }
                             };
 
-            foreach(var prop in properties)
+            foreach (var prop in properties)
                 activity?.SetTag(prop.Key, prop.Value);
 
             switch (result.StatusCode)
@@ -1693,7 +1693,7 @@ namespace Platform.API.Controllers
                                 { "message", result.Message }
                             };
 
-            foreach(var prop in properties)
+            foreach (var prop in properties)
                 activity?.SetTag(prop.Key, prop.Value);
 
             switch (result.StatusCode)
@@ -1741,7 +1741,7 @@ namespace Platform.API.Controllers
                                 { "message", result.Message }
                             };
 
-            foreach(var prop in properties)
+            foreach (var prop in properties)
                 activity?.SetTag(prop.Key, prop.Value);
 
             switch (result.StatusCode)
@@ -1787,7 +1787,7 @@ namespace Platform.API.Controllers
                                 { "message", result.Message }
                             };
 
-            foreach(var prop in properties)
+            foreach (var prop in properties)
                 activity?.SetTag(prop.Key, prop.Value);
 
             switch (result.StatusCode)
@@ -1834,7 +1834,7 @@ namespace Platform.API.Controllers
                                 { "message", result.Message }
                             };
 
-            foreach(var prop in properties)
+            foreach (var prop in properties)
                 activity?.SetTag(prop.Key, prop.Value);
 
             switch (result.StatusCode)
@@ -1882,7 +1882,7 @@ namespace Platform.API.Controllers
                                 { "message", result.Message }
                             };
 
-            foreach(var prop in properties)
+            foreach (var prop in properties)
                 activity?.SetTag(prop.Key, prop.Value);
 
             switch (result.StatusCode)
@@ -1926,7 +1926,7 @@ namespace Platform.API.Controllers
                                 { "message", result.Message }
                             };
 
-            foreach(var prop in properties)
+            foreach (var prop in properties)
                 activity?.SetTag(prop.Key, prop.Value);
 
             switch (result.StatusCode)
@@ -1950,11 +1950,11 @@ namespace Platform.API.Controllers
             var clientId = HttpContext.Request.Headers["x-client-id"].FirstOrDefault();
             var languageCode = string.IsNullOrEmpty(HttpContext.Request.Headers["x-language-code"].FirstOrDefault()) ? "EN" : HttpContext.Request.Headers["x-language-code"].FirstOrDefault().Trim().ToUpper();
 
-            if(fixtureScope != null && fixtureScope < FixtureScope.Live)
+            if (fixtureScope != null && fixtureScope < FixtureScope.Live)
             {
                 if (minuteUTCOffset == null)
                     minuteUTCOffset = 0;
-                if(fixtureScope == FixtureScope.Early && dateUTC == null)
+                if (fixtureScope == FixtureScope.Early && dateUTC == null)
                     dateUTC = DateTime.UtcNow.AddDays(1);
             }
 
@@ -1978,7 +1978,7 @@ namespace Platform.API.Controllers
                                 { "message", result.Message }
                             };
 
-            foreach(var prop in properties)
+            foreach (var prop in properties)
                 activity?.SetTag(prop.Key, prop.Value);
 
             switch (result.StatusCode)
@@ -2024,7 +2024,7 @@ namespace Platform.API.Controllers
                                 { "message", result.Message }
                             };
 
-            foreach(var prop in properties)
+            foreach (var prop in properties)
                 activity?.SetTag(prop.Key, prop.Value);
 
             switch (result.StatusCode)
@@ -2072,7 +2072,7 @@ namespace Platform.API.Controllers
                                 { "message", result.Message }
                             };
 
-            foreach(var prop in properties)
+            foreach (var prop in properties)
                 activity?.SetTag(prop.Key, prop.Value);
 
             switch (result.StatusCode)
@@ -2114,7 +2114,7 @@ namespace Platform.API.Controllers
                                 { "message", result.Message }
                             };
 
-            foreach(var prop in properties)
+            foreach (var prop in properties)
                 activity?.SetTag(prop.Key, prop.Value);
 
             switch (result.StatusCode)
@@ -2156,7 +2156,7 @@ namespace Platform.API.Controllers
                                 { "message", result.Message }
                             };
 
-            foreach(var prop in properties)
+            foreach (var prop in properties)
                 activity?.SetTag(prop.Key, prop.Value);
 
             switch (result.StatusCode)
@@ -2202,7 +2202,7 @@ namespace Platform.API.Controllers
                                 { "message", result.Message }
                             };
 
-            foreach(var prop in properties)
+            foreach (var prop in properties)
                 activity?.SetTag(prop.Key, prop.Value);
 
             switch (result.StatusCode)
@@ -2242,7 +2242,7 @@ namespace Platform.API.Controllers
                                 { "message", result.Message }
                             };
 
-            foreach(var prop in properties)
+            foreach (var prop in properties)
                 activity?.SetTag(prop.Key, prop.Value);
 
             switch (result.StatusCode)
@@ -2283,7 +2283,7 @@ namespace Platform.API.Controllers
                                 { "message", result.Message }
                             };
 
-            foreach(var prop in properties)
+            foreach (var prop in properties)
                 activity?.SetTag(prop.Key, prop.Value);
 
             switch (result.StatusCode)
@@ -2323,7 +2323,7 @@ namespace Platform.API.Controllers
                                 { "message", result.Message }
                             };
 
-            foreach(var prop in properties)
+            foreach (var prop in properties)
                 activity?.SetTag(prop.Key, prop.Value);
 
             switch (result.StatusCode)
@@ -2362,7 +2362,7 @@ namespace Platform.API.Controllers
                                 { "response", JsonSerializer.Serialize(result) }
                             };
 
-            foreach(var prop in properties)
+            foreach (var prop in properties)
                 activity?.SetTag(prop.Key, prop.Value);
 
             switch (result.StatusCode)
@@ -2400,7 +2400,7 @@ namespace Platform.API.Controllers
                                 { "response", JsonSerializer.Serialize(result) }
                             };
 
-            foreach(var prop in properties)
+            foreach (var prop in properties)
                 activity?.SetTag(prop.Key, prop.Value);
 
             switch (result.StatusCode)
@@ -2438,7 +2438,7 @@ namespace Platform.API.Controllers
                                 { "response", JsonSerializer.Serialize(result) }
                             };
 
-            foreach(var prop in properties)
+            foreach (var prop in properties)
                 activity?.SetTag(prop.Key, prop.Value);
 
             switch (result.StatusCode)
@@ -2473,7 +2473,7 @@ namespace Platform.API.Controllers
                                 { "response", JsonSerializer.Serialize(result) }
                             };
 
-            foreach(var prop in properties)
+            foreach (var prop in properties)
                 activity?.SetTag(prop.Key, prop.Value);
 
             switch (result.StatusCode)
@@ -2509,7 +2509,7 @@ namespace Platform.API.Controllers
                                 { "response", JsonSerializer.Serialize(result) }
                             };
 
-            foreach(var prop in properties)
+            foreach (var prop in properties)
                 activity?.SetTag(prop.Key, prop.Value);
 
             switch (result.StatusCode)
@@ -2549,7 +2549,7 @@ namespace Platform.API.Controllers
                                 { "message", result.Message }
                             };
 
-            foreach(var prop in properties)
+            foreach (var prop in properties)
                 activity?.SetTag(prop.Key, prop.Value);
 
             switch (result.StatusCode)
@@ -2588,7 +2588,7 @@ namespace Platform.API.Controllers
                                 { "message", result.Message }
                             };
 
-            foreach(var prop in properties)
+            foreach (var prop in properties)
                 activity?.SetTag(prop.Key, prop.Value);
 
             switch (result.StatusCode)
@@ -2622,7 +2622,7 @@ namespace Platform.API.Controllers
                                 { "response", JsonSerializer.Serialize(result) }
                             };
 
-            foreach(var prop in properties)
+            foreach (var prop in properties)
                 activity?.SetTag(prop.Key, prop.Value);
 
             switch (result.StatusCode)
@@ -2655,7 +2655,7 @@ namespace Platform.API.Controllers
                                 { "response", JsonSerializer.Serialize(result) }
                             };
 
-            foreach(var prop in properties)
+            foreach (var prop in properties)
                 activity?.SetTag(prop.Key, prop.Value);
 
             switch (result.StatusCode)
@@ -2695,7 +2695,7 @@ namespace Platform.API.Controllers
                                 { "message", result.Message }
                             };
 
-            foreach(var prop in properties)
+            foreach (var prop in properties)
                 activity?.SetTag(prop.Key, prop.Value);
 
             switch (result.StatusCode)
@@ -2731,7 +2731,7 @@ namespace Platform.API.Controllers
                                 { "message", result.Message }
                             };
 
-            foreach(var prop in properties)
+            foreach (var prop in properties)
                 activity?.SetTag(prop.Key, prop.Value);
 
             switch (result.StatusCode)

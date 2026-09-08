@@ -40,7 +40,7 @@ namespace Platform.Placement.Servicev2.Repository
             payload.OddsChangeType = message.OddsChangeType;
 
             var key = $"dly:{message.Bet.BetId}";
-            if(message.DelayedBetAcceptance != null)
+            if (message.DelayedBetAcceptance != null)
             {
                 var cache = _memCache.GetCache<OnBetPlacement>(key);
                 if (cache == null)
@@ -163,7 +163,7 @@ namespace Platform.Placement.Servicev2.Repository
                                         BetSelection = betSelectionEntity,
                                     };
 
-                                    if(message.DelayedBetAcceptance == null)
+                                    if (message.DelayedBetAcceptance == null)
                                     {
                                         betSelectionExtension.MarketSelectionCount = message.BetSelections.FirstOrDefault(c => c.BetSelection.BetId == betSelection.BetId && c.BetSelection.BetSelectionId == betSelection.BetSelectionId).MarketSelectionCount;
                                     }
@@ -269,7 +269,7 @@ namespace Platform.Placement.Servicev2.Repository
                     RejectBetOnError(message, messageBroker, correlationId, new Tuple<BetAcceptance, string>(BetAcceptance.Rejected, $"10001 - {ex.Message}"), 2);
                 }
             }
-            else if(providerResult.Acceptance == BetAcceptance.Rejected)
+            else if (providerResult.Acceptance == BetAcceptance.Rejected)
             {
                 try
                 {
@@ -356,7 +356,7 @@ namespace Platform.Placement.Servicev2.Repository
                                     betSelection.IsSettled = true;
 
                                     var betSelectionEntity = context.BetSelection.Update(betSelection).Entity;
-                                    
+
                                     var betSelectionExtension = new BetSelectionMessageExtenstion()
                                     {
                                         BetSelection = betSelectionEntity,
@@ -433,7 +433,7 @@ namespace Platform.Placement.Servicev2.Repository
 
                                 scope.Complete();
 
-                                if(message.ChannelTypeId != (int)ChannelType.BG)
+                                if (message.ChannelTypeId != (int)ChannelType.BG)
                                 {//no need to send to BG if they rejected it on their end
                                     messageBroker.Publish(new OnBetTimeout()
                                     {

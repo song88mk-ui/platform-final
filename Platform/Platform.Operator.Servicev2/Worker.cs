@@ -410,7 +410,7 @@ namespace Platform.Operator.Servicev2
 
             var activityName = $"{messageType} receive {e.RoutingKey}";
 
-            using(var activity = _activitySource.StartActivity(activityName, ActivityKind.Consumer, parentContext.ActivityContext))
+            using (var activity = _activitySource.StartActivity(activityName, ActivityKind.Consumer, parentContext.ActivityContext))
             {
                 activity?.SetTag("correlation.id", correlationId);
                 activity?.SetTag("message.type", messageType);

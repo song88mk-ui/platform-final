@@ -6,7 +6,7 @@ namespace Platform.Shared.Models
 {
     public class MarketsSubscriptionRequestDTO
     {
-        public string FixtureId { get;set; }
+        public string FixtureId { get; set; }
         public List<string> MarketIds { get; set; }
     }
 }

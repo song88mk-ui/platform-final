@@ -42,7 +42,7 @@ namespace Platform.Shared.Repositories
 
         public async Task<BaseResponseDTO<ProviderAuthResponseDTO>> GetGTSAuthorizationToken()
         {
-            using(var activity = _activitySource.StartActivity("gts.authorization"))
+            using (var activity = _activitySource.StartActivity("gts.authorization"))
             {
                 activity?.SetTag("provider.enabled", _configuration["Custom:IsProviderEnabled"]);
 

@@ -864,7 +864,8 @@ namespace Platform.Sportsbook.API.Repository
             if (request.FixtureScope == null)
             {
                 var fixtureTypeIds = new int[] { (int)FixtureType.Match, (int)FixtureType.Outright };
-                var todayDateUTC = GetDateTimeRange2(DateTime.UtcNow, request.MinuteUTCOffset ?? 0);
+                var minuteUTCOffset = request.MinuteUTCOffset ?? 0;
+                var todayDateUTC = GetDateTimeRange2(DateTime.UtcNow.AddMinutes(minuteUTCOffset), minuteUTCOffset, true);
 
                 fixtureFilter = Builders<Fixture>.Filter.Where(c => c.FiStId < 2 && fixtureTypeIds.Contains(c.FiTyId) && c.FiStDa > todayDateUTC.Item1);
                 //fixtureFilter = Builders<Fixture>.Filter.Where(c => c.FiStId < 2);

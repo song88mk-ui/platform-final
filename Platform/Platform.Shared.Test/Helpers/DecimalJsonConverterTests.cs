@@ -63,6 +63,17 @@ namespace Platform.Shared.Test.Helpers
         }
 
         [Fact]
+        public void Read_NonNumericStringBalance_NamesTheOffendingValue()
+        {
+            // The message carries the value that failed. Without it, a bad operator response is
+            // reported as an anonymous conversion error and nobody can tell what arrived.
+            var exception = Assert.Throws<JsonException>(() =>
+                JsonSerializer.Deserialize<OperatorResponse>("{\"statusId\":1000,\"balance\":\"abc\"}", Options));
+
+            Assert.Contains("abc", exception.Message);
+        }
+
+        [Fact]
         public void Write_TrimsTrailingZeros()
         {
             var json = JsonSerializer.Serialize(1.990000000000m, Options);

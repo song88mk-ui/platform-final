@@ -53,13 +53,13 @@ Excluded deliberately:
 | `Extensions/BetAuditEntityExtension.cs` | takes a `DbSet<T>`; needs the EF seam from Tier 6 |
 | `Extensions/BetSelectionAuditEntityExtension.cs` | same |
 
-## Baseline (2026-09-10, on the Phase A test suite merged with main)
+## Baseline (2026-09-10, after GM-804)
 
-**Overall score 53.19%** - 150 killed, 22 survived, 110 not covered by any test, out of 282 mutants.
-Measured on covered code only, the score is **87.2%**.
+**Overall score 87.23%** - 246 killed, 29 survived, 7 not covered by any test, out of 282
+mutants. Run takes about 40 seconds.
 
-Both numbers matter. 87.2% says the tests that exist are sharp. 53.19% says a third of the mutants
-sit in code no test reaches at all.
+GM-804 raised this from the 53.19% first measured under DEVOPS-365, by adding 99 tests for
+`Helper` and `ObjectExtensions`. Unreached mutants fell from 110 to 7.
 
 | File | Killed | Survived | No coverage | Score |
 |---|---|---|---|---|
@@ -69,43 +69,50 @@ sit in code no test reaches at all.
 | `ListExtensions.cs` | 5 | 0 | 0 | 100.0% |
 | `Formatting.cs` | 4 | 0 | 0 | 100.0% |
 | `JwtParser.cs` | 4 | 0 | 0 | 100.0% |
+| `DecimalJsonConverter.cs` | 11 | 1 | 0 | 91.7% |
+| `ObjectExtensions.cs` | 41 | 4 | 0 | 91.1% |
+| `Helper.cs` | 80 | 12 | 0 | 87.0% |
 | `DecimalExtensions.cs` | 5 | 0 | 1 | 83.3% |
 | `LocalizedSearchMatcher.cs` | 21 | 3 | 2 | 80.8% |
 | `StringExtensions.cs` | 39 | 6 | 4 | 79.6% |
-| `DecimalJsonConverter.cs` | 9 | 3 | 0 | 75.0% |
 | `HashExtensions.cs` | 3 | 1 | 0 | 75.0% |
-| `ObjectExtensions.cs` | 18 | 7 | 20 | 40.0% |
 | `IntExtensions.cs` | 1 | 2 | 0 | 33.3% |
-| `Helper.cs` | 9 | 0 | 83 | 9.8% |
 
-Thresholds in the config are set from this baseline, not picked in advance: `break` 45 (below the
-current score, so a run fails only on a real regression), `low` 55, `high` 80. Raise them as the
-score improves.
+Thresholds are set from this measurement: `break` 80 (below the current score, so a run
+fails only on a regression), `low` 85, `high` 90.
 
-## What the baseline found
+## Why the score is not higher
 
-`Helper.cs` dominates the gap: 83 of its 92 mutants are unreached, because `HelperTests` covers only
-`Helper.GetStake`. `ObjectExtensions.cs` is second at 20 unreached plus 7 survivors, despite having
-the largest existing test file - line coverage there was hiding untested behaviour.
+Do not read the remaining 36 unkilled mutants as 36 missing tests. Nearly all of them are
+**equivalent mutants** - edits that cannot change observable behaviour, so no test can ever
+kill them. They fall into three groups.
 
-Several survivors are **not test gaps but unreachable code**, which is the more interesting result:
+**Redundant branches that return the same value (Helper.cs).** The bet-builder path checks
+`Any(Void)`, then `Any(Cancelled)`, then falls through to a catch-all, and all three return
+`trueStake`. Negating any of those conditions changes nothing. Likewise both `GetVoidFactor`
+overloads return `Zero` from their explicit `Won || Lost` branch and from the fall-through,
+so `||` to `&&` is invisible. `GetInstanceName` subtracts `'0'` from a character and then
+tests parity; since 48 is even, subtracting or adding it gives the same parity.
 
-- `StringExtensions.cs:17,18` - after the `ogParam.Length <= 2` guard returns null, `Length >= 2` can
-  never be false, so both ternaries are dead. Mutating them to `true` changes nothing.
-- `StringExtensions.cs:56,59` - `result.Length <= 0` can never hold: `string.Split` always returns at
-  least one element. Dead guard.
-- `HashExtensions.cs:11` - `var hex = string.Empty;` is always overwritten before use. Dead
-  initialiser.
-- `ObjectExtensions.cs:41` - an always-true null-or-empty guard.
-- `IntExtensions.cs:13,18` - block removal survives because both sport-ID lists are still empty
-  stubs, which `IntExtensionsTests` already records.
+**Guards on conditions that cannot occur.** `First()` to `FirstOrDefault()` survives wherever
+the collection is already known non-empty - `string.Split` never returns an empty array, and
+`GetPayout`'s branch 1 is guarded by `Count == 1`.
 
-Genuine test gaps among the survivors:
+**Dead code.** Four sites are unreachable and can only be cleared by deleting them, which is
+a shared-kernel change and out of scope for GM-804:
 
-- `LocalizedSearchMatcher.cs:55,56` - `FirstOrDefault()` to `First()` and `Count > 1` to `>= 1` both
-  survive, so the single-participant case is unasserted.
-- `DecimalJsonConverter.cs:12,29` - `CanConvert` returning `false` survives, and the write path's
-  output is not asserted.
+- `StringExtensions.cs:17,18` - after the `Length <= 2` guard returns null, `Length >= 2` is
+  always true, so both ternaries are dead
+- `StringExtensions.cs:56,59` - `result.Length <= 0` can never hold
+- `HashExtensions.cs:11` - the `string.Empty` initialiser is always overwritten
+- `ObjectExtensions.cs:45` - the primitive/enum/decimal/DateTime disjunction is redundant,
+  because a type with no writable properties falls through the complex-object branch unchanged
+
+`IntExtensions.cs:13,18` also survive, as the deliberate empty sport-ID stubs that
+`IntExtensionsTests` records.
+
+The practical ceiling for this scope is therefore in the high 80s. Chasing a higher number
+means deleting the dead code, not writing more tests.
 
 ## Not wired into CI
 

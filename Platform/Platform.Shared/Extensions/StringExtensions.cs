@@ -14,8 +14,8 @@ namespace Platform.Shared.Extensions
             if (ogParam.Length <= 2)
                 return null;
 
-            var ogCurrencyCode = ogParam.Length >= 2 ? ogParam[1] : string.Empty;
-            var gameCode = ogParam.Length >= 3 ? ogParam[2] : string.Empty;
+            var ogCurrencyCode = ogParam[1];
+            var gameCode = ogParam[2];
 
             return new OGRequestDTO
             {
@@ -47,16 +47,12 @@ namespace Platform.Shared.Extensions
             if (result.Length <= 1)
                 return null;
 
-            return result.Length >= 2 ? result[1] : string.Empty;
+            return result[1];
         }
 
         public static string GetActualValue(this string input)
         {
-            var result = input.Split('|');
-            if (result.Length <= 0)
-                return null;
-
-            return result.Length >= 1 ? result[0] : string.Empty;
+            return input.Split('|')[0];
         }
 
         public static string ConvertToUnicodeEscape(this string input)

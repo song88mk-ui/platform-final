@@ -53,66 +53,62 @@ Excluded deliberately:
 | `Extensions/BetAuditEntityExtension.cs` | takes a `DbSet<T>`; needs the EF seam from Tier 6 |
 | `Extensions/BetSelectionAuditEntityExtension.cs` | same |
 
-## Baseline (2026-09-10, after GM-804)
+## Baseline (2026-09-10, after GM-806)
 
-**Overall score 87.23%** - 246 killed, 29 survived, 7 not covered by any test, out of 282
+**Overall score 90.35%** - 234 killed, 22 survived, 3 not covered by any test, out of 259
 mutants. Run takes about 40 seconds.
 
-GM-804 raised this from the 53.19% first measured under DEVOPS-365, by adding 99 tests for
-`Helper` and `ObjectExtensions`. Unreached mutants fell from 110 to 7.
+History: 53.19% at DEVOPS-365, 87.23% after GM-804 added 99 tests for `Helper` and
+`ObjectExtensions`, 90.35% after GM-806 deleted the unreachable guards in
+`StringExtensions` and `HashExtensions`. That last step raised the score by removing
+mutants from the denominator (282 to 259), not by killing more.
 
 | File | Killed | Survived | No coverage | Score |
 |---|---|---|---|---|
 | `OddsTypeHelper.cs` | 29 | 0 | 0 | 100.0% |
-| `DateTimeExtensions.cs` | 2 | 0 | 0 | 100.0% |
-| `EnumExtensions.cs` | 1 | 0 | 0 | 100.0% |
+| `StringExtensions.cs` | 27 | 0 | 0 | 100.0% |
 | `ListExtensions.cs` | 5 | 0 | 0 | 100.0% |
 | `Formatting.cs` | 4 | 0 | 0 | 100.0% |
 | `JwtParser.cs` | 4 | 0 | 0 | 100.0% |
+| `HashExtensions.cs` | 3 | 0 | 0 | 100.0% |
+| `DateTimeExtensions.cs` | 2 | 0 | 0 | 100.0% |
+| `EnumExtensions.cs` | 1 | 0 | 0 | 100.0% |
 | `DecimalJsonConverter.cs` | 11 | 1 | 0 | 91.7% |
 | `ObjectExtensions.cs` | 41 | 4 | 0 | 91.1% |
 | `Helper.cs` | 80 | 12 | 0 | 87.0% |
 | `DecimalExtensions.cs` | 5 | 0 | 1 | 83.3% |
 | `LocalizedSearchMatcher.cs` | 21 | 3 | 2 | 80.8% |
-| `StringExtensions.cs` | 39 | 6 | 4 | 79.6% |
-| `HashExtensions.cs` | 3 | 1 | 0 | 75.0% |
 | `IntExtensions.cs` | 1 | 2 | 0 | 33.3% |
 
-Thresholds are set from this measurement: `break` 80 (below the current score, so a run
-fails only on a regression), `low` 85, `high` 90.
+Thresholds are set from this measurement: `break` 85 (below the current score, so a run
+fails only on a regression), `low` 88, `high` 95.
 
-## Why the score is not higher
+## Why the score is not 100%
 
-Do not read the remaining 36 unkilled mutants as 36 missing tests. Nearly all of them are
-**equivalent mutants** - edits that cannot change observable behaviour, so no test can ever
-kill them. They fall into three groups.
+Do not read the remaining 25 unkilled mutants as 25 missing tests. Nearly all are
+**equivalent mutants** - edits that cannot change observable behaviour, so no test can kill
+them. Two groups remain now that GM-806 has removed the dead code.
 
-**Redundant branches that return the same value (Helper.cs).** The bet-builder path checks
-`Any(Void)`, then `Any(Cancelled)`, then falls through to a catch-all, and all three return
-`trueStake`. Negating any of those conditions changes nothing. Likewise both `GetVoidFactor`
-overloads return `Zero` from their explicit `Won || Lost` branch and from the fall-through,
-so `||` to `&&` is invisible. `GetInstanceName` subtracts `'0'` from a character and then
-tests parity; since 48 is even, subtracting or adding it gives the same parity.
+**Redundant branches that return the same value (`Helper.cs`, 12 mutants).** The
+bet-builder path checks `Any(Void)`, then `Any(Cancelled)`, then falls through to a
+catch-all, and all three return `trueStake`, so negating any of those conditions changes
+nothing. Both `GetVoidFactor` overloads return `Zero` from their explicit `Won || Lost`
+branch and from the fall-through. `GetInstanceName` subtracts `'0'` from a character and
+then tests parity; since 48 is even, adding it gives the same parity.
 
-**Guards on conditions that cannot occur.** `First()` to `FirstOrDefault()` survives wherever
-the collection is already known non-empty - `string.Split` never returns an empty array, and
-`GetPayout`'s branch 1 is guarded by `Count == 1`.
-
-**Dead code.** Four sites are unreachable and can only be cleared by deleting them, which is
-a shared-kernel change and out of scope for GM-804:
-
-- `StringExtensions.cs:17,18` - after the `Length <= 2` guard returns null, `Length >= 2` is
-  always true, so both ternaries are dead
-- `StringExtensions.cs:56,59` - `result.Length <= 0` can never hold
-- `HashExtensions.cs:11` - the `string.Empty` initialiser is always overwritten
-- `ObjectExtensions.cs:45` - the primitive/enum/decimal/DateTime disjunction is redundant,
-  because a type with no writable properties falls through the complex-object branch unchanged
+**Guards on conditions that cannot occur.** `First()` to `FirstOrDefault()` survives
+wherever the collection is already known non-empty - `string.Split` never returns an empty
+array, and `GetPayout`'s branch 1 is guarded by `Count == 1`. Same for
+`LocalizedSearchMatcher.cs:55,56`, where a name without a "vs." separator makes the away
+participant equal the home one, so the two code paths agree.
 
 `IntExtensions.cs:13,18` also survive, as the deliberate empty sport-ID stubs that
-`IntExtensionsTests` records.
+`IntExtensionsTests` records. `ObjectExtensions.cs:45` survives as a fast path that is
+redundant but worth keeping: a primitive falls through the complex-object branch unchanged,
+so deleting the check would be slower and less obvious.
 
-The practical ceiling for this scope is therefore in the high 80s. Chasing a higher number
-means deleting the dead code, not writing more tests.
+Chasing a higher number from here means changing production code for no behavioural gain.
+Treat 90% as the working ceiling for this scope.
 
 ## Not wired into CI
 

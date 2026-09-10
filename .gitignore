@@ -45,3 +45,5 @@ Platform/Platform.Sportsbook.API/.config/dotnet-tools.json
 
 # Stryker.NET mutation-testing output (reports are regenerated per run)
 StrykerOutput/
+.sonarqube/
+TestResults/

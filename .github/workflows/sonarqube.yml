@@ -1,0 +1,48 @@
+name: SonarQube
+
+on:
+  push:
+    branches: ["main"]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  sonar:
+    name: Analyze
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
+        with:
+          fetch-depth: 0  # Shallow clones should be disabled for a better relevancy of analysis
+
+      - name: Setup .NET SDKs
+        uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
+        with:
+          dotnet-version: 10.0.x
+
+      - name: Add NuGet source
+        run: |
+          dotnet nuget add source \
+            --username FlyingCockatoo \
+            --password ${{ secrets.NUGET_PASSWORD }} \
+            --store-password-in-clear-text \
+            --name github "https://nuget.pkg.github.com/FlyingCockatoo/index.json"
+
+      - name: Connect to twingate
+        uses: twingate/github-action@f1e69fc5af67b737d8597b759e5c607f567e77f2 # v1.8
+        with:
+          service-key: ${{ secrets.TWINGATE_CI_SERVICE_KEY }}
+
+      - name: Run
+        run: |
+          dotnet tool install --global dotnet-sonarscanner
+          export PATH=$PATH:~/.dotnet/tools
+          dotnet sonarscanner begin /k:"platform-final" \
+                                    /d:sonar.host.url="https://sonarqube.stg.song88.com" \
+                                    /d:sonar.token="${{ secrets.SONARQUBE_TOKEN }}"
+          dotnet build --no-incremental Platform/Platform.sln
+          dotnet test --collect:"XPlat Code Coverage;Format=opencover" Platform/Platform.sln
+          dotnet sonarscanner end /d:sonar.token="${{ secrets.SONARQUBE_TOKEN }}"

@@ -1,0 +1,346 @@
+BetCancel
+  BetId -> BetId: Guid
+  Reason -> Reason: String
+BetManualSettlement
+  BetId -> BetId: Guid
+  NewStatus -> NewStatus: BetStatus
+  Reason -> Reason: String
+BetSelectionMessageExtenstion
+  BetSelection -> BetSelection: BetSelection
+  MarketSelectionCount -> MarketSelectionCount: Int32
+CashedOutProbabilities
+  BetSelectionId -> BetSelectionId: Guid
+  CashOutStatusId -> CashOutStatusId: Int32
+  HalfLostProbability -> HalfLostProbability: Double
+  HalfWonProbability -> HalfWonProbability: Double
+  IsLive -> IsLive: Boolean
+  LostProbability -> LostProbability: Double
+  Price -> Price: Nullable<Decimal>
+  Probability -> Probability: Double
+  VoidProbability -> VoidProbability: Double
+  WonProbability -> WonProbability: Double
+OGRecord
+  Amount -> amount: Double
+  OtherInfo -> other_info: OtherInfo
+  SecondaryInfo -> secondary_info: SecondaryInfo
+  TransactionId -> transaction_id: String
+OnBOBetCancellaton
+  Bets -> Bets: List<BetCancel>
+OnBOBetManualSettlement
+  Bets -> Bets: List<BetManualSettlement>
+OnBetBackofficeCancellation
+  BetId -> BetId: Guid
+  ChannelTypeId -> ChannelTypeId: Int32
+  ClientCode -> ClientCode: String
+  LimitId -> LimitId: String
+OnBetCancellation
+  Bet -> Bet: Bet
+  BetSelections -> BetSelections: List<BetSelection>
+  IsSuccess -> IsSuccess: Boolean
+OnBetCashOutDelayedVerdict
+  Accepted -> Accepted: Boolean
+  BetId -> BetId: Guid
+  Reason -> Reason: String
+OnBetPlacement
+  Bet -> Bet: Bet
+  BetSelections -> BetSelections: List<BetSelectionMessageExtenstion>
+  BonusId -> BonusId: String
+  ChannelTypeId -> ChannelTypeId: Int32
+  DelayedBetAcceptance -> DelayedBetAcceptance: Nullable<BetAcceptance>
+  DelayedMessage -> DelayedMessage: String
+  IsBetBuilder -> IsBetBuilder: Boolean
+  IsBoosted -> IsBoosted: Boolean
+  IsOGClient -> IsOGClient: Boolean
+  Odds -> Odds: Decimal
+  OddsChangeType -> OddsChangeType: OddsChangeType
+  UserAgent -> UserAgent: String
+  WillRecordTopMarket -> WillRecordTopMarket: Boolean
+OnBetPlacementError
+  BetId -> BetId: String
+  Error -> Error: String
+  InnerException -> InnerException: String
+  StackTrace -> StackTrace: String
+OnBetSettlement
+  Bet -> Bet: Bet
+  BetSelections -> BetSelections: List<BetSelection>
+  CashedOutTotalAmount -> CashedOutTotalAmount: Nullable<Decimal>
+  CashedOutTotalTrueStake -> CashedOutTotalTrueStake: Nullable<Decimal>
+  ChannelTypeId -> ChannelTypeId: Int32
+  IsAudit -> IsAudit: Boolean
+  IsResettle -> IsResettle: Boolean
+  IsRetry -> IsRetry: Boolean
+  Message -> Message: String
+  NonTaxedPayout -> NonTaxedPayout: Decimal
+  OriginalTrueStake -> OriginalTrueStake: Nullable<Decimal>
+OnBetSettlementPartial
+  Bet -> Bet: Bet
+  BetSelections -> BetSelections: List<BetSelection>
+  CashedOutTotalAmount -> CashedOutTotalAmount: Nullable<Decimal>
+  CashedOutTotalTrueStake -> CashedOutTotalTrueStake: Nullable<Decimal>
+  CashoutStake -> CashoutStake: Decimal
+  CashoutStakePercent -> CashoutStakePercent: Decimal
+  ChannelTypeId -> ChannelTypeId: Int32
+  IsAudit -> IsAudit: Boolean
+  IsResettle -> IsResettle: Boolean
+  IsRetry -> IsRetry: Boolean
+  Message -> Message: String
+  NonTaxedPayout -> NonTaxedPayout: Decimal
+  OriginalTrueStake -> OriginalTrueStake: Nullable<Decimal>
+  Stake -> Stake: Decimal
+  TaxedStake -> TaxedStake: Decimal
+  TrueStake -> TrueStake: Decimal
+OnBetSettlementRetry
+  OnBetSettlement -> OnBetSettlement: OnBetSettlement
+  RemainingRetries -> RemainingRetries: Int32
+OnBetStatus
+  BetId -> BetId: String
+  BetStatus -> BetStatus: BetStatus
+  ClientId -> ClientId: String
+  Message -> Message: String
+  UserId -> UserId: String
+OnBetTimeout
+  BetId -> BetId: Guid
+  ChannelTypeId -> ChannelTypeId: Int32
+  ClientCode -> ClientCode: String
+  LimitId -> LimitId: String
+OnCashOut
+  Bet -> Bet: Bet
+  BetSelections -> BetSelections: List<BetSelection>
+OnCashOutChange
+  BetId -> BetId: String
+  CashOutStake -> CashOutStake: Decimal
+  CashOutStatus -> CashOutStatus: CashOutStatus
+  ClientId -> ClientId: String
+  UserId -> UserId: String
+OnCashOutResult
+  BetId -> BetId: String
+  BetStatus -> BetStatus: BetStatus
+  CashOutStake -> CashOutStake: Decimal
+  CashOutStatus -> CashOutStatus: CashOutStatus
+  ClientCode -> ClientCode: String
+  ClientId -> ClientId: String
+  Endpoint -> Endpoint: String
+  Message -> Message: String
+  UserId -> UserId: String
+OnCashoutBetSettlement
+  BetId -> BetId: Guid
+  CashOutStake -> CashOutStake: Decimal
+  CashOutStakePercent -> CashOutStakePercent: Decimal
+  CashoutType -> CashoutType: CashoutType
+  ChannelTypeId -> ChannelTypeId: Int32
+  ClientCode -> ClientCode: String
+  ClientId -> ClientId: String
+  DelayedBetAcceptance -> DelayedBetAcceptance: Nullable<BetAcceptance>
+  DelayedMessage -> DelayedMessage: String
+  Endpoint -> Endpoint: String
+  HasLive -> HasLive: Boolean
+  NonTaxedPayout -> NonTaxedPayout: Decimal
+  Probabilities -> Probabilities: List<CashedOutProbabilities>
+  TaxedStake -> TaxedStake: Decimal
+  TaxedWinnings -> TaxedWinnings: Decimal
+  UserId -> UserId: String
+OnCasinoBetSettlement
+  BetDate -> BetDate: DateTime
+  BetId -> BetId: Guid
+  BetStatusId -> BetStatusId: Int32
+  BetStatusName -> BetStatusName: String
+  BonusPromoCode -> BonusPromoCode: String
+  BonusType -> BonusType: String
+  Category -> Category: String
+  ClientCode -> ClientCode: String
+  ClientId -> ClientId: String
+  ClientName -> ClientName: String
+  ClientType -> ClientType: String
+  ConversionRate -> ConversionRate: String
+  CurrencyCode -> CurrencyCode: String
+  Device -> Device: String
+  Endpoint -> Endpoint: String
+  ExchangeRate -> ExchangeRate: Decimal
+  GameId -> GameId: String
+  IsAgent -> IsAgent: Boolean
+  IsComplete -> IsComplete: Boolean
+  JackpotContributions -> JackpotContributions: String
+  JackpotPayout -> JackpotPayout: Decimal
+  OperatorToken -> OperatorToken: String
+  Payout -> Payout: Decimal
+  ProviderBetId -> ProviderBetId: String
+  ProviderTransactionDate -> ProviderTransactionDate: DateTime
+  ProviderTransactionId -> ProviderTransactionId: String
+  Reason -> Reason: String
+  RoundId -> RoundId: String
+  SettlementDate -> SettlementDate: DateTime
+  Stake -> Stake: Decimal
+  StakeBonus -> StakeBonus: Decimal
+  TableId -> TableId: String
+  TransactionIds -> TransactionIds: String
+  TransactionType -> TransactionType: String
+  UserId -> UserId: String
+  WinLoss -> WinLoss: Decimal
+OnClientTopMarketBetPlacement
+  ClientCode -> ClientCode: String
+  ClientId -> ClientId: String
+  ClientName -> ClientName: String
+  CurrencyCode -> CurrencyCode: String
+  FixtureId -> FixtureId: Int64
+  FixtureName -> FixtureName: String
+  FixtureTypeId -> FixtureTypeId: Int32
+  FixtureTypeName -> FixtureTypeName: String
+  MarketId -> MarketId: Int64
+  MarketName -> MarketName: String
+  MarketSelectionCount -> MarketSelectionCount: Int32
+  MarketStatusId -> MarketStatusId: Int32
+  MarketStatusName -> MarketStatusName: String
+  SportId -> SportId: Int32
+  SportName -> SportName: String
+OnClientTopMarketBetSettlement
+  FixtureId -> FixtureId: Int64
+  MarketId -> MarketId: Int64
+  MarketStatusId -> MarketStatusId: Int32
+  MarketStatusName -> MarketStatusName: String
+  SportId -> SportId: Int32
+OnDeleteCacheMessage
+  CacheKey -> CacheKey: String
+  CacheKeys -> CacheKeys: List<String>
+  CacheType -> CacheType: CacheType
+  ClientCode -> ClientCode: String
+  ClientId -> ClientId: Guid
+  LanguageCode -> LanguageCode: LanguageCode
+  PurgeAll -> PurgeAll: Boolean
+OnESportBetSettlement
+  Amount -> Amount: String
+  BetDate -> BetDate: DateTime
+  BetId -> BetId: Guid
+  BetStatusId -> BetStatusId: Int32
+  BetStatusName -> BetStatusName: String
+  ClientCode -> ClientCode: String
+  ClientId -> ClientId: String
+  ClientName -> ClientName: String
+  CurrencyCode -> CurrencyCode: String
+  Endpoint -> Endpoint: String
+  IsAgent -> IsAgent: Boolean
+  Odds -> Odds: Decimal
+  OperatorToken -> OperatorToken: String
+  Payout -> Payout: Decimal
+  ProviderBetId -> ProviderBetId: String
+  ProviderTransactionDate -> ProviderTransactionDate: DateTime
+  ProviderTransactionId -> ProviderTransactionId: String
+  Reason -> Reason: String
+  SettlementDate -> SettlementDate: DateTime
+  Stake -> Stake: Decimal
+  Ticket -> Ticket: String
+  TransactionIds -> TransactionIds: String
+  TransactionType -> TransactionType: String
+  UserId -> UserId: String
+  WinLoss -> WinLoss: Decimal
+OnESportCreditRequest
+  BetId -> BetId: Guid
+  ClientCode -> ClientCode: String
+  ClientId -> ClientId: String
+  Endpoint -> Endpoint: String
+  OperatorToken -> OperatorToken: String
+  Payload -> Payload: OperatorESportsCreditRequestDTO
+  TransactionId -> TransactionId: String
+OnESportCreditResponse
+  BetId -> BetId: Guid
+  ClientCode -> ClientCode: String
+  ClientId -> ClientId: String
+  Endpoint -> Endpoint: String
+  OperatorToken -> OperatorToken: String
+  Payload -> Payload: OperatorBetResponseDTO
+  TransactionId -> TransactionId: String
+OnESportDebitRequest
+  BetId -> BetId: Guid
+  ClientCode -> ClientCode: String
+  ClientId -> ClientId: String
+  Endpoint -> Endpoint: String
+  OperatorToken -> OperatorToken: String
+  Payload -> Payload: OperatorESportsDebitRequestDTO
+  TransactionId -> TransactionId: String
+OnESportDebitResponse
+  BetId -> BetId: Guid
+  ClientCode -> ClientCode: String
+  ClientId -> ClientId: String
+  Endpoint -> Endpoint: String
+  OperatorToken -> OperatorToken: String
+  Payload -> Payload: OperatorBetResponseDTO
+  TransactionId -> TransactionId: String
+OnMarketDeactivationMesssage
+  FixtureId -> FixtureId: Int64
+  FixtureSpecifier -> FixtureSpecifier: String
+  MarketId -> MarketId: Int64
+  SportId -> SportId: Int32
+OnOGCreditCancelRequest
+  CalledAt -> called_at: Int64
+  OtherInfo -> other_info: Object
+  PlayerCode -> player_code: String
+  Remark -> remark: String
+  SecondaryInfo -> secondary_info: Object
+  Signature -> signature: String
+  TimeStamp -> timestamp: Int64
+  TransactionId -> transaction_id: String
+  TransactionType -> transaction_type: String
+OnOGCreditRequest
+  Amount -> amount: Decimal
+  BetPlace -> bet_place: String
+  CalledAt -> called_at: Int64
+  Currency -> currency: String
+  EffectiveAmount -> effective_amount: Decimal
+  GameCode -> game_code: String
+  OtherInfo -> other_info: Object
+  PlayerCode -> player_code: String
+  Remark -> remark: String
+  ResultUrl -> result_url: String
+  RoundId -> round_id: String
+  SecondaryInfo -> secondary_info: Object
+  Signature -> signature: String
+  TimeStamp -> timestamp: Int64
+  TransactionId -> transaction_id: String
+  TransactionType -> transaction_type: String
+  WinloseAmount -> winlose_amount: Decimal
+OnOGDebitRequest
+  CalledAt -> called_at: Int64
+  Currency -> currency: String
+  GameCode -> game_code: String
+  PlayerCode -> player_code: String
+  Records -> records: Object
+  RoundId -> round_id: String
+  Signature -> signature: String
+  TimeStamp -> timestamp: Int64
+  TotalAmount -> total_amount: Decimal
+  TransactionType -> transaction_type: String
+OnOddsFeedBetCancellation
+  BetId -> BetId: Guid
+  ClientId -> ClientId: String
+  Reason -> Reason: String
+OnPayableChange
+  ClientId -> ClientId: String
+  Payable -> Payable: Decimal
+  UserId -> UserId: String
+OnTranslationChangeMessage
+  Tr -> Tr: List<TranslationChangeItem>
+OnUOFBetCancellation
+  EndTime -> EndTime: Int64
+  MarketId -> MarketId: Int64
+  MarketStatus -> MarketStatus: BetStatus
+  Reason -> Reason: String
+  SettlementScore -> SettlementScore: String
+  StartTime -> StartTime: Int64
+OnUOFBetSettlement
+  DeadHeatFactor -> DeadHeatFactor: Decimal
+  EndTime -> EndTime: Int64
+  SelectionId -> SelectionId: Int64
+  SelectionStatus -> SelectionStatus: BetStatus
+  SettlementScore -> SettlementScore: String
+  StartTime -> StartTime: Int64
+OnWalletChange
+  Balance -> Balance: Decimal
+  ClientId -> ClientId: String
+  UserId -> UserId: String
+OtherInfo
+  BetStatus -> bet_status: String
+SecondaryInfo
+  BetAmount -> bet_amount: Double
+TranslationChangeItem
+  LaCo -> LaCo: String
+  StId -> StId: String
+  Tx -> Tx: String

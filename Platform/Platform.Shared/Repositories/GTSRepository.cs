@@ -723,7 +723,7 @@ namespace Platform.Shared.Repositories
         private string GetGtsBetStatus(int statusId) => statusId switch
         {
             var s when s <= (int)BetStatus.Running => Enums.Provider.GTS.BetStatus.Open.ToString(),
-            var s when s == (int)BetStatus.Void || s == (int)BetStatus.Cancelled || s == (int)BetStatus.Rejected => Enums.Provider.GTS.BetStatus.Cancelled.ToString(),
+            var s when s == (int)BetStatus.Cancelled || s == (int)BetStatus.Rejected => Enums.Provider.GTS.BetStatus.Cancelled.ToString(),
             _ => Enums.Provider.GTS.BetStatus.Settled.ToString()
         };
 

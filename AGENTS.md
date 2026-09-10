@@ -50,7 +50,8 @@ See [CLAUDE.md](CLAUDE.md) §Engineering principles.
 
 ## Tooling notes
 - Windows host; PowerShell + Git Bash available. Build needs the private GitHub NuGet feed
-  (`NUGET_PASSWORD`). Tests: `Platform.Shared.Test`, `Platform.Sportsbook.API.Test` and `Platform.Operator.API.Test`.
+  (`NUGET_PASSWORD`). Tests: `Platform.Shared.Test`, `Platform.Sportsbook.API.Test`,
+  `Platform.Operator.API.Test` and `Platform.BetInfo.Service.Test`.
 - Commit/PR only when asked; don't bypass hooks.
 
 ## Asset index

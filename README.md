@@ -2,7 +2,7 @@
 
 Core .NET sportsbook backend of the Song88 platform - the "Platform API" consumed by the
 sibling `platform-web` Blazor sportsbook frontend. It is a headless, microservice,
-message-driven backend: a 41-project solution (`Platform/Platform.sln`) containing REST
+message-driven backend: a 42-project solution (`Platform/Platform.sln`) containing REST
 APIs, ~18 RabbitMQ background workers, and a SignalR websocket hub. There is no UI in
 this repository.
 
@@ -23,7 +23,7 @@ This README is a practical local run/test guide. The deep reference lives in
 | `Platform.Websocket.API2` | SignalR hub | Real-time hub at `/platform`, MessagePack; consumed by `platform-web` (fed by `odds-engine-2`) |
 | `Platform.*.Service`, `Platform.Job.*` | Workers | ~18 `BackgroundService` RabbitMQ consumers (settlement, cashout, cache sync, ...) |
 | `Platform.Shared` | Class library | Shared kernel: entities, `DbContext`s, message contracts, enums. Platform-wide blast radius - treat as public API. |
-| `Platform.Shared.Test`, `Platform.Sportsbook.API.Test`, `Platform.Operator.API.Test` | xUnit tests | See "Running tests" |
+| `Platform.Shared.Test`, `Platform.Sportsbook.API.Test`, `Platform.Operator.API.Test`, `Platform.BetInfo.Service.Test` | xUnit tests | See "Running tests" |
 
 Note: some services exist in duplicated variants (`*.Service` vs `*.Servicev2`,
 `WebSocket.API` vs `Websocket.API2`). Confirm the live variant before working on one -
@@ -552,6 +552,9 @@ dotnet test Platform/Platform.Sportsbook.API.Test
 
 # repository tests against the EF in-memory provider
 dotnet test Platform/Platform.Operator.API.Test
+
+# repository and host-registration tests against the EF in-memory provider
+dotnet test Platform/Platform.BetInfo.Service.Test
 ```
 
 No external services are required, including for the repository tests: they run against

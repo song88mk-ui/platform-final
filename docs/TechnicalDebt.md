@@ -94,18 +94,24 @@
 ### TD-10 — Thin automated-test net
 - **Evidence:** 3 of 41 projects have tests: `Platform.Shared.Test` (360 tests, 83.51% Stryker
   mutation score over `Extensions`/`Helpers`/`Utility`/`Providers`), `Platform.Sportsbook.API.Test`
-  (13 tests over one pure static class), and `Platform.Operator.API.Test` (73 tests, added GM-809).
-  All run by a PR-only CI test job. Settlement, placement and cashout remain untested.
-- **Files:** `Platform.Shared.Test/*`, `Platform.Sportsbook.API.Test/*`, `Platform.Operator.API.Test/*`.
+  (13 tests over one pure static class), `Platform.Operator.API.Test` (73 tests, added GM-809) and
+  `Platform.BetInfo.Service.Test` (12 tests, added GM-814). All run by a PR-only CI test job.
+  Settlement, placement and cashout remain untested.
+- **Files:** `Platform.Shared.Test/*`, `Platform.Sportsbook.API.Test/*`,
+  `Platform.Operator.API.Test/*`, `Platform.BetInfo.Service.Test/*`.
 - **Confidence:** **[Verified]**.
-- **Suggested investigation:** the remaining 33 inline `new DbContextOptionsBuilder<T>()` sites
-  across 13 files have no test seam; introducing `IDbContextFactory<T>` there is what unblocks
-  settlement/cashout/placement coverage.
+- **Suggested investigation:** 32 inline `new DbContextOptionsBuilder<T>()` sites across 12 files
+  still have no test seam. `Platform.BetInfo.Service` shows the fix: swap the inline construction
+  for `IDbContextFactory<T>` and register it with `AddDbContextFactory`.
 
 ### TD-13 — Singleton repo holding scoped `DbContext` (worker hazard)
 - **Evidence:** worker services register repos Singleton while the hosted `Worker` is singleton.
 - **Files:** `*.Service/Program.cs`, `*/Repository/*`.
 - **Confidence:** **[Likely]**.
+- **Resolved for `Platform.BetInfo.Service`** (GM-814): the repository stays a singleton but now
+  takes `IDbContextFactory<BettingContext>`, which `AddDbContextFactory` registers as a singleton
+  handing out a fresh context per call. That pairing is safe where injecting a scoped `DbContext`
+  into a singleton would not be, and it is the pattern the other workers should follow.
 - **Suggested investigation:** per worker, confirm a `DbContext` is created per message, not cached.
 
 ### TD-14 — README stub; no in-repo docs before this set

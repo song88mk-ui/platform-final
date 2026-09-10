@@ -84,6 +84,7 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Platform.Sportsbook.API.Test", "Platform.Sportsbook.API.Test\Platform.Sportsbook.API.Test.csproj", "{FEF0B938-32D4-4F39-AC5C-6BD9CAB28A41}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Platform.Operator.API.Test", "Platform.Operator.API.Test\Platform.Operator.API.Test.csproj", "{FFBF94EF-6F44-402C-8903-9640209A209A}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Platform.BetInfo.Service.Test", "Platform.BetInfo.Service.Test\Platform.BetInfo.Service.Test.csproj", "{15220529-9195-4AAD-B000-AE92A3D85B1A}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -255,6 +256,10 @@ Global
 		{FFBF94EF-6F44-402C-8903-9640209A209A}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{FFBF94EF-6F44-402C-8903-9640209A209A}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{FFBF94EF-6F44-402C-8903-9640209A209A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{15220529-9195-4AAD-B000-AE92A3D85B1A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{15220529-9195-4AAD-B000-AE92A3D85B1A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{15220529-9195-4AAD-B000-AE92A3D85B1A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{15220529-9195-4AAD-B000-AE92A3D85B1A}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

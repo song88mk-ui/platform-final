@@ -1,5 +1,3 @@
-﻿
-using Microsoft.Extensions.Configuration;
 using System.Transactions;
 using System;
 using Platform.Shared.MessageModels;
@@ -11,20 +9,23 @@ namespace Platform.BetInfo.Service.Repository
 {
     public class BettingRepository : IBettingRepository
     {
-        private readonly IConfiguration _configuration;
+        private readonly IDbContextFactory<BettingContext> _contextFactory;
 
-        public BettingRepository(IConfiguration configuration)
+        public BettingRepository(IDbContextFactory<BettingContext> contextFactory)
         {
-            _configuration = configuration;
+            _contextFactory = contextFactory;
         }
 
         public void ProcessBetPlacement(OnBetPlacement message)
         {
             using (var scope = new TransactionScope(TransactionScopeOption.Required, new TransactionOptions { IsolationLevel = IsolationLevel.ReadCommitted }))
             {
-                var optionsBuilder = new DbContextOptionsBuilder<BettingContext>().UseSqlServer(_configuration["ConnectionStrings:Betting"]);
-
-                using (var context = new BettingContext(optionsBuilder.Options))
+                // CreateDbContext returns a fresh context per call, matching the lifetime the
+                // previous inline construction gave: the context is created and disposed inside
+                // the ambient TransactionScope, never shared across calls. This repository is
+                // registered as a singleton (Program.cs), and the factory is a singleton too,
+                // so no scoped DbContext is captured by a longer-lived object.
+                using (var context = _contextFactory.CreateDbContext())
                 {
                     context.BetInfo.Add(new Shared.Data.Betting.Entities.BetInfo
                     {

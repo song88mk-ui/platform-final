@@ -38,7 +38,7 @@ jobs:
 
       - name: Run
         run: |
-          dotnet tool install --global dotnet-sonarscanner
+          dotnet tool install --global dotnet-sonarscanner --framework net10.0
           export PATH=$PATH:~/.dotnet/tools
           dotnet sonarscanner begin /k:"platform-final" \
                                     /d:sonar.host.url="https://sonarqube.stg.song88.com" \

@@ -2,7 +2,7 @@
 
 Core .NET sportsbook backend of the Song88 platform - the "Platform API" consumed by the
 sibling `platform-web` Blazor sportsbook frontend. It is a headless, microservice,
-message-driven backend: a 40-project solution (`Platform/Platform.sln`) containing REST
+message-driven backend: a 41-project solution (`Platform/Platform.sln`) containing REST
 APIs, ~18 RabbitMQ background workers, and a SignalR websocket hub. There is no UI in
 this repository.
 
@@ -23,7 +23,7 @@ This README is a practical local run/test guide. The deep reference lives in
 | `Platform.Websocket.API2` | SignalR hub | Real-time hub at `/platform`, MessagePack; consumed by `platform-web` (fed by `odds-engine-2`) |
 | `Platform.*.Service`, `Platform.Job.*` | Workers | ~18 `BackgroundService` RabbitMQ consumers (settlement, cashout, cache sync, ...) |
 | `Platform.Shared` | Class library | Shared kernel: entities, `DbContext`s, message contracts, enums. Platform-wide blast radius - treat as public API. |
-| `Platform.Shared.Test`, `Platform.Sportsbook.API.Test` | xUnit tests | See "Running tests" |
+| `Platform.Shared.Test`, `Platform.Sportsbook.API.Test`, `Platform.Operator.API.Test` | xUnit tests | See "Running tests" |
 
 Note: some services exist in duplicated variants (`*.Service` vs `*.Servicev2`,
 `WebSocket.API` vs `Websocket.API2`). Confirm the live variant before working on one -
@@ -541,19 +541,25 @@ Plain REST endpoints on the same host (`Controllers/SportsbookController.cs`):
 
 ## Running tests
 
-Two xUnit test projects exist; both target `net10.0`:
+Three xUnit test projects exist; all target `net10.0`:
 
 ```
 # pure unit tests over the shared kernel
 dotnet test Platform/Platform.Shared.Test
 
-# repository tests
+# pure unit tests over the selection-name composer
 dotnet test Platform/Platform.Sportsbook.API.Test
+
+# repository tests against the EF in-memory provider
+dotnet test Platform/Platform.Operator.API.Test
 ```
 
-No external services are required. CI runs both test projects in a PR-only test job
-(`.github/workflows/ci.yml`), but still run them locally before pushing. New services
-are expected to ship with a matching xUnit test project (see `CLAUDE.md`).
+No external services are required, including for the repository tests: they run against
+`Microsoft.EntityFrameworkCore.InMemory`, not a database. CI runs the whole solution in a
+PR-only test job (`dotnet test Platform/Platform.sln`, `.github/workflows/ci.yml`), so a new
+test project is picked up as soon as it is added to `Platform.sln`. Still run them locally
+before pushing. New services are expected to ship with a matching xUnit test project (see
+`CLAUDE.md`).
 
 ## Dependent services
 

@@ -92,11 +92,15 @@
 - **Suggested investigation:** check argocd/other pipelines for how these are built/deployed (U-06).
 
 ### TD-10 — Thin automated-test net
-- **Evidence:** only `Platform.Shared.Test` and `Platform.Sportsbook.API.Test` (run by a PR-only CI
-  test job); broad coverage not evident.
-- **Files:** `Platform.Shared.Test/*`, `Platform.Sportsbook.API.Test/*`.
-- **Confidence:** **[Likely]**.
-- **Suggested investigation:** measure coverage; identify untested high-risk paths (settlement/cashout/placement).
+- **Evidence:** 3 of 41 projects have tests: `Platform.Shared.Test` (360 tests, 83.51% Stryker
+  mutation score over `Extensions`/`Helpers`/`Utility`/`Providers`), `Platform.Sportsbook.API.Test`
+  (13 tests over one pure static class), and `Platform.Operator.API.Test` (73 tests, added GM-809).
+  All run by a PR-only CI test job. Settlement, placement and cashout remain untested.
+- **Files:** `Platform.Shared.Test/*`, `Platform.Sportsbook.API.Test/*`, `Platform.Operator.API.Test/*`.
+- **Confidence:** **[Verified]**.
+- **Suggested investigation:** the remaining 33 inline `new DbContextOptionsBuilder<T>()` sites
+  across 13 files have no test seam; introducing `IDbContextFactory<T>` there is what unblocks
+  settlement/cashout/placement coverage.
 
 ### TD-13 — Singleton repo holding scoped `DbContext` (worker hazard)
 - **Evidence:** worker services register repos Singleton while the hosted `Worker` is singleton.

@@ -130,10 +130,12 @@
 - **Suggested investigation:** observability-coverage audit; dependency-version alignment review.
 
 ## R-16 — Thin test safety net — **Risk: Medium**
-- **Evidence:** only `Platform.Shared.Test`; broad coverage not evident; refactoring safety leans on
-  the `/Reference` snapshot + manual care.
-- **Files:** `Platform.Shared.Test/*`.
-- **Confidence:** **[Likely]**.
+- **Evidence:** 3 of 41 projects have tests (`Platform.Shared.Test`, `Platform.Sportsbook.API.Test`,
+  `Platform.Operator.API.Test`). The shared kernel is now gated by Stryker at `break 80`; the
+  money-path services (settlement, cashout, placement) are still untested, because their
+  repositories build a `DbContext` inline and offer no seam.
+- **Files:** `Platform.Shared.Test/*`, `Platform.Sportsbook.API.Test/*`, `Platform.Operator.API.Test/*`.
+- **Confidence:** **[Verified]**.
 - **Suggested investigation:** measure actual coverage; identify the highest-risk untested paths
   (settlement, cashout, placement).
 

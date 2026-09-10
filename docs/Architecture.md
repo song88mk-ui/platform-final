@@ -9,7 +9,7 @@
 `platform-final` is a **microservice / message-driven distributed system** built on
 **.NET 10** (all projects target `net10.0` since GM-744, 2026-08-20 — see
 [SolutionStructure.md](SolutionStructure.md)). It is **not** a single deployable monolith:
-the solution contains **40 projects** that compile into ~26 independently deployed Docker
+the solution contains **41 projects** that compile into ~26 independently deployed Docker
 images (see [.github/workflows/ci.yml](../.github/workflows/ci.yml)).
 
 Two complementary communication styles coexist: **[Verified]**

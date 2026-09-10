@@ -5,12 +5,12 @@
 ## Solution file
 
 - Single solution: [`Platform/Platform.sln`](../Platform/Platform.sln).
-- **40 projects.** **[Verified]** (`find Platform -name "*.csproj" | wc -l` = 40).
+- **41 projects.** **[Verified]** (`find Platform -name "*.csproj" | wc -l` = 41).
   Note: `Platform.Cancellation.Service/` is **not** a project — it is an orphan directory
   containing only `bin`/`obj` leftovers (no `.csproj`, no solution entry). **[Verified]**
 - **Flat structure: the solution defines no solution folders, no nested-project grouping,
   and no "Solution Items".** **[Verified]** — `Platform.sln` contains no
-  `NestedProjects` section and no folder-type `Project(...)` entries. All 40 projects sit at
+  `NestedProjects` section and no folder-type `Project(...)` entries. All 41 projects sit at
   the solution root. Logical grouping exists only by project-name prefix convention
   (`Platform.*`), not by IDE folders.
 
@@ -27,14 +27,14 @@ platform-final/
 ├── docs/                ← this knowledge base (Phase 1 output)
 └── Platform/
     ├── Platform.sln
-    └── <40 project folders> (plus the bin/obj-only orphan dir Platform.Cancellation.Service)
+    └── <41 project folders> (plus the bin/obj-only orphan dir Platform.Cancellation.Service)
 ```
 
 ## Target frameworks
 
 | Target | Count | Projects |
 |--------|------:|----------|
-| `net10.0` | 36 | All APIs, services, jobs, console, tests except the four below |
+| `net10.0` | 37 | All APIs, services, jobs, console, tests except the four below |
 | `net8.0` | 4 | `Platform.Shared`, `Platform.Sportsbook.API`, `Platform.QTech.API`, `Platform.CashOutStake.Servicev2` |
 
 **[Verified]** via `grep TargetFramework Platform/*/*.csproj`. Unified by the .NET 10
@@ -68,7 +68,7 @@ See [RepositoryMap.md](RepositoryMap.md) for the full annotated list and
 | **Jobs** (timed/loop workers) | 4 | `Job.CCF`, `Job.ForexEUR`, `Job.Operator.Score`, `Job.Resettlement` |
 | **Console** (utility/load test) | 1 | `BetPlacement.Console` |
 | **Shared library** | 1 | `Platform.Shared` |
-| **Test** | 2 | `Platform.Shared.Test`, `Platform.Sportsbook.API.Test` |
+| **Test** | 3 | `Platform.Shared.Test`, `Platform.Sportsbook.API.Test`, `Platform.Operator.API.Test` |
 | **Client/sample** | 1 | `Platform.WebSocket.Client` |
 
 ## Per-service sub-projects
@@ -88,16 +88,18 @@ in references) / **[Likely]** (naming):
 
 `.github/workflows/ci.yml` builds a **subset** of 26 projects as Docker images (matrix
 `app.path` → `app.image`); `Platform.Operator.Cashout.Service` **is** in the matrix.
-**[Verified]** A PR-only `test` job runs `Platform.Shared.Test` and
-`Platform.Sportsbook.API.Test` on the .NET SDK 10.0.x. **[Verified]** Projects present in
+**[Verified]** A PR-only `test` job runs `dotnet test Platform/Platform.sln` on the .NET SDK
+10.0.x, so it picks up every test project in the solution automatically: currently
+`Platform.Shared.Test`, `Platform.Sportsbook.API.Test` and `Platform.Operator.API.Test`. **[Verified]** Projects present in
 the solution but **absent from the build matrix** (i.e. not deployed as their own image):
 `Platform.AgentReports.API`, `Platform.AgentReports.Service`,
 `Platform.ESportOperator.Service`, `Platform.Oddin.API`,
 `Platform.QTech.API`, `Platform.RedCat.API`, `Platform.RedCatBetting.API`,
 `Platform.RedCatOperator.API`, `Platform.WebSocket.API` (note: `Websocket.API2` builds as
 `platform-websocket-api`), `Platform.WebSocket.Client`, `Platform.BetPlacement.Console`,
-`Platform.Shared`, `Platform.Shared.Test`, `Platform.Sportsbook.API.Test` (the two test
-projects run in the test job instead). **[Verified]** by diffing the CI matrix against
+`Platform.Shared`, `Platform.Shared.Test`, `Platform.Sportsbook.API.Test`,
+`Platform.Operator.API.Test` (the three test projects run in the test job instead; note that
+`Platform.Operator.API` itself **is** in the matrix, only its test project is not). **[Verified]** by diffing the CI matrix against
 the project list. Why some shipping integrations (QTech, RedCat, Oddin, AgentReports) are not
 in CI is **[Unknown]** — see [Unknowns.md](Unknowns.md). (Because CI never builds them, six of
 these — Oddin.API, QTech.API, RedCat.API, RedCatBetting.API, RedCatOperator.API,

@@ -42,3 +42,6 @@ Platform/Platform.Sportsbook.API/.config/dotnet-tools.json
 # Claude Code: only user-local settings stay ignored; the rest of .claude/,
 # CLAUDE.md, AGENTS.md and docs/ are shared with the team
 .claude/settings.local.json
+
+# Stryker.NET mutation-testing output (reports are regenerated per run)
+StrykerOutput/

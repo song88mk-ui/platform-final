@@ -1,0 +1,26 @@
+{
+  "stryker-config": {
+    "project": "Platform.Shared.csproj",
+    "solution": "../Platform.sln",
+    "mutate": [
+      "Extensions/**/*.cs",
+      "Utility/Formatting.cs",
+      "Utility/Helper.cs",
+      "Utility/JwtParser.cs",
+      "Utility/LocalizedSearchMatcher.cs",
+      "Helpers/**/*.cs",
+      "!Extensions/BetAuditEntityExtension.cs",
+      "!Extensions/BetSelectionAuditEntityExtension.cs"
+    ],
+    "reporters": [
+      "progress",
+      "html",
+      "json"
+    ],
+    "thresholds": {
+      "high": 80,
+      "low": 55,
+      "break": 45
+    }
+  }
+}

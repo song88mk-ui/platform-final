@@ -36,37 +36,47 @@ gitignored. Open the HTML report to see each surviving mutant in context.
 
 ## Scope, and why it is narrow
 
-Stryker re-runs the test suite once per surviving mutant, so it is only viable where the tests are
-fast and fully in-memory. `stryker-config.json` therefore mutates only
-`Platform.Shared/Extensions`, `Helpers`, and four files in `Utility` - the code whose tests touch no
-SQL Server, RabbitMQ or MongoDB.
+Stryker reruns the test suite once per surviving mutant, so it is only viable where the tests
+are fast and fully in-memory. `stryker-config.json` mutates `Platform.Shared/Extensions`,
+`Helpers`, `Providers`, and four files in `Utility` - the code whose tests touch no SQL Server,
+RabbitMQ or MongoDB.
 
-**Do not widen `mutate` to a project whose tests need infrastructure.** Such a run appears to hang
-rather than fail, because every mutant waits on a connection that never arrives.
+**Do not widen `mutate` to a project whose tests need infrastructure.** Such a run appears to
+hang rather than fail, because every mutant waits on a connection that never arrives.
 
 Excluded deliberately:
 
 | Excluded | Reason |
 |---|---|
+| `Providers/MTS/**` | MTS is retired. It still has DI registrations and answers `ChannelType.SR`, which no call site resolves, so it should not be defended by a threshold |
 | `Utility/MemCache.cs` | wraps `MemoryCache.Default`, a per-pod static |
 | `Utility/MessageBroker.cs` | needs a live RabbitMQ connection |
 | `Extensions/BetAuditEntityExtension.cs` | takes a `DbSet<T>`; needs the EF seam from Tier 6 |
 | `Extensions/BetSelectionAuditEntityExtension.cs` | same |
 
-## Baseline (2026-09-10, after GM-806)
+`ignore-methods` excludes mutants inside `ILogger` calls. Without it, 83 of the provider
+mutants were string and statement edits to log messages: killing those would mean asserting log
+text, which is brittle and says nothing about behaviour. It is noise removal, not score
+inflation - the reason codes that callers actually branch on are ordinary strings elsewhere in
+the method and are still mutated.
 
-**Overall score 90.35%** - 234 killed, 22 survived, 3 not covered by any test, out of 259
+## Baseline (2026-09-10, after GM-807)
+
+**Overall score 83.51%** - 395 killed, 55 survived, 23 not covered by any test, out of 473
 mutants. Run takes about 40 seconds.
 
-History: 53.19% at DEVOPS-365, 87.23% after GM-804 added 99 tests for `Helper` and
-`ObjectExtensions`, 90.35% after GM-806 deleted the unreachable guards in
-`StringExtensions` and `HashExtensions`. That last step raised the score by removing
-mutants from the denominator (282 to 259), not by killing more.
+History, all measured: 53.19% at DEVOPS-365 over 282 mutants, 87.23% after GM-804 added tests
+for `Helper` and `ObjectExtensions`, 90.35% after GM-806 deleted the unreachable guards, then
+**83.51% after GM-807 brought `Providers` into scope**. That last step lowered the number by
+widening what is measured, from 259 mutants to 473. A drop after widening the scope is the gate
+reaching further, not a regression - read the mutant count alongside the percentage.
 
 | File | Killed | Survived | No coverage | Score |
 |---|---|---|---|---|
 | `OddsTypeHelper.cs` | 29 | 0 | 0 | 100.0% |
 | `StringExtensions.cs` | 27 | 0 | 0 | 100.0% |
+| `BetProviderFactory.cs` | 6 | 0 | 0 | 100.0% |
+| `LiveStreamFactory.cs` | 6 | 0 | 0 | 100.0% |
 | `ListExtensions.cs` | 5 | 0 | 0 | 100.0% |
 | `Formatting.cs` | 4 | 0 | 0 | 100.0% |
 | `JwtParser.cs` | 4 | 0 | 0 | 100.0% |
@@ -74,41 +84,38 @@ mutants from the denominator (282 to 259), not by killing more.
 | `DateTimeExtensions.cs` | 2 | 0 | 0 | 100.0% |
 | `EnumExtensions.cs` | 1 | 0 | 0 | 100.0% |
 | `DecimalJsonConverter.cs` | 11 | 1 | 0 | 91.7% |
+| `BetGeniusLiveStream.cs` | 21 | 1 | 1 | 91.3% |
 | `ObjectExtensions.cs` | 41 | 4 | 0 | 91.1% |
 | `Helper.cs` | 80 | 12 | 0 | 87.0% |
 | `DecimalExtensions.cs` | 5 | 0 | 1 | 83.3% |
 | `LocalizedSearchMatcher.cs` | 21 | 3 | 2 | 80.8% |
+| `GTSBetProvider.cs` | 128 | 32 | 19 | 71.5% |
 | `IntExtensions.cs` | 1 | 2 | 0 | 33.3% |
 
-Thresholds are set from this measurement: `break` 85 (below the current score, so a run
-fails only on a regression), `low` 88, `high` 95.
+Thresholds are set from this measurement: `break` 80 (below the current score, so a run fails
+only on a regression), `low` 82, `high` 92.
 
-## Why the score is not 100%
+## Why the score is not higher
 
-Do not read the remaining 25 unkilled mutants as 25 missing tests. Nearly all are
-**equivalent mutants** - edits that cannot change observable behaviour, so no test can kill
-them. Two groups remain now that GM-806 has removed the dead code.
+Two different reasons, and they should not be conflated.
 
-**Redundant branches that return the same value (`Helper.cs`, 12 mutants).** The
-bet-builder path checks `Any(Void)`, then `Any(Cancelled)`, then falls through to a
-catch-all, and all three return `trueStake`, so negating any of those conditions changes
-nothing. Both `GetVoidFactor` overloads return `Zero` from their explicit `Won || Lost`
-branch and from the fall-through. `GetInstanceName` subtracts `'0'` from a character and
-then tests parity; since 48 is even, adding it gives the same parity.
+**Equivalent mutants** - edits that cannot change observable behaviour, so no test can kill
+them. The bet-builder path in `Helper.GetPayout` returns `trueStake` from its Void check, its
+Cancelled check and its catch-all, so negating any of those conditions changes nothing. Both
+`GetVoidFactor` overloads return `Zero` from the explicit branch and the fall-through.
+`GetInstanceName` subtracts `'0'` then tests parity, and 48 is even. `First()` to
+`FirstOrDefault()` survives wherever the collection is provably non-empty. In `GTSBetProvider`
+the virtual-sport guards at lines 49 and 175 are unreachable from tests because
+`IntExtensions.IsVirtualSportId` is still an empty stub, so both arms behave identically.
 
-**Guards on conditions that cannot occur.** `First()` to `FirstOrDefault()` survives
-wherever the collection is already known non-empty - `string.Split` never returns an empty
-array, and `GetPayout`'s branch 1 is guarded by `Count == 1`. Same for
-`LocalizedSearchMatcher.cs:55,56`, where a name without a "vs." separator makes the away
-participant equal the home one, so the two code paths agree.
+**Genuine gaps in `GTSBetProvider`'s cashout region** (lines 205-378). `GTSBetProviderCashoutTests`
+covers the cashout paths behaviourally, but does not assert the test-prefix routing or the
+`SendBet` status handling within them, so those mutants survive. That is a real, addressable
+gap and the obvious next increment for this file.
 
-`IntExtensions.cs:13,18` also survive, as the deliberate empty sport-ID stubs that
-`IntExtensionsTests` records. `ObjectExtensions.cs:45` survives as a fast path that is
-redundant but worth keeping: a primitive falls through the complex-object branch unchanged,
-so deleting the check would be slower and less obvious.
-
-Chasing a higher number from here means changing production code for no behavioural gain.
-Treat 90% as the working ceiling for this scope.
+`IntExtensions.cs:13,18` survive as the deliberate empty sport-ID stubs that
+`IntExtensionsTests` records. `ObjectExtensions.cs:45` survives as a redundant but worthwhile
+fast path.
 
 ## Not wired into CI
 

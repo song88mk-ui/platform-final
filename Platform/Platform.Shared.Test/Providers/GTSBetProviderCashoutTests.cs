@@ -13,58 +13,6 @@ namespace Platform.Shared.Test.Providers
 {
     public class GTSBetProviderCashoutTests
     {
-        private sealed class FakeGtsAuthRepository : IGTSAuthRepository
-        {
-            public BaseResponseDTO<ProviderAuthResponseDTO> Response { get; set; } = new()
-            {
-                StatusCode = StatusCode.Success,
-                Result = new ProviderAuthResponseDTO { Token = "token" }
-            };
-
-            public int Calls { get; private set; }
-
-            public Task<BaseResponseDTO<ProviderAuthResponseDTO>> GetGTSAuthorizationToken()
-            {
-                Calls++;
-                return Task.FromResult(Response);
-            }
-        }
-
-        private sealed class FakeGtsRepository : IGTSRepository
-        {
-            public BaseResponseDTO<ProviderAssessmentResponseDTO> CashoutAssessmentResponse { get; set; } = new()
-            {
-                StatusCode = StatusCode.Success,
-                Result = new ProviderAssessmentResponseDTO { IsBetAllowed = true }
-            };
-
-            public OnBetSettlement? LastCashoutAssessmentRequest { get; private set; }
-            public bool? LastIsInPlay { get; private set; }
-
-            public List<CashedOutProbabilities>? LastProbabilities { get; private set; }
-
-            public Task<BaseResponseDTO<ProviderAssessmentResponseDTO>> CashoutAssessment(string authToken, OnBetSettlement request, string testPrefix = "", bool isInPlay = false, List<CashedOutProbabilities> probabilities = null)
-            {
-                LastCashoutAssessmentRequest = request;
-                LastIsInPlay = isInPlay;
-                LastProbabilities = probabilities;
-                return Task.FromResult(CashoutAssessmentResponse);
-            }
-
-            public (SendBet Request, bool IsSettled, GtsCashout Cashout)? LastSendBet { get; private set; }
-
-            public Task<BaseResponseDTO<string>> SendBet(string authToken, SendBet request, string testPrefix = "", bool isSettled = false, GtsCashout cashout = null)
-            {
-                LastSendBet = (request, isSettled, cashout);
-                return Task.FromResult(new BaseResponseDTO<string> { StatusCode = StatusCode.Success });
-            }
-
-            public Task<BaseResponseDTO<ProviderStakeResponseDTO>> GetMaxStakeOld(string authToken, BetRequestDTO request) => throw new NotImplementedException();
-            public Task<BaseResponseDTO<ProviderStakeResponseDTO>> GetMaxStake(string authToken, BetRequestDTO request) => throw new NotImplementedException();
-            public Task<BaseResponseDTO<ProviderAssessmentResponseDTO>> Assessment(string authToken, OnBetPlacement request, string testPrefix = "") => throw new NotImplementedException();
-            public Task<BaseResponseDTO<string>> Cancellation(string authToken, Guid betId, string limitId, string clientCode, string testPrefix = "") => throw new NotImplementedException();
-        }
-
         private static GTSBetProvider CreateProvider(FakeGtsAuthRepository auth, FakeGtsRepository repo, bool providerEnabled = true)
         {
             var configuration = new ConfigurationBuilder()

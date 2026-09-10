@@ -9,8 +9,18 @@
       "Utility/JwtParser.cs",
       "Utility/LocalizedSearchMatcher.cs",
       "Helpers/**/*.cs",
+      "Providers/**/*.cs",
+      "!Providers/MTS/*.cs",
       "!Extensions/BetAuditEntityExtension.cs",
       "!Extensions/BetSelectionAuditEntityExtension.cs"
+    ],
+    "ignore-methods": [
+      "LogInformation",
+      "LogError",
+      "LogWarning",
+      "LogDebug",
+      "LogTrace",
+      "LogCritical"
     ],
     "reporters": [
       "progress",
@@ -18,9 +28,9 @@
       "json"
     ],
     "thresholds": {
-      "high": 95,
-      "low": 88,
-      "break": 85
+      "high": 92,
+      "low": 82,
+      "break": 80
     }
   }
 }

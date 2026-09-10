@@ -277,7 +277,7 @@ namespace Platform.Settlement.Service.Repository
                         }
                         catch (Exception ex)
                         {
-
+                            _logger.LogError(ex, "Error processing bet settlement for cancellation for BetId: {BetId}, CorrelationId: {CorrelationId}", betSelection.BetId, correlationId);
                         }
                     }
                 }

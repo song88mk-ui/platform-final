@@ -562,8 +562,9 @@ namespace Platform.Operator.Servicev2.Repository
                         context.SaveChanges();
                         scope.Complete();
                     }
-                    catch (Exception)
+                    catch (Exception ex)
                     {
+                        _logger.LogError(ex, "AddOrUpdateOperatorSettlementRetry failed for BetId: {BetId}, MessageType: {MessageType}, CorrelationId: {CorrelationId}", message.OnBetSettlement.Bet.BetId, messageType, correlationId);
                     }
                 }
             }
@@ -596,8 +597,9 @@ namespace Platform.Operator.Servicev2.Repository
                     context.SaveChanges();
                     scope.Complete();
                 }
-                catch (Exception)
+                catch (Exception ex)
                 {
+                    _logger.LogError(ex, "AddOperatorLog failed for BetId: {BetId}, ClientCode: {ClientCode}, CorrelationId: {CorrelationId}", operatorLog.BetId, operatorLog.ClientCode, operatorLog.CorrelationId);
                 }
             }
         }

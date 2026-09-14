@@ -12,10 +12,11 @@ namespace Platform.Operator.API.Test.Repository
     // AddOrUpdateOperatorAudit (Platform.Operator.API/Repository/PlatformRepository.cs:1182).
     //
     // That method is where an operator's balance is actually decided, and its hardest part is
-    // RESETTLEMENT: when a bet that already produced an audit row is settled again with a
-    // different status, the previous row's Amount has to be reversed out before the new one is
-    // applied, or the player is paid twice. The reversal rules are undocumented and expressed
-    // as nested conditionals. Every branch of them is pinned below.
+    // RESETTLEMENT: when a bet that already produced an audit row is settled again, the previous
+    // row's Amount has to be reversed out before the new one is applied, or the player is paid
+    // twice. Since GM-815 the reversal rules live in the pure OperatorAuditReversal.Resolve and
+    // every (previous, incoming) status pair is covered in OperatorAuditReversalTests; the tests
+    // below drive them through the repository, with the EF lookup of the previous row included.
     //
     // Balances are decimal(26,12). The assertions use full scale on purpose - see the note in
     // InMemoryPlatformContext on why the in-memory provider was chosen over SQLite.
@@ -492,13 +493,19 @@ namespace Platform.Operator.API.Test.Repository
             var clientId = Guid.NewGuid().ToString();
 
             await repository.BetSettlement(ASettlement(userId, betId, 30m, 90m, BetStatus.Won), clientId);
+            Assert.Equal(160m, context.Operator.Single().Balance);
 
-            // Same status, so the reversal branch is skipped entirely: the second payout is
-            // added on top of the first. Pinned as behaviour, not endorsed as correct - a
-            // repeated Won for the same bet pays twice.
+            // GM-815 Defect A. The same status arriving again used to skip the reversal entirely,
+            // so the second payout stacked on the first and the balance reached 210. The first
+            // payout is now reversed before the second is credited: 160 - 90 + 50.
             var response = await repository.BetSettlement(ASettlement(userId, betId, 30m, 50m, BetStatus.Won), clientId);
 
-            Assert.Equal(210m, response.Balance);
+            Assert.Equal(120m, response.Balance);
+
+            var resettlement = context.OperatorAudit.OrderBy(a => a.Id).Last();
+            Assert.Equal(70m, resettlement.PreBalance);
+            Assert.Equal(50m, resettlement.Amount);
+            Assert.Equal(120m, resettlement.PostBalance);
         }
 
         [Fact]
@@ -527,14 +534,14 @@ namespace Platform.Operator.API.Test.Repository
         [Fact]
         public async Task Resettlement_VoidThenWon_CreditsPayoutMinusStakeAndKeepsTheVoidRefund()
         {
-            // The asymmetric case. When the PREVIOUS row is the Void, neither reversal branch
-            // matches: the first needs the previous row not to be a Void, the second needs the
-            // incoming status to be Void. Control falls to the else, which sets
-            // amount = payout - stake but leaves postBalance at the current balance.
-            //
-            // So the void refund is NOT clawed back. The player keeps the returned stake and
-            // is then credited payout - stake on top. Pinned as the behaviour that ships;
-            // whether it is intended is a separate question, and changing it would move money.
+            // GM-815 Defect B, re-examined. When the PREVIOUS row is the Void, the refund row is
+            // left standing and the Won is booked as payout - stake. That IS the refund being
+            // reclaimed, folded into the amount: 60 = -30 (take the refund back) + 90 (credit the
+            // payout). With the placement debit in the history the balance ends at 160, the same
+            // as a first-time Won; see Resettlement_PlacedThenVoidThenWon below. The 160 the
+            // ticket expected for THIS scenario, which has no placement debit, would reclaim the
+            // refund a second time and underpay the real flow by the stake, so the expectation
+            // stays at 190 and the rule is pinned in OperatorAuditReversalTests.
             var userId = Guid.NewGuid();
             var betId = Guid.NewGuid();
 
@@ -550,8 +557,8 @@ namespace Platform.Operator.API.Test.Repository
 
             var response = await repository.BetSettlement(ASettlement(userId, betId, 30m, 90m, BetStatus.Won), clientId);
 
-            // 130 kept in full, plus (90 - 30). Compare with Resettlement_WonThenVoid, where
-            // the previous credit IS reversed.
+            // 130 + (90 - 30). Compare with Resettlement_WonThenVoid, where the reversal is also
+            // inside the amount: 160 + (30 - 90) = 100.
             Assert.Equal(190m, response.Balance);
         }
 
@@ -580,6 +587,131 @@ namespace Platform.Operator.API.Test.Repository
             var response = await repository.BetSettlement(ASettlement(userId, betId, 30m, 90m, BetStatus.Won), clientId);
 
             Assert.Equal(160m, response.Balance);
+        }
+
+        [Fact]
+        public async Task Resettlement_PlacedThenWonThenLost_ReversesTheLatestRowNotThePlacementDebit()
+        {
+            // The realistic sequence: a placement row exists before any settlement, and the row
+            // to reverse is the LATEST one, the Won. Before GM-815 the previous-row lookup had no
+            // ordering; in-memory it returned the oldest row, the Running placement, which is
+            // never reversible, so the Won was never reversed and the balance stayed at 160.
+            var userId = Guid.NewGuid();
+            var token = Guid.NewGuid().ToString();
+            var betId = Guid.NewGuid();
+
+            using var context = InMemoryPlatformContext.Create();
+            context.Operator.Add(AnOperator(userId, token, 100m));
+            context.SaveChanges();
+
+            var repository = new PlatformRepository(context);
+            var clientId = Guid.NewGuid().ToString();
+
+            await repository.BetPlacement(
+                new OperatorBetRequestDTO { BetId = betId.ToString(), Stake = 30m, BetStatus = BetStatus.Running.ToString() },
+                token,
+                clientId);
+            await repository.BetSettlement(ASettlement(userId, betId, 30m, 90m, BetStatus.Won), clientId);
+            Assert.Equal(160m, context.Operator.Single().Balance);
+
+            var response = await repository.BetSettlement(ASettlement(userId, betId, 30m, 0m, BetStatus.Lost), clientId);
+
+            Assert.Equal(70m, response.Balance);
+
+            var lost = context.OperatorAudit.OrderBy(a => a.Id).Last();
+            Assert.Equal((int)BetStatus.Lost, lost.TransactionTypeId);
+            Assert.Equal(70m, lost.PreBalance);
+            Assert.Equal(0m, lost.Amount);
+        }
+
+        [Fact]
+        public async Task Resettlement_PlacedThenVoidThenWon_EndsWhereAFirstTimeWonWouldHave()
+        {
+            // GM-815 Defect B in the realistic flow. 100, stake 30 debited -> 70, Void refunds the
+            // stake -> 100, then Won pays 90. The correct end state is 70 + 90 = 160, and booking
+            // payout - stake against the post-void balance gets there: 100 + 60.
+            var userId = Guid.NewGuid();
+            var token = Guid.NewGuid().ToString();
+            var betId = Guid.NewGuid();
+
+            using var context = InMemoryPlatformContext.Create();
+            context.Operator.Add(AnOperator(userId, token, 100m));
+            context.SaveChanges();
+
+            var repository = new PlatformRepository(context);
+            var clientId = Guid.NewGuid().ToString();
+
+            await repository.BetPlacement(
+                new OperatorBetRequestDTO { BetId = betId.ToString(), Stake = 30m, BetStatus = BetStatus.Running.ToString() },
+                token,
+                clientId);
+            await repository.BetSettlement(ASettlement(userId, betId, 30m, 30m, BetStatus.Void), clientId);
+            Assert.Equal(100m, context.Operator.Single().Balance);
+
+            var response = await repository.BetSettlement(ASettlement(userId, betId, 30m, 90m, BetStatus.Won), clientId);
+
+            Assert.Equal(160m, response.Balance);
+        }
+
+        [Fact]
+        public async Task Resettlement_PlacedThenWonThenVoidThenWon_RoundTripsToTheSameBalance()
+        {
+            // 100 -> 70 (placed) -> 160 (Won) -> 100 (Void) -> 160 (Won again). The two Won rows
+            // read differently, +90 then +60, because the second is booked net of the refunded
+            // stake, but the balance is the same.
+            var userId = Guid.NewGuid();
+            var token = Guid.NewGuid().ToString();
+            var betId = Guid.NewGuid();
+
+            using var context = InMemoryPlatformContext.Create();
+            context.Operator.Add(AnOperator(userId, token, 100m));
+            context.SaveChanges();
+
+            var repository = new PlatformRepository(context);
+            var clientId = Guid.NewGuid().ToString();
+
+            await repository.BetPlacement(
+                new OperatorBetRequestDTO { BetId = betId.ToString(), Stake = 30m, BetStatus = BetStatus.Running.ToString() },
+                token,
+                clientId);
+            await repository.BetSettlement(ASettlement(userId, betId, 30m, 90m, BetStatus.Won), clientId);
+            Assert.Equal(160m, context.Operator.Single().Balance);
+
+            await repository.BetSettlement(ASettlement(userId, betId, 30m, 30m, BetStatus.Void), clientId);
+            Assert.Equal(100m, context.Operator.Single().Balance);
+
+            var response = await repository.BetSettlement(ASettlement(userId, betId, 30m, 90m, BetStatus.Won), clientId);
+
+            Assert.Equal(160m, response.Balance);
+        }
+
+        [Fact]
+        public async Task Resettlement_VoidTwice_RefundsTheStakeOnce()
+        {
+            // Before GM-815 the repeated Void was skipped by the "status changed" guard and the
+            // stake was refunded a second time, to 130.
+            var userId = Guid.NewGuid();
+            var token = Guid.NewGuid().ToString();
+            var betId = Guid.NewGuid();
+
+            using var context = InMemoryPlatformContext.Create();
+            context.Operator.Add(AnOperator(userId, token, 100m));
+            context.SaveChanges();
+
+            var repository = new PlatformRepository(context);
+            var clientId = Guid.NewGuid().ToString();
+
+            await repository.BetPlacement(
+                new OperatorBetRequestDTO { BetId = betId.ToString(), Stake = 30m, BetStatus = BetStatus.Running.ToString() },
+                token,
+                clientId);
+            await repository.BetSettlement(ASettlement(userId, betId, 30m, 30m, BetStatus.Void), clientId);
+            Assert.Equal(100m, context.Operator.Single().Balance);
+
+            var response = await repository.BetSettlement(ASettlement(userId, betId, 30m, 30m, BetStatus.Void), clientId);
+
+            Assert.Equal(100m, response.Balance);
+            Assert.Equal(0m, context.OperatorAudit.OrderBy(a => a.Id).Last().Amount);
         }
 
         [Fact]
@@ -652,6 +784,30 @@ namespace Platform.Operator.API.Test.Repository
 
             Assert.Equal(1003, (await repository.BetFullCashOut(request, Guid.NewGuid().ToString())).StatusId);
             Assert.Equal(70m, context.Operator.Single().Balance);
+        }
+
+        [Fact]
+        public async Task BetFullCashOut_RepeatedCallbackWithTheSamePayout_CreditsOnce()
+        {
+            // A duplicate cashout callback is the same status arriving twice. Before GM-815 it
+            // skipped the reversal and credited the payout again, to 160.
+            var userId = Guid.NewGuid();
+            var betId = Guid.NewGuid();
+
+            using var context = InMemoryPlatformContext.Create();
+            context.Operator.Add(AnOperator(userId, Guid.NewGuid().ToString(), 70m));
+            context.SaveChanges();
+
+            var repository = new PlatformRepository(context);
+            var clientId = Guid.NewGuid().ToString();
+
+            await repository.BetFullCashOut(ASettlement(userId, betId, 30m, 45m, BetStatus.CashedOut), clientId);
+            Assert.Equal(115m, context.Operator.Single().Balance);
+
+            var response = await repository.BetFullCashOut(ASettlement(userId, betId, 30m, 45m, BetStatus.CashedOut), clientId);
+
+            Assert.Equal(1000, response.StatusId);
+            Assert.Equal(115m, response.Balance);
         }
 
         [Fact]
@@ -777,21 +933,36 @@ namespace Platform.Operator.API.Test.Repository
         public async Task AuditRow_PostBalanceAlwaysEqualsPreBalancePlusAmount()
         {
             // The ledger invariant. If it ever breaks, the balance and its audit trail disagree.
+            // The chain below crosses every reversal rule: placement, Won, the same Won again with
+            // a new payout, Void, Won after the Void, and Lost after that.
             var userId = Guid.NewGuid();
+            var token = Guid.NewGuid().ToString();
             var betId = Guid.NewGuid();
 
             using var context = InMemoryPlatformContext.Create();
-            context.Operator.Add(AnOperator(userId, Guid.NewGuid().ToString(), 100m));
+            context.Operator.Add(AnOperator(userId, token, 100m));
             context.SaveChanges();
 
             var repository = new PlatformRepository(context);
             var clientId = Guid.NewGuid().ToString();
 
+            await repository.BetPlacement(
+                new OperatorBetRequestDTO { BetId = betId.ToString(), Stake = 30m, BetStatus = BetStatus.Running.ToString() },
+                token,
+                clientId);
+            await repository.BetSettlement(ASettlement(userId, betId, 30m, 90m, BetStatus.Won), clientId);
+            await repository.BetSettlement(ASettlement(userId, betId, 30m, 50m, BetStatus.Won), clientId);
+            await repository.BetSettlement(ASettlement(userId, betId, 30m, 30m, BetStatus.Void), clientId);
             await repository.BetSettlement(ASettlement(userId, betId, 30m, 90m, BetStatus.Won), clientId);
             await repository.BetSettlement(ASettlement(userId, betId, 30m, 0m, BetStatus.Lost), clientId);
 
+            Assert.Equal(6, context.OperatorAudit.Count());
             foreach (var audit in context.OperatorAudit)
                 Assert.Equal(audit.PreBalance + audit.Amount, audit.PostBalance);
+
+            // And the ledger agrees with the wallet: a bet that finally Lost leaves 100 - 30.
+            Assert.Equal(70m, context.Operator.Single().Balance);
+            Assert.Equal(70m, context.OperatorAudit.OrderBy(a => a.Id).Last().PostBalance);
         }
 
         #endregion

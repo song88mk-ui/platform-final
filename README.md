@@ -550,7 +550,7 @@ dotnet test Platform/Platform.Shared.Test
 # pure unit tests over the selection-name composer
 dotnet test Platform/Platform.Sportsbook.API.Test
 
-# repository tests against the EF in-memory provider
+# repository tests against the EF in-memory provider, plus pure tests over the audit reversal rules
 dotnet test Platform/Platform.Operator.API.Test
 
 # repository and host-registration tests against the EF in-memory provider

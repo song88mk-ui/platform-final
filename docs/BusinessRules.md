@@ -125,6 +125,16 @@ Encoded by `StatusCode` 104–117 and `BetConfig`. **[Verified]** (codes) / **[L
    in between. `Operator.Servicev2` keys its own behaviour on the same flag. **[Verified]** (GM-800
    follow-up).
 
+8. **Test-operator wallet resettlement** (`Platform.Operator.API`, the in-house wallet behind
+   `Platform.Operator` tokens) - every placement, settlement, cashout and cancellation writes an
+   `OperatorAudit` row with `PostBalance == PreBalance + Amount`. When a bet that already has a
+   settled row (Won/HalfWon/Lost/HalfLost/Void/CashedOut) is settled again, the LATEST row for the
+   bet is reversed before the new outcome is booked, including the same status arriving again with
+   a different payout. Rows after a Void are booked net of the stake (`payout - stake`) because
+   the Void refunded it; Running (placement) rows are never reversed. Rules are stated once in
+   `Platform.Operator.API/Utility/OperatorAuditReversal.cs` and covered pair-by-pair in
+   `Platform.Operator.API.Test`. **[Verified]** (GM-815).
+
 ## J. History / query rules
 1. **Date window** — `FromDate < ToDate` → else `152`; **max 24h per request** → `153`. **[Verified]** (codes).
 2. **Search text ≥ 3 chars** → `133`. **[Verified]**.

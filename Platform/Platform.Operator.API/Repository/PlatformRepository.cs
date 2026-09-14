@@ -1,6 +1,7 @@
 ﻿using Microsoft.CodeAnalysis;
 using Microsoft.EntityFrameworkCore;
 using Platform.Operator.API.Models;
+using Platform.Operator.API.Utility;
 using Platform.Shared.Data.Platform;
 using Platform.Shared.Data.Platform.Entities;
 using Platform.Shared.Enums;
@@ -1181,71 +1182,38 @@ namespace Platform.Operator.API.Repository
 
         private OperatorAudit AddOrUpdateOperatorAudit(Shared.Data.Platform.Entities.Operator _operator, string betId, decimal payout, decimal stake, string betStatus, bool isFreebet = false, bool isPartialCashout = false)
         {
-            var amount = payout;
-            if ((int)Enum.Parse(typeof(BetStatus), betStatus) == (int)BetStatus.Running && isPartialCashout == false)
-            {
-                if (isFreebet)
-                    amount = 0;
-                else
-                    amount = stake * -1;
-            }
+            var status = (BetStatus)Enum.Parse(typeof(BetStatus), betStatus);
+            var betGuid = Guid.Parse(betId);
 
-            var postBalance = _operator.Balance;
-            var prevOperatorAudit = _platformContext.OperatorAudit.AsNoTracking().FirstOrDefault(o => o.UserId == _operator.UserId && o.BetId == Guid.Parse(betId));
+            // The row to reverse is the LATEST one for this bet. Without the ordering TOP(1) returned
+            // whichever row the plan met first, in practice the oldest, which is the placement debit
+            // and is never reversible (GM-815).
+            var prevOperatorAudit = _platformContext.OperatorAudit.AsNoTracking()
+                .Where(o => o.UserId == _operator.UserId && o.BetId == betGuid)
+                .OrderByDescending(o => o.Id)
+                .FirstOrDefault();
 
-            if (prevOperatorAudit != null)
-            {
-                if (prevOperatorAudit.TransactionTypeId != (int)Enum.Parse(typeof(BetStatus), betStatus))
-                {
-                    switch (prevOperatorAudit.TransactionTypeId)
-                    {
-                        case (int)BetStatus.CashedOut:
-                        case (int)BetStatus.Void:
-                        case (int)BetStatus.Lost:
-                        case (int)BetStatus.Won:
-                        case (int)BetStatus.HalfLost:
-                        case (int)BetStatus.HalfWon:
+            var previousStatus = prevOperatorAudit == null ? (BetStatus?)null : (BetStatus)prevOperatorAudit.TransactionTypeId;
+            var hasVoid = previousStatus.HasValue
+                && OperatorAuditReversal.IsSettledOutcome(previousStatus.Value)
+                && _platformContext.OperatorAudit.AsNoTracking().Any(o => o.UserId == _operator.UserId && o.BetId == betGuid && o.TransactionTypeId == (int)BetStatus.Void);
 
-                            var hasVoid = _platformContext.OperatorAudit.AsNoTracking().Any(o => o.UserId == _operator.UserId && o.BetId == Guid.Parse(betId) && o.TransactionTypeId == (int)BetStatus.Void);
-                            if ((int)Enum.Parse(typeof(BetStatus), betStatus) != (int)BetStatus.Void && prevOperatorAudit.TransactionTypeId != (int)BetStatus.Void)
-                            {
-                                postBalance += (prevOperatorAudit.Amount * -1);
-
-                                if (hasVoid)
-                                    amount = payout - stake;
-
-                            }
-                            else if ((int)Enum.Parse(typeof(BetStatus), betStatus) == (int)BetStatus.Void)
-                            {
-                                if (hasVoid)
-                                    amount = (payout - stake) + (prevOperatorAudit.Amount * -1);
-                                else
-                                    amount = payout + (prevOperatorAudit.Amount * -1);
-                            }
-                            else
-                            {
-                                amount = payout - stake;
-                            }
-                            break;
-                        default:
-                            break;
-                    }
-                }
-            }
+            var movement = OperatorAuditReversal.Resolve(status, payout, stake, isFreebet, isPartialCashout, previousStatus, prevOperatorAudit?.Amount ?? 0, hasVoid);
+            var preBalance = _operator.Balance + movement.PreBalanceAdjustment;
 
             var operatorAuditEntity = _platformContext.OperatorAudit.Update(new OperatorAudit()
             {
-                BetId = Guid.Parse(betId),
+                BetId = betGuid,
                 UserId = _operator.UserId,
                 ClientId = _operator.ClientId,
                 OperatorToken = _operator.OperatorToken.ToString(),
                 CreatedDate = DateTime.UtcNow,
                 CurrencyCode = _operator.CurrencyCode,
-                TransactionTypeId = (int)Enum.Parse(typeof(BetStatus), betStatus),
+                TransactionTypeId = (int)status,
                 TransactionTypeName = betStatus,
-                PreBalance = postBalance,
-                Amount = amount,
-                PostBalance = postBalance + amount,
+                PreBalance = preBalance,
+                Amount = movement.Amount,
+                PostBalance = preBalance + movement.Amount,
                 TransactionId = string.Empty,
             }).Entity;
 

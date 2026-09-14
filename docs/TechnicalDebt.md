@@ -94,7 +94,7 @@
 ### TD-10 — Thin automated-test net
 - **Evidence:** 3 of 41 projects have tests: `Platform.Shared.Test` (360 tests, 83.51% Stryker
   mutation score over `Extensions`/`Helpers`/`Utility`/`Providers`), `Platform.Sportsbook.API.Test`
-  (13 tests over one pure static class), `Platform.Operator.API.Test` (73 tests, added GM-809) and
+  (13 tests over one pure static class), `Platform.Operator.API.Test` (209 tests, added GM-809, resettlement matrix added GM-815) and
   `Platform.BetInfo.Service.Test` (12 tests, added GM-814). All run by a PR-only CI test job.
   Settlement, placement and cashout remain untested.
 - **Files:** `Platform.Shared.Test/*`, `Platform.Sportsbook.API.Test/*`,

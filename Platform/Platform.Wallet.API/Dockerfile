@@ -32,4 +32,5 @@ EXPOSE 80
 WORKDIR /app
 
 COPY --from=build /source/Platform.Wallet.API/publish .
+USER app
 CMD ["dotnet", "Platform.Wallet.API.dll"]

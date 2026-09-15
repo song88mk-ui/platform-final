@@ -19,4 +19,5 @@ EXPOSE 80
 WORKDIR /app
 
 COPY --from=build /source/Platform.RedCatBetting.API/publish .
+USER app
 CMD ["dotnet", "Platform.RedCatBetting.API.dll"]

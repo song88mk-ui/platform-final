@@ -30,4 +30,5 @@ ADD https://truststore.pki.rds.amazonaws.com/global/global-bundle.pem /usr/local
 RUN update-ca-certificates
 
 COPY --from=build /source/Platform.Sportsbook.API/publish .
+USER app
 CMD ["dotnet", "Platform.Sportsbook.API.dll"]

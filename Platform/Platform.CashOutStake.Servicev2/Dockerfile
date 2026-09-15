@@ -36,4 +36,5 @@ ADD https://truststore.pki.rds.amazonaws.com/global/global-bundle.pem /usr/local
 RUN update-ca-certificates
 
 COPY --from=build /source/Platform.CashOutStake.Servicev2/publish .
+USER app
 CMD ["dotnet", "Platform.CashOutStake.Servicev2.dll"]

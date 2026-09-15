@@ -26,4 +26,5 @@ EXPOSE 80
 WORKDIR /app
 
 COPY --from=build /source/Platform.Job.ForexEUR/publish .
+USER app
 CMD ["dotnet", "Platform.Job.ForexEUR.dll"]

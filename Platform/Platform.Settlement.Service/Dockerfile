@@ -32,4 +32,5 @@ EXPOSE 80
 WORKDIR /app
 
 COPY --from=build /source/Platform.Settlement.Service/publish .
+USER app
 CMD ["dotnet", "Platform.Settlement.Service.dll"]

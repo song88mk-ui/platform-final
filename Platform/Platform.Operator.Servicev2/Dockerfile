@@ -32,4 +32,5 @@ EXPOSE 80
 WORKDIR /app
 
 COPY --from=build /source/Platform.Operator.Servicev2/publish .
+USER app
 CMD ["dotnet", "Platform.Operator.Servicev2.dll"]

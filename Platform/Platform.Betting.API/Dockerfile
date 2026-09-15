@@ -26,4 +26,5 @@ EXPOSE 80
 WORKDIR /app
 
 COPY --from=build /source/Platform.Betting.API/publish .
+USER app
 CMD ["dotnet", "Platform.Betting.API.dll"]

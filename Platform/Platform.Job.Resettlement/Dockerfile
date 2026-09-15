@@ -32,4 +32,5 @@ EXPOSE 80
 WORKDIR /app
 
 COPY --from=build /source/Platform.Job.Resettlement/publish .
+USER app
 CMD ["dotnet", "Platform.Job.Resettlement.dll"]

@@ -32,4 +32,5 @@ EXPOSE 80
 WORKDIR /app
 
 COPY --from=build /source/Platform.Operator.Cashout.Service/publish .
+USER app
 CMD ["dotnet", "Platform.Operator.Cashout.Service.dll"]

@@ -26,4 +26,5 @@ EXPOSE 80
 WORKDIR /app
 
 COPY --from=build /source/Platform.BetForwarder.Service/publish .
+USER app
 CMD ["dotnet", "Platform.BetForwarder.Service.dll"]

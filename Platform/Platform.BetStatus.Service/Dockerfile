@@ -26,4 +26,5 @@ EXPOSE 80
 WORKDIR /app
 
 COPY --from=build /source/Platform.BetStatus.Service/publish .
+USER app
 CMD ["dotnet", "Platform.BetStatus.Service.dll"]

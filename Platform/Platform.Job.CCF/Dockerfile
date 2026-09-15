@@ -32,4 +32,5 @@ EXPOSE 80
 WORKDIR /app
 
 COPY --from=build /source/Platform.Job.CCF/publish .
+USER app
 CMD ["dotnet", "Platform.Job.CCF.dll"]

@@ -34,4 +34,5 @@ WORKDIR /app
 
 COPY --from=build /source/Platform.Placement.Servicev2/publish .
 COPY --from=build /source/Platform.Placement.Servicev2/entrypoint.sh /app
+USER app
 CMD ["/app/entrypoint.sh"]

@@ -18,4 +18,5 @@ EXPOSE 80
 WORKDIR /app
 
 COPY --from=build /source/Platform.WebSocket.API/publish .
+USER app
 CMD ["dotnet", "Platform.WebSocket.API.dll"]

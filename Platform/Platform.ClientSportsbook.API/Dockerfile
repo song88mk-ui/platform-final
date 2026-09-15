@@ -32,4 +32,5 @@ EXPOSE 80
 WORKDIR /app
 
 COPY --from=build /source/Platform.ClientSportsbook.API/publish .
+USER app
 CMD ["dotnet", "Platform.ClientSportsbook.API.dll"]

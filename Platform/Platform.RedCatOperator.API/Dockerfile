@@ -19,4 +19,5 @@ EXPOSE 80
 WORKDIR /app
 
 COPY --from=build /source/Platform.RedCatOperator.API/publish .
+USER app
 CMD ["dotnet", "Platform.RedCatOperator.API.dll"]

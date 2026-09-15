@@ -26,4 +26,5 @@ EXPOSE 80
 WORKDIR /app
 
 COPY --from=build /source/Platform.CacheSync.Service/publish .
+USER app
 CMD ["dotnet", "Platform.CacheSync.Service.dll"]

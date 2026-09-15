@@ -867,8 +867,8 @@ namespace Platform.Sportsbook.API.Repository
                 var minuteUTCOffset = request.MinuteUTCOffset ?? 0;
                 var todayDateUTC = GetDateTimeRange2(DateTime.UtcNow.AddMinutes(minuteUTCOffset), minuteUTCOffset, true);
 
-                fixtureFilter = Builders<Fixture>.Filter.Where(c => c.FiStId < 2 && fixtureTypeIds.Contains(c.FiTyId) && c.FiStDa > todayDateUTC.Item1);
-                //fixtureFilter = Builders<Fixture>.Filter.Where(c => c.FiStId < 2);
+                // GM-771: live fixtures are exempt from the local-day start bound, see SportsTreeFilter.
+                fixtureFilter = Builders<Fixture>.Filter.Where(SportsTreeFilter.Build(fixtureTypeIds, todayDateUTC.Item1));
             }
             else
             {
@@ -8391,20 +8391,11 @@ namespace Platform.Sportsbook.API.Repository
         //    }
         //}
 
+        // GM-771: the boundary math lives in LocalDayRange so it is unit-tested. Both the "now" and the
+        // request-date paths shift the local-day boundaries back to UTC, because FiStDa is stored in UTC.
         private Tuple<DateTime, DateTime> GetDateTimeRange2(DateTime utcDate, int minuteUTCOffset, bool dateIsFromRequest = false)
         {
-            var referenceDate = dateIsFromRequest ? utcDate : utcDate.AddMinutes(minuteUTCOffset);
-
-            var start = referenceDate.Date.AddMilliseconds(-1);
-            var end = referenceDate.Date.AddDays(1);
-
-            if (dateIsFromRequest)
-            {
-                start = start.AddMinutes(-minuteUTCOffset);
-                end = end.AddMinutes(-minuteUTCOffset);
-            }
-
-            return Tuple.Create(start, end);
+            return LocalDayRange.Compute(utcDate, minuteUTCOffset, dateIsFromRequest);
         }
 
 

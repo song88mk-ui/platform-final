@@ -2,8 +2,8 @@ FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
 
 WORKDIR /source
 
-ADD Platform/Platform.Shared Platform.Shared
-ADD Platform/Platform.Job.Operator.Score Platform.Job.Operator.Score
+COPY Platform/Platform.Shared Platform.Shared
+COPY Platform/Platform.Job.Operator.Score Platform.Job.Operator.Score
 
 WORKDIR /source/Platform.Job.Operator.Score
 

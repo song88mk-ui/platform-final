@@ -3,8 +3,8 @@ FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
 
 WORKDIR /source
 
-ADD Platform.RedCat.API Platform.RedCat.API
-ADD Platform.Shared Platform.Shared
+COPY Platform.RedCat.API Platform.RedCat.API
+COPY Platform.Shared Platform.Shared
 
 WORKDIR /source/Platform.RedCat.API
 

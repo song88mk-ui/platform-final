@@ -2,8 +2,8 @@ FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
 
 WORKDIR /source
 
-ADD Platform/Platform.Shared Platform.Shared
-ADD Platform/Platform.Wallet.API Platform.Wallet.API
+COPY Platform/Platform.Shared Platform.Shared
+COPY Platform/Platform.Wallet.API Platform.Wallet.API
 
 WORKDIR /source/Platform.Wallet.API
 

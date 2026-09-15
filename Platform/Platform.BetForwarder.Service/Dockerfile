@@ -2,8 +2,8 @@ FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
 
 WORKDIR /source
 
-ADD Platform/Platform.Shared Platform.Shared
-ADD Platform/Platform.BetForwarder.Service Platform.BetForwarder.Service
+COPY Platform/Platform.Shared Platform.Shared
+COPY Platform/Platform.BetForwarder.Service Platform.BetForwarder.Service
 
 WORKDIR /source/Platform.BetForwarder.Service
 

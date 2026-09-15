@@ -2,8 +2,8 @@ FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
 
 WORKDIR /source
 
-ADD Platform/Platform.Shared Platform.Shared
-ADD Platform/Platform.Client.TopMarket Platform.Client.TopMarket
+COPY Platform/Platform.Shared Platform.Shared
+COPY Platform/Platform.Client.TopMarket Platform.Client.TopMarket
 
 WORKDIR /source/Platform.Client.TopMarket
 

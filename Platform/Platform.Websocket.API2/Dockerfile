@@ -2,8 +2,8 @@ FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
 
 WORKDIR /source
 
-ADD Platform/Platform.Shared Platform.Shared
-ADD Platform/Platform.Websocket.API2 Platform.WebSocket.API
+COPY Platform/Platform.Shared Platform.Shared
+COPY Platform/Platform.Websocket.API2 Platform.WebSocket.API
 
 WORKDIR /source/Platform.WebSocket.API
 

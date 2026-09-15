@@ -2,8 +2,8 @@ FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
 
 WORKDIR /source
 
-ADD Platform/Platform.Shared Platform.Shared
-ADD Platform/Platform.Operator.Cashout.Service Platform.Operator.Cashout.Service
+COPY Platform/Platform.Shared Platform.Shared
+COPY Platform/Platform.Operator.Cashout.Service Platform.Operator.Cashout.Service
 
 WORKDIR /source/Platform.Operator.Cashout.Service
 

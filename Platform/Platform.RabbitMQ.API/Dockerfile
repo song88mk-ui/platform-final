@@ -2,8 +2,8 @@ FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
 
 WORKDIR /source
 
-ADD Platform/Platform.Shared Platform.Shared
-ADD Platform/Platform.RabbitMQ.API Platform.RabbitMQ.API
+COPY Platform/Platform.Shared Platform.Shared
+COPY Platform/Platform.RabbitMQ.API Platform.RabbitMQ.API
 
 WORKDIR /source/Platform.RabbitMQ.API
 

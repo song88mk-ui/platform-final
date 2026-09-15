@@ -2,8 +2,8 @@ FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
 
 WORKDIR /source
 
-ADD Platform/Platform.Shared Platform.Shared
-ADD Platform/Platform.Provider.Service Platform.Provider.Service
+COPY Platform/Platform.Shared Platform.Shared
+COPY Platform/Platform.Provider.Service Platform.Provider.Service
 
 WORKDIR /source/Platform.Provider.Service
 

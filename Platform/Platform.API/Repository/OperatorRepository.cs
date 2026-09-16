@@ -178,8 +178,6 @@ namespace Platform.API.Repository
 
         public async Task<BaseResponseDTO<OperatorBetResponseDTO>> ResendCancellation(string endpoint, string info)
         {
-            _httpClient.BaseAddress = new Uri(endpoint);
-
             try
             {
                 var response = await _httpClient.PostAsync($"{endpoint}", new StringContent(info, System.Text.Encoding.UTF8, "application/json"));

@@ -3538,11 +3538,166 @@ namespace Platform.API.Repository
 
             if (!cancelledBets.Any() && !bets.Any())
             {
+                // These bets settled and synced successfully the first time, so they were never queued into
+                // OperatorSettlementRetry (that table only tracks *failed* operator notifications) - there is
+                // nothing to forward via the message-broker retry path below. Seed a fresh retry row from the
+                // bet's current data instead, and let the existing Job.Resettlement -> Operator.Servicev2
+                // pipeline perform the actual outbound send and OperatorLog write, same as it already does for
+                // genuine failures.
+                var response = new ResendSettlementResponseDTO();
+
+                foreach (var betId in betIds)
+                {
+                    var manualBetDetails = await _bettingRepository.GetManualBetDetails(new ManualBetDetailsRequest
+                    {
+                        BetIds = new List<string>() { betId.ToString() }
+                    });
+
+                    var betDetail = manualBetDetails.Result?.Bets?.FirstOrDefault();
+
+                    if (betDetail == null)
+                    {
+                        response.Data.Add(new ResendSettlementResponse()
+                        {
+                            StatusCode = StatusCode.Error,
+                            BetId = betId,
+                            Message = "No settlement found"
+                        });
+                        continue;
+                    }
+
+                    var onBetSettlement = new OnBetSettlement
+                    {
+                        // Required for the retry/GTS pipeline: Operator.Servicev2 gates its OperatorLog RESPONSE
+                        // write, wallet-change publish, and OperatorSettlementRetry success-marking on IsAudit
+                        // (mirrors isInsertToBetAudit from the original live settlement), and GTSBetProvider's
+                        // dedup guard also checks it before forwarding. Without this, the row would never be
+                        // marked successful and Job.Resettlement would keep re-sending it indefinitely.
+                        IsAudit = true,
+                        Bet = new Platform.Shared.Data.Betting.Entities.Bet
+                        {
+                            BetId = betDetail.BetId,
+                            UserId = betDetail.UserId,
+                            Stake = betDetail.Stake,
+                            TrueStake = betDetail.TrueStake,
+                            Odds = betDetail.Odds,
+                            OddsTypeId = betDetail.OddsTypeId,
+                            OddsTypeName = betDetail.OddsTypeName,
+                            Payout = betDetail.Payout,
+                            WinLoss = betDetail.WinLoss,
+                            BetStatusId = betDetail.BetStatusId,
+                            BetStatusName = betDetail.BetStatusName,
+                            Reason = betDetail.Reason,
+                            CurrencyCode = betDetail.CurrencyCode,
+                            LanguageCode = betDetail.LanguageCode,
+                            ExchangeRate = betDetail.ExchangeRate,
+                            IPAddress = betDetail.IPAddress,
+                            Channel = betDetail.Channel,
+                            ClientId = betDetail.ClientId,
+                            ClientIdRef = betDetail.ClientIdRef,
+                            ClientCode = betDetail.ClientCode,
+                            ClientName = betDetail.ClientName,
+                            LimitId = betDetail.LimitId,
+                            Endpoint = betDetail.Endpoint,
+                            OperatorToken = betDetail.OperatorToken,
+                            CompanyShare = betDetail.CompanyShare,
+                            IsResettled = betDetail.IsResettled,
+                            IsCashout = betDetail.IsCashout,
+                            BetDate = betDetail.BetDate,
+                            BetDateOffset = betDetail.BetDateOffset,
+                            SettlementDate = betDetail.SettlementDate,
+                            SettlementDateOffset = betDetail.SettlementDateOffset,
+                            StakeTax = betDetail.StakeTax,
+                            WinningsTax = betDetail.WinningsTax,
+                            TaxedStake = betDetail.TaxedStake,
+                            TaxedWinnings = betDetail.TaxedWinnings,
+                            ParlayBonus = betDetail.ParlayBonus,
+                            ParlayBonusWinnings = betDetail.ParlayBonusWinnings,
+                            StakeReal = betDetail.StakeReal,
+                            StakeBonus = betDetail.StakeBonus,
+                            StakeRealPayout = betDetail.StakeRealPayout,
+                            StakeBonusPayout = betDetail.StakeBonusPayout,
+                            IsFreeBet = betDetail.IsFreeBet,
+                            BetTypeId = betDetail.BetTypeId,
+                            BetTypeName = betDetail.BetTypeName
+                        },
+                        BetSelections = betDetail.Selections.Select(ss => new Platform.Shared.Data.Betting.Entities.BetSelection
+                        {
+                            BetSelectionId = ss.BetSelectionId,
+                            BetId = ss.BetId,
+                            UserId = ss.UserId,
+                            SportId = ss.SportId,
+                            SportName = ss.SportName,
+                            SegmentId = ss.SegmentId,
+                            SegmentName = ss.SegmentName,
+                            LeagueId = ss.LeagueId,
+                            LeagueName = ss.LeagueName,
+                            FixtureId = long.Parse(ss.FixtureId),
+                            FixtureName = ss.FixtureName,
+                            FixtureTypeId = ss.FixtureTypeId,
+                            FixtureTypeName = ss.FixtureTypeName,
+                            MarketTemplateId = ss.MarketTemplateId,
+                            MarketId = long.Parse(ss.MarketId),
+                            MarketName = ss.MarketName,
+                            IsHandicap = ss.IsHandicap,
+                            SelectionTemplateId = ss.SelectionTemplateId,
+                            SelectionId = long.Parse(ss.SelectionId),
+                            SelectionName = ss.SelectionName,
+                            FixtureStatusId = ss.FixtureStatusId,
+                            FixtureStatusName = ss.FixtureStatusName,
+                            Line = ss.Line,
+                            Odds = ss.Odds,
+                            BetSelectionStatusId = ss.BetSelectionStatusId,
+                            BetSelectionStatusName = ss.BetSelectionStatusName,
+                            IsSettled = ss.IsSettled,
+                            IsResettled = ss.IsResettled,
+                            FixtureSpecifier = ss.FixtureSpecifier,
+                            SelectionSpecifier = ss.SelectionSpecifier,
+                            FixtureStartDate = ss.FixtureStartDate,
+                            BetScore = ss.BetScore,
+                            SettlementScore = ss.SettlementScore,
+                            Probability = ss.Probability,
+                            WonProbability = ss.WonProbability,
+                            LostProbability = ss.LostProbability,
+                            VoidProbability = ss.VoidProbability,
+                            HalfWonProbability = ss.HalfWonProbability,
+                            HalfLostProbability = ss.HalfLostProbability,
+                            CorrelationId = ss.CorrelationId,
+                            DeadHeatFactor = ss.DeadHeatFactor
+                        }).ToList()
+                    };
+
+                    _platformContext.OperatorSettlementRetry.Add(new OperatorSettlementRetry
+                    {
+                        BetId = betDetail.BetId,
+                        ClientId = betDetail.ClientId,
+                        ClientCode = betDetail.ClientCode,
+                        Endpoint = betDetail.Endpoint,
+                        MessageType = "OnBetSettlement",
+                        Info = JsonSerializer.Serialize(onBetSettlement),
+                        OperatorToken = betDetail.OperatorToken,
+                        CorrelationId = Guid.NewGuid().ToString(),
+                        RetryCount = 0,
+                        IsRetry = true,
+                        IsSuccess = false,
+                        Timestamp = DateTime.UtcNow
+                    });
+
+                    response.Data.Add(new ResendSettlementResponse()
+                    {
+                        StatusCode = StatusCode.Success,
+                        BetId = betId,
+                        Message = "Queued for resend to operator"
+                    });
+                }
+
+                await _platformContext.SaveChangesAsync();
+
                 return new BaseResponseDTO<ResendSettlementResponseDTO>()
                 {
-                    StatusCode = StatusCode.Success,
-                    Message = StatusCode.Success.ToString().Replace('_', ' '),
-                    Result = new ResendSettlementResponseDTO()
+                    StatusCode = response.Data.Any(d => d.StatusCode == StatusCode.Success) ? StatusCode.Success : StatusCode.Error,
+                    Message = (response.Data.Any(d => d.StatusCode == StatusCode.Success) ? StatusCode.Success : StatusCode.Error).ToString().Replace('_', ' '),
+                    Result = response
                 };
             }
 
@@ -3877,7 +4032,7 @@ namespace Platform.API.Repository
                             }).ToList()
                         }).FirstOrDefault();
 
-                        if (betDetail != null && (betDetail.BetStatusId == (int)BetStatus.Rejected || betDetail.BetStatusId == (int)BetStatus.Cancelled))
+                        if (betDetail != null)
                             response.Bet = betDetail;
                     }
                 }

@@ -3388,29 +3388,49 @@ namespace Platform.Betting.API.Repository
 
         public async Task<BaseResponseDTO<ResendSettlementResponseDTO>> ResendSettlement(ResendSettlementMessageRequestDTO request)
         {
+            var results = new List<ResendSettlementResponse>();
+
             foreach (var message in request.Messages)
             {
-                _rabbitMQRepository.PublishViaHttp(new MessageRequestDTO
+                var publishResult = _rabbitMQRepository.PublishViaHttp(new MessageRequestDTO
                 {
                     MessageType = message.MessageType,
                     Payload = message.Info,
                     CorrelationId = message.CorrelationId,
                     RoutingKey = "r.bet.operator"
                 });
+
+                if (publishResult == null || publishResult.StatusCode != StatusCode.Success)
+                {
+                    _logger.LogError($"ResendSettlement - failed to publish {message.MessageType} for BetId {message.BetId} (CorrelationId {message.CorrelationId}): {publishResult?.Message}");
+
+                    results.Add(new ResendSettlementResponse
+                    {
+                        BetId = message.BetId,
+                        StatusCode = StatusCode.Error,
+                        Message = publishResult?.Message ?? StatusCode.Error.ToString().Replace('_', ' ')
+                    });
+                }
+                else
+                {
+                    results.Add(new ResendSettlementResponse
+                    {
+                        BetId = message.BetId,
+                        StatusCode = StatusCode.Success,
+                        Message = StatusCode.Success.ToString().Replace('_', ' '),
+                    });
+                }
             }
+
+            var hasFailure = results.Any(r => r.StatusCode != StatusCode.Success);
 
             return new BaseResponseDTO<ResendSettlementResponseDTO>()
             {
-                StatusCode = StatusCode.Success,
-                Message = StatusCode.Success.ToString().Replace('_', ' '),
+                StatusCode = hasFailure ? StatusCode.Error : StatusCode.Success,
+                Message = (hasFailure ? StatusCode.Error : StatusCode.Success).ToString().Replace('_', ' '),
                 Result = new ResendSettlementResponseDTO
                 {
-                    Data = request.Messages.Select(s => new ResendSettlementResponse
-                    {
-                        BetId = s.BetId,
-                        StatusCode = StatusCode.Success,
-                        Message = StatusCode.Success.ToString().Replace('_', ' '),
-                    }).ToList()
+                    Data = results
                 }
             };
         }

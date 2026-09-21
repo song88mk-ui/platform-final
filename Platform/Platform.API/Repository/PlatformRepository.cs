@@ -28,6 +28,7 @@ namespace Platform.API.Repository
         private readonly IBettingRepository _bettingRepository;
         private readonly ISportsbookRepository _sportsbookRepository;
         private readonly ICasinoRepository _casinoRepository;
+        private readonly IWebPropsRepository _webPropsRepository;
         private readonly PlatformContext _platformContext;
         private readonly IMemCache _memCache;
         private readonly IConfiguration _configuration;
@@ -64,12 +65,13 @@ namespace Platform.API.Repository
             };
         }
 
-        public PlatformRepository(IOperatorRepository operatorRepository, IBettingRepository bettingRepository, ISportsbookRepository sportsbookRepository, ICasinoRepository casinoRepository, PlatformContext platformContext, IMemCache memCache, IConfiguration configuration, IMessageBroker messageBroker, Instrumentation instrumentation, ILogger<PlatformRepository> logger)
+        public PlatformRepository(IOperatorRepository operatorRepository, IBettingRepository bettingRepository, ISportsbookRepository sportsbookRepository, ICasinoRepository casinoRepository, IWebPropsRepository webPropsRepository, PlatformContext platformContext, IMemCache memCache, IConfiguration configuration, IMessageBroker messageBroker, Instrumentation instrumentation, ILogger<PlatformRepository> logger)
         {
             _operatorRepository = operatorRepository;
             _bettingRepository = bettingRepository;
             _sportsbookRepository = sportsbookRepository;
             _casinoRepository = casinoRepository;
+            _webPropsRepository = webPropsRepository;
             _platformContext = platformContext;
             _memCache = memCache;
             _configuration = configuration;
@@ -3297,6 +3299,42 @@ namespace Platform.API.Repository
                 {
                     StatusCode = authenticationResponse.StatusCode,
                     Message = authenticationResponse.Message,
+                };
+            }
+
+            // BO-106 guardrail (sub-task of BO-96): BO's "disable cashout" toggle must be
+            // enforced here, not just by hiding the button in platform-web - that UI state
+            // depends on a SignalR push the client may have missed (stale tab, dropped
+            // connection, or a direct call to this endpoint that never went through the browser
+            // at all). Re-check webprops on every cashout instead of trusting anything the
+            // caller already believes about its own state.
+            var isFullCashoutRequest = (request.CashoutStakePercent ?? 1) >= 1;
+
+            var webPropsResponse = await _webPropsRepository.GetClientFeatureFlags(clientResponse.Result.ClientCode);
+
+            if (webPropsResponse.StatusCode != StatusCode.Success || webPropsResponse.Result?.Features == null)
+            {
+                // Fail closed: if we can't confirm cashout is currently allowed for this client,
+                // we must not let it through just because webprops-api hiccupped.
+                _logger.LogError($"[CashoutBet] unable to verify webprops config for clientCode={clientResponse.Result.ClientCode}, denying cashout. status={webPropsResponse.StatusCode} message={webPropsResponse.Message}");
+
+                return new BaseResponseDTO<BetCashOutResponseDTO>
+                {
+                    StatusCode = StatusCode.CashOut_Is_Unavailable,
+                    Message = StatusCode.CashOut_Is_Unavailable.ToString().Replace('_', ' '),
+                };
+            }
+
+            var cashoutAllowed = isFullCashoutRequest
+                ? webPropsResponse.Result.Features.FullCashout
+                : webPropsResponse.Result.Features.PartialCashout;
+
+            if (!cashoutAllowed)
+            {
+                return new BaseResponseDTO<BetCashOutResponseDTO>
+                {
+                    StatusCode = StatusCode.CashOut_Is_Unavailable,
+                    Message = StatusCode.CashOut_Is_Unavailable.ToString().Replace('_', ' '),
                 };
             }
 

@@ -13,6 +13,7 @@ using Platform.API.Telemetry;
 using Platform.Shared.Data.Platform;
 using Platform.Shared.Utility;
 using Platform.Shared.Extensions;
+using System;
 using System.IO.Compression;
 using System.Linq;
 
@@ -93,6 +94,11 @@ namespace Platform.API
             services.AddHttpClient<IOperatorRepository, OperatorRepository>();
             services.AddHttpClient<ISportsbookRepository, SportsbookRepository>();
             services.AddHttpClient<ICasinoRepository, CasinoRepository>();
+            services.AddHttpClient<IWebPropsRepository, WebPropsRepository>(client =>
+            {
+                client.BaseAddress = new Uri(Configuration["API:WebProps:Uri"]);
+                client.DefaultRequestHeaders.Add("x-api-key", Configuration["API:WebProps:Security:ApiKey"]);
+            });
 
             services.AddSwaggerGen(c =>
             {

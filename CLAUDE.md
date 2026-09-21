@@ -21,6 +21,17 @@ This file is the quick operating manual; `docs/` is the authoritative deep refer
   under GM-744); EF Core 8.0.30 (LTS - EF 10 needs net10, Shared is net8), Docker: sdk:10.0 build, aspnet:10.0 runtime (aspnet:8.0 for Sportsbook.API/CashOutStake.Servicev2).
 - Deployed as Docker images → AWS ECR → EKS via the sibling `argocd` repo.
 
+## Build / test
+
+```
+dotnet build Platform/Platform.sln
+dotnet test Platform/Platform.sln
+```
+
+Four test projects: `Platform.Shared.Test`, `Platform.Sportsbook.API.Test`,
+`Platform.Operator.API.Test`, `Platform.BetInfo.Service.Test`. CI runs them on pull requests only.
+Restore needs `NUGET_PASSWORD` for the private feed.
+
 ## The 30-second architecture
 - **One public gateway** `Platform.API` (REST) → fans out over HTTP to `Betting.API`,
   `Sportsbook.API`, `Wallet.API`, `Operator.API`, QTech; and over RabbitMQ via `RabbitMQ.API`.
@@ -31,13 +42,13 @@ This file is the quick operating manual; `docs/` is the authoritative deep refer
     `odds-engine-2`**; platform-final **reads only** (never writes Mongo).
   - **SQL `SportsbookContext`** = curation/config (also written directly by `backoffice-final`).
   - **SQL `BettingContext`** + others = bets/cashout/audit (platform-final owns).
-- **Real-time:** SignalR hub `Websocket.API2` (`/platform`), **fed by `OE.Websocket.Service`**
+- **Real-time:** SignalR hub `Websocket.API2` on the `platform` route, **fed by `OE.Websocket.Service`**
   (odds-engine-2), consumed by platform-web. See [docs/WebSocket.md](docs/WebSocket.md).
 
 ## Critical rules (read before changing anything)
 1. **`Platform.Shared` is the shared kernel with platform-wide blast radius.** A change there rebuilds
    **every** image (CI builds all 26 matrix images on every push to main and every PR — there is no affected-files
-   detection). Treat its `MessageModels/`, `Data/` entities, and enums as **public API**. (R-1)
+   detection). Treat its MessageModels, Data entities and enums as **public API**. (R-1)
 2. **Cross-repo contracts are duplicated by convention, with no shared package and no contract test.**
    Renaming a message field, routing key, Mongo/SQL column, or SignalR method name is an **up-to-4-repo
    silent break** (platform-final ↔ odds-engine-2 ↔ platform-web, + oddsfeed/backoffice). (R-2,
@@ -46,19 +57,19 @@ This file is the quick operating manual; `docs/` is the authoritative deep refer
    is inert. Access control = API-key **ActionFilters** applied per-controller via `[ServiceFilter]`.
    **A new controller without a filter attribute is completely open** (no global fallback). (R-6,
    [docs/Authentication.md](docs/Authentication.md))
-4. **No global exception handler.** Errors are shaped per-controller `try/catch` → `BaseResponseDTO`
+4. **No global exception handler.** Errors are shaped per-controller try/catch → `BaseResponseDTO`
    with a business `StatusCode`; unguarded actions leak a bare 500. Don't return `ex.StackTrace`. (TD-04)
 5. **platform-final never writes MongoDB.** If you think you need to, you're probably in the wrong repo
    (odds-engine-2 owns the catalogue). ([docs/MongoDb.md](docs/MongoDb.md))
 6. **Money is stored-proc only** (`Wallet.API`, `decimal(26,12)`); **parameterize all `FromSqlRaw`**
    (AgentReports interpolates — TD-01b/AP-2, do not copy it).
-7. **Secrets:** never commit new secrets; never print secret values. Committed `appsettings.json`
+7. **Secrets:** never commit new secrets; never print secret values. Committed settings-file
    secrets are dev/staging fallbacks (prod = AWS SSM). (TD-01)
 8. **Caches are per-pod** (`MemoryCache.Default`); invalidation is event-driven via `CacheSync.Service`
    — use the prefix convention so eviction works. ([docs/CacheInvalidation.md](docs/CacheInvalidation.md))
 
 ## How this team writes code (match it — don't introduce new patterns)
-- **Repository pattern**: `IXxxRepository`+`XxxRepository` in `Repository/`, async, return
+- **Repository pattern**: `IXxxRepository`+`XxxRepository` in each project's Repository folder, async, return
   `Task<BaseResponseDTO<T>>` (business `StatusCode`). Controllers stay thin (open `Activity`, call repo,
   `switch` on `StatusCode`). Business logic lives **in repositories**, not services.
 - **DI**: built-in container; group registrations in `IServiceCollection` extension methods
@@ -77,31 +88,31 @@ This file is the quick operating manual; `docs/` is the authoritative deep refer
 ## Where things live (hotspots)
 | Need | File |
 |------|------|
-| Public API surface | `Platform.API/Controllers/{Integration,Internal}Controller.cs` |
-| Gateway logic | `Platform.API/Repository/PlatformRepository.cs` |
-| Sportsbook reads (Mongo) | `Platform.Sportsbook.API/Repository/SportsbookRepository.cs` (#1 churn, 724 changes) |
-| Bet placement/config | `Platform.Betting.API/Repository/BettingRepository.cs` |
-| Settlement | `Platform.Settlement.Service/` · Cashout: `Platform.CashOut.Service/`, `CashOutStake.Servicev2/` |
-| Messaging | `Platform.Shared/Utility/MessageBroker.cs` · Cache: `MemCache.cs` + `CacheSync.Service` |
-| Entities / contracts / enums | `Platform.Shared/Data/`, `MessageModels/`, `Enums/` |
-| Providers | `Platform.Shared/Providers/` (MTS, GTS, BetGenius) |
+| Public API surface | `Platform/Platform.API/Controllers/IntegrationController.cs` and its InternalController |
+| Gateway logic | `Platform/Platform.API/Repository/PlatformRepository.cs` |
+| Sportsbook reads (Mongo) | `Platform/Platform.Sportsbook.API/Repository/SportsbookRepository.cs` (#1 churn) |
+| Bet placement/config | `Platform/Platform.Betting.API/Repository/BettingRepository.cs` |
+| Settlement | `Platform/Platform.Settlement.Service` · Cashout: `Platform/Platform.CashOut.Service`, `Platform/Platform.CashOutStake.Servicev2` |
+| Messaging | `Platform/Platform.Shared/Utility/MessageBroker.cs` · Cache: `Platform/Platform.Shared/Utility/MemCache.cs` + `Platform/Platform.CacheSync.Service` |
+| Entities / contracts / enums | `Platform/Platform.Shared` — its Data, MessageModels and Enums folders |
+| Providers | `Platform/Platform.Shared/Providers` (MTS, GTS, BetGenius) |
 See [docs/knowledge/FrequentlyModifiedAreas.md](docs/knowledge/FrequentlyModifiedAreas.md).
 
 ## Permanent development workflow (MANDATORY — every task)
 Follow these steps in order on every task (Phase 12 standing rule):
 1. **Understand the requirement.**
-2. **Search the repo** for existing implementations (`/find-service`, `/find-repository`, `/find-pattern`).
+2. **Search the repo** for existing implementations (the find-service, find-repository and find-pattern commands).
 3. **Consult the docs** ([docs/README.md](docs/README.md) index).
-4. **Trace the feature end-to-end** (`/trace-*`) — don't stop at boundaries.
+4. **Trace the feature end-to-end** (the trace commands) — don't stop at boundaries.
 5. **Identify reusable components** ([docs/knowledge/CommonServices.md](docs/knowledge/CommonServices.md)).
 6. **Explain the proposed solution** before building.
-7. **Identify risks and assumptions** (`/impact-analysis`, [docs/ArchitectureRisks.md](docs/ArchitectureRisks.md)).
+7. **Identify risks and assumptions** (the impact-analysis command, [docs/ArchitectureRisks.md](docs/ArchitectureRisks.md)).
 8. **Ask clarifying questions** when the requirement/evidence is unclear.
 9. **Wait for approval before architectural changes** (anything touching `Platform.Shared`, a cross-repo
    contract, a new pattern, or a new project/service).
 10. **Implement the smallest possible change.**
 11. **Validate** compilation (.NET 10 / `net10.0`) and behavior (run the relevant checklist).
-12. **Update documentation** if architectural knowledge changed (`/update-docs`; keep CLAUDE.md/AGENTS.md/
+12. **Update documentation** if architectural knowledge changed (the update-docs command; keep CLAUDE.md/AGENTS.md/
     commands/skills/playbooks in sync). **Also update `README.md` in the same change whenever the change
     affects anything the README documents** (projects/frameworks, prerequisites, build/run/test
     instructions, configuration, endpoints) — the README must never describe a repo state that no
@@ -109,19 +120,18 @@ Follow these steps in order on every task (Phase 12 standing rule):
 13. **Summarize** changes, risks, and validation results.
 
 ## Engineering principles (MANDATORY)
-- **The repository is the source of truth.** Verify in code; prefer current implementation over the
-  `/Reference` snapshot (read-only, never modify).
+- **The repository is the source of truth.** Verify in code.
 - **Preserve existing architecture; never introduce a new pattern without approval** (no AutoMapper/
   FluentValidation/MediatR/`IOptions<T>`/etc. where an established pattern exists — see
   [docs/ImplementationPatterns.md](docs/ImplementationPatterns.md)).
 - **Reuse the shared kernel — never duplicate a definition per-service.** Entities, `DbContext`s,
   message/DTO contracts, and enums belong in the shared library (`Platform.Shared` here; `BG.Shared` /
-  `OE.Shared` in siblings — e.g. `BG.Shared/Data/Trading/TradingContext.cs`). **Before creating any of
+  `OE.Shared` in siblings — e.g. `../bet-genius/BG.Shared/Data/Trading/TradingContext.cs`). **Before creating any of
   these, search the shared project first and reuse it.** If it's genuinely missing, **add it to the
   shared library** (additive) — do not copy a local per-service version, even if an existing service
   already has its own copy (that copy is the bug to fix, not a pattern to follow).
 - **Never guess.** Distinguish **verified facts** vs **assumptions** vs **unknowns**; tag them and
-  record unknowns ([docs/Unknowns.md](docs/Unknowns.md)). Treat `[Likely]/[Unknown]` as verify-before-rely.
+  record unknowns ([docs/Unknowns.md](docs/Unknowns.md)). Treat Likely and Unknown tags as verify-before-rely.
 - **A new project/service ships with tests — don't forget them.** When creating a new project or
   service, add a matching test project (xUnit, mirroring `Platform.Shared.Test` / sibling conventions:
   `xunit` + `Microsoft.NET.Test.Sdk`, Arrange/Act/Assert, no mocking framework unless one is already
@@ -133,9 +143,9 @@ Follow these steps in order on every task (Phase 12 standing rule):
 - **Every SQL script must be idempotent** (data fixes, seeds, DDL, hand-run/flyway migrations): guard
   INSERTs with `NOT EXISTS`/`MERGE`, schema changes with `IF NOT EXISTS`/`OBJECT_ID` checks, so
   re-running is a no-op with the same end state.
-- **External repos: identify dependencies, don't invent behavior.** Siblings (`odds-engine-2`, `Auth`,
-  `backoffice-final`, `bet-genius`, `oddsfeed`, `argocd`, `infrastructure`) are read-only references;
-  **never modify files outside this repo**; prefer `odds-engine-2` over the obsolete `oddsengine`.
+- **External repos: identify dependencies, don't invent behavior.** Siblings (`../odds-engine-2`,
+  `../Auth`, `../backoffice-final`, `../bet-genius`, `../platform-web`, `../argocd`,
+  `../infrastructure`) are read-only references; **never modify files outside this repo**.
 - **Keep docs + CLAUDE.md/AGENTS.md/commands/skills/playbooks synchronized** with architectural changes.
 
 ## Scope & build reminders (repo-specific)
@@ -146,7 +156,7 @@ Follow these steps in order on every task (Phase 12 standing rule):
 
 ## Assets in this repo
 - **`docs/`** — the 10-phase knowledge base (start at [docs/README.md](docs/README.md)).
-- **`.claude/commands/`** — `/trace-*`, `/impact-analysis`, `/find-*`, `/review-feature`, etc.
+- **`.claude/commands/`** — trace, impact-analysis, find and review-feature commands.
 - **`.claude/skills/`**, **`.claude/playbooks/`**, **`.claude/checklists/`**, **`.claude/templates/`**,
   **`.claude/prompts/`** — task guidance, derived from this repo.
 

@@ -26,7 +26,7 @@ namespace Platform.CacheSync.Service.Repository
             _configuration = configuration;
         }
 
-        public async void ProcessMarketSortOrderChange(OnDeleteCacheMessage message)
+        public async Task ProcessMarketSortOrderChange(OnDeleteCacheMessage message)
         {
             var request = new CachePreloadRequestDTO
             {
@@ -41,7 +41,7 @@ namespace Platform.CacheSync.Service.Repository
             }
         }
 
-        public async void ProcessSportSortOrderChange(OnDeleteCacheMessage message)
+        public async Task ProcessSportSortOrderChange(OnDeleteCacheMessage message)
         {
             var request = new CachePreloadRequestDTO
             {
@@ -51,7 +51,7 @@ namespace Platform.CacheSync.Service.Repository
             var publishMessage = await DeleteCachePreload_SportsbookApi(request);
         }
 
-        public async void ProcessUpdateUserFavorites(OnDeleteCacheMessage message)
+        public async Task ProcessUpdateUserFavorites(OnDeleteCacheMessage message)
         {
             var request = new CachePreloadRequestDTO
             {
@@ -62,7 +62,7 @@ namespace Platform.CacheSync.Service.Repository
             var publishMessage = await DeleteCachePreload_SportsbookApi(request);
         }
 
-        public async void ProcessMaintenance(OnDeleteCacheMessage message)
+        public async Task ProcessMaintenance(OnDeleteCacheMessage message)
         {
             var request = new CachePreloadRequestDTO
             {
@@ -73,7 +73,7 @@ namespace Platform.CacheSync.Service.Repository
         }
 
 
-        public async void ProcessParlayBonusChange(OnDeleteCacheMessage message)
+        public async Task ProcessParlayBonusChange(OnDeleteCacheMessage message)
         {
             var request = new CachePreloadRequestDTO
             {
@@ -83,7 +83,7 @@ namespace Platform.CacheSync.Service.Repository
             await DeleteCachePreload_BettingApi(request);
         }
 
-        public async void ProcessClientChange(OnDeleteCacheMessage message)
+        public async Task ProcessClientChange(OnDeleteCacheMessage message)
         {
             var request = new CachePreloadRequestDTO
             {
@@ -94,7 +94,7 @@ namespace Platform.CacheSync.Service.Repository
             await DeleteCachePreload_PlatformApi(request);
         }
 
-        public async void ProcessDynamicTranslationChange(OnDeleteCacheMessage message)
+        public async Task ProcessDynamicTranslationChange(OnDeleteCacheMessage message)
         {
             var request = new CachePreloadRequestDTO
             {
@@ -128,7 +128,7 @@ namespace Platform.CacheSync.Service.Repository
         // the changed TranslationCache2 rows on r.oe.ontranslationchange, where the topic exchange
         // delivers them to both OE.Adapter.Service (in-memory enrichment cache) and
         // OE.Translation.Service (Mongo persistence + translation-only odds pushes).
-        public async void ProcessTranslationChange(OnTranslationChangeMessage message)
+        public async Task ProcessTranslationChange(OnTranslationChangeMessage message)
         {
             if (message?.Tr == null || message.Tr.Count == 0)
                 return;
@@ -164,7 +164,7 @@ namespace Platform.CacheSync.Service.Repository
         // Static UI-label change (Backoffice SportsbookStatic edit): purge the Sportsbook.API
         // "tr" / "tr-{LANG}" caches so the next v1/sportsbook/translations call re-reads SQL.
         // No onward publish — nothing downstream of Sportsbook.API consumes static labels.
-        public async void ProcessStaticTranslationChange(OnDeleteCacheMessage message)
+        public async Task ProcessStaticTranslationChange(OnDeleteCacheMessage message)
         {
             var request = new CachePreloadRequestDTO
             {

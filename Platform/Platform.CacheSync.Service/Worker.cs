@@ -57,40 +57,40 @@ namespace Platform.CacheSync.Service
                 {
                     case "OnMarketSortOrderChange":
                         var marketSortOrderMessage = JsonSerializer.Deserialize<OnDeleteCacheMessage>(payload);
-                        _cacheSyncRepository.ProcessMarketSortOrderChange(marketSortOrderMessage);
+                        _cacheSyncRepository.ProcessMarketSortOrderChange(marketSortOrderMessage).GetAwaiter().GetResult();
                         break;
                     case "OnSportSortOrderChange":
                         var sportSortOrderMessage = JsonSerializer.Deserialize<OnDeleteCacheMessage>(payload);
-                        _cacheSyncRepository.ProcessSportSortOrderChange(sportSortOrderMessage);
+                        _cacheSyncRepository.ProcessSportSortOrderChange(sportSortOrderMessage).GetAwaiter().GetResult();
                         break;
                     case "OnUpdateUserFavorites":
                         var userFavorite = JsonSerializer.Deserialize<OnDeleteCacheMessage>(payload);
-                        _cacheSyncRepository.ProcessUpdateUserFavorites(userFavorite);
+                        _cacheSyncRepository.ProcessUpdateUserFavorites(userFavorite).GetAwaiter().GetResult();
                         break;
                     case "OnMaintenance":
                         var maintenance = JsonSerializer.Deserialize<OnDeleteCacheMessage>(payload);
-                        _cacheSyncRepository.ProcessUpdateUserFavorites(maintenance);
+                        _cacheSyncRepository.ProcessUpdateUserFavorites(maintenance).GetAwaiter().GetResult();
                         break;
                     case "OnParlayBonusChange":
                         var parlayBonus = JsonSerializer.Deserialize<OnDeleteCacheMessage>(payload);
-                        _cacheSyncRepository.ProcessParlayBonusChange(parlayBonus);
+                        _cacheSyncRepository.ProcessParlayBonusChange(parlayBonus).GetAwaiter().GetResult();
                         break;
                     case "OnClientChange":
                         //
                         var client = JsonSerializer.Deserialize<OnDeleteCacheMessage>(payload);
-                        _cacheSyncRepository.ProcessClientChange(client);
+                        _cacheSyncRepository.ProcessClientChange(client).GetAwaiter().GetResult();
                         break;
                     case "OnDynamicTranslationChange":
                         var translationRequest = JsonSerializer.Deserialize<OnDeleteCacheMessage>(payload);
-                        _cacheSyncRepository.ProcessDynamicTranslationChange(translationRequest);
+                        _cacheSyncRepository.ProcessDynamicTranslationChange(translationRequest).GetAwaiter().GetResult();
                         break;
                     case "OnTranslationChange":
                         var translationChange = JsonSerializer.Deserialize<OnTranslationChangeMessage>(payload);
-                        _cacheSyncRepository.ProcessTranslationChange(translationChange);
+                        _cacheSyncRepository.ProcessTranslationChange(translationChange).GetAwaiter().GetResult();
                         break;
                     case "OnStaticTranslationChange":
                         var staticTranslation = JsonSerializer.Deserialize<OnDeleteCacheMessage>(payload);
-                        _cacheSyncRepository.ProcessStaticTranslationChange(staticTranslation);
+                        _cacheSyncRepository.ProcessStaticTranslationChange(staticTranslation).GetAwaiter().GetResult();
                         break;
                 }
             }

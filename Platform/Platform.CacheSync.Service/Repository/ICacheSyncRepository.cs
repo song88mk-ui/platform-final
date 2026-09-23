@@ -1,17 +1,18 @@
 ﻿using Platform.Shared.MessageModels;
+using System.Threading.Tasks;
 
 namespace Platform.CacheSync.Service.Repository
 {
     public interface ICacheSyncRepository
     {
-        void ProcessMarketSortOrderChange(OnDeleteCacheMessage message);
-        void ProcessSportSortOrderChange(OnDeleteCacheMessage message);
-        void ProcessUpdateUserFavorites(OnDeleteCacheMessage message);
-        void ProcessMaintenance(OnDeleteCacheMessage message);
-        void ProcessParlayBonusChange(OnDeleteCacheMessage message);
-        void ProcessClientChange(OnDeleteCacheMessage message);
-        void ProcessDynamicTranslationChange(OnDeleteCacheMessage message);
-        void ProcessTranslationChange(OnTranslationChangeMessage message);
-        void ProcessStaticTranslationChange(OnDeleteCacheMessage message);
+        Task ProcessMarketSortOrderChange(OnDeleteCacheMessage message);
+        Task ProcessSportSortOrderChange(OnDeleteCacheMessage message);
+        Task ProcessUpdateUserFavorites(OnDeleteCacheMessage message);
+        Task ProcessMaintenance(OnDeleteCacheMessage message);
+        Task ProcessParlayBonusChange(OnDeleteCacheMessage message);
+        Task ProcessClientChange(OnDeleteCacheMessage message);
+        Task ProcessDynamicTranslationChange(OnDeleteCacheMessage message);
+        Task ProcessTranslationChange(OnTranslationChangeMessage message);
+        Task ProcessStaticTranslationChange(OnDeleteCacheMessage message);
     }
 }

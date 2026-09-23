@@ -12709,15 +12709,7 @@ namespace Platform.Sportsbook.API.Repository
             string prefix,
             string fallback)
         {
-            if (id == null)
-                return fallback;
-
-            var key = $"{prefix}:{id}";
-
-            if (translations.TryGetValue(key, out var translated))
-                return translated;
-
-            return fallback;
+            return MongoTranslationResolver.ResolveName(translations, id, prefix, fallback);
         }
 
         // Mongo-sourced translation helpers (2026-07 translation-flow redesign; made the ONLY
@@ -12733,26 +12725,12 @@ namespace Platform.Sportsbook.API.Repository
             Func<T, string> languageSelector,
             Func<T, string> textSelector)
         {
-            if (translations == null)
-                return null;
-
-            foreach (var translation in translations)
-            {
-                if (translation != null && string.Equals(languageSelector(translation), languageCode, StringComparison.OrdinalIgnoreCase))
-                {
-                    var text = textSelector(translation);
-
-                    return string.IsNullOrEmpty(text) ? null : text;
-                }
-            }
-
-            return null;
+            return MongoTranslationResolver.FindTranslation(translations, languageCode, languageSelector, textSelector);
         }
 
         private static void AddMongoTranslation(Dictionary<string, string> map, string key, string translated)
         {
-            if (!string.IsNullOrEmpty(translated))
-                map[key] = translated;
+            MongoTranslationResolver.AddTranslation(map, key, translated);
         }
 
         // Fixture names for non-EN languages are composed from the two translated team names
@@ -12762,7 +12740,7 @@ namespace Platform.Sportsbook.API.Repository
             List<TeamTranslationMDB> awNaTr,
             string languageCode)
         {
-            return ComposeMongoFixtureName(hoNaTr, awNaTr, languageCode, null, null);
+            return MongoTranslationResolver.ComposeFixtureName(hoNaTr, awNaTr, languageCode);
         }
 
         // Overload used where the English team names are available as a per-side fallback: a team
@@ -12776,12 +12754,7 @@ namespace Platform.Sportsbook.API.Repository
             string hoNaFallback,
             string awNaFallback)
         {
-            var home = FindTranslation(hoNaTr, languageCode, t => t.LaCo, t => t.TeNa) ?? hoNaFallback;
-            var away = FindTranslation(awNaTr, languageCode, t => t.LaCo, t => t.TeNa) ?? awNaFallback;
-
-            return !string.IsNullOrEmpty(home) && !string.IsNullOrEmpty(away)
-                ? $"{home} vs. {away}"
-                : null;
+            return MongoTranslationResolver.ComposeFixtureName(hoNaTr, awNaTr, languageCode, hoNaFallback, awNaFallback);
         }
 
         // Markets carry the translated market TEMPLATE in MaNaTr; selections carry the translated

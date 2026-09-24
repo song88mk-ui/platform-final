@@ -1,14 +1,19 @@
+---
+name: production-investigation
+description: Diagnose live production issues safely and read-only (symptom classification, trace correlation, tier selection). Use when a live incident or production-only behavior needs investigating.
+---
+
 # Skill: Production Investigation
 
 Diagnose live issues safely.
 
 ## Rules
-- **Read-only first** — [.claude/playbooks/production-readonly.md](../playbooks/production-readonly.md).
+- **Read-only first** — [.claude/playbooks/production-readonly.md](../../playbooks/production-readonly.md).
   Don't place/settle/cancel bets or mutate config/wallet during diagnosis.
 - Treat `docs/` `[Likely]/[Unknown]` as verify-before-rely.
 
 ## Method
-1. Classify the symptom ([docs/knowledge/Troubleshooting.md](../../docs/knowledge/Troubleshooting.md)).
+1. Classify the symptom ([docs/knowledge/Troubleshooting.md](../../../docs/knowledge/Troubleshooting.md)).
 2. Correlate by OTel trace id (propagated through RabbitMQ headers) + `CorrelationId`; Serilog console-JSON.
 3. Decide the tier: gateway/API · worker/messaging · SQL · Mongo (odds-engine-2-owned) · cache (per-pod,
    stale until eviction/TTL) · WebSocket (feeder = OE.Websocket.Service) · deploy/secrets (argocd/SSM).

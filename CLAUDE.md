@@ -17,7 +17,7 @@ This file is the quick operating manual; `docs/` is the authoritative deep refer
 - **44-project .NET solution** ([`Platform/Platform.sln`](Platform/Platform.sln)) — a
   **microservice, message-driven sportsbook backend**. Headless: **no UI here** (the UI is the
   sibling `platform-web` Blazor app).
-- **40 projects on `net10.0`; `Platform.Shared` + 3 Mongo services (`Sportsbook.API`, `QTech.API`, `CashOutStake.Servicev2`) on `net8.0`** (MongoDB.Driver 2.11.6 LINQ breaks on .NET 10; upgraded from `netcoreapp3.1`/`netstandard2.1`/`net7.0`/`net8.0`
+- **40 projects on `net10.0`; `Platform.Shared` + 3 Mongo services (`Sportsbook.API`, `QTech.API`, `CashOutStake.Servicev2`) on `net8.0`** (MongoDB.Driver 2.11.6 in `Sportsbook.API`/`QTech.API`, 2.13.1 in `CashOutStake.Servicev2`; its 2.x LINQ breaks on .NET 10; upgraded from `netcoreapp3.1`/`netstandard2.1`/`net7.0`/`net8.0`
   under GM-744); EF Core 8.0.30 (LTS - EF 10 needs net10, Shared is net8), Docker: sdk:10.0 build, aspnet:10.0 runtime (aspnet:8.0 for Sportsbook.API/CashOutStake.Servicev2).
 - Deployed as Docker images → AWS ECR → EKS via the sibling `argocd` repo.
 
@@ -35,7 +35,8 @@ Restore needs `NUGET_PASSWORD` for the private feed.
 
 ## The 30-second architecture
 - **One public gateway** `Platform.API` (REST) → fans out over HTTP to `Betting.API`,
-  `Sportsbook.API`, `Wallet.API`, `Operator.API`, QTech; and over RabbitMQ via `RabbitMQ.API`.
+  `Sportsbook.API`, the operator endpoint (`IOperatorRepository`), Casino (QTech) and WebProps. It has no
+  `Wallet.API` or `RabbitMQ.API` client; it publishes directly with its own publish-only `MessageBroker` (`CPublish`).
 - **Async spine = RabbitMQ topic exchange `e.central`**; routing keys namespaced `r.bet.*`/`r.wallet.*`
   (platform), `r.oe.*` (odds engines). ~18 background `Worker : BackgroundService` services.
 - **Three data stores, three owners** (the most important fact — see [docs/DomainModel.md](docs/DomainModel.md)):
@@ -75,7 +76,7 @@ Restore needs `NUGET_PASSWORD` for the private feed.
   `switch` on `StatusCode`). Business logic lives **in repositories**, not services.
 - **DI**: built-in container; group registrations in `IServiceCollection` extension methods
   (`AddBettingProviders`/`AddProviders`); config via `IConfiguration["A:B"]` (no `IOptions<T>`).
-- **Providers**: add via `IBetProvider` + `IBetProviderFactory.Resolve(ChannelType)` — no call-site `if`s.
+- **Providers**: add via `IBetProvider` + `IBetProviderFactory.Resolve(int channelType)` — no call-site `if`s.
 - **Mapping**: manual via LINQ `.Select` (no AutoMapper). **Validation**: ActionFilters + inline +
   `StatusCode` (no FluentValidation). **Feature flags**: `Custom:*` config keys (no flag framework).
 - **Messaging**: `On*` POCO contracts; consume via `IMessageBroker.MessageReceived` + `switch(MessageType)`;
@@ -96,7 +97,7 @@ Restore needs `NUGET_PASSWORD` for the private feed.
 | Settlement | `Platform/Platform.Settlement.Service` · Cashout: `Platform/Platform.CashOut.Service`, `Platform/Platform.CashOutStake.Servicev2` |
 | Messaging | `Platform/Platform.Shared/Utility/MessageBroker.cs` · Cache: `Platform/Platform.Shared/Utility/MemCache.cs` + `Platform/Platform.CacheSync.Service` |
 | Entities / contracts / enums | `Platform/Platform.Shared` — its Data, MessageModels and Enums folders |
-| Providers | `Platform/Platform.Shared/Providers` (MTS, GTS, BetGenius) |
+| Providers | `Platform/Platform.Shared/Providers` (bet providers MTS, GTS; BetGenius only as the `BGLiveStream` `ILiveStreamProvider`) |
 See [docs/knowledge/FrequentlyModifiedAreas.md](docs/knowledge/FrequentlyModifiedAreas.md).
 
 ## Permanent development workflow (MANDATORY — every task)
@@ -151,7 +152,7 @@ Follow these steps in order on every task (Phase 12 standing rule):
 
 ## Scope & build reminders (repo-specific)
 - Subject is **platform-final** (backend); UI work belongs to **platform-web**.
-- Code targets **.NET 10** (`net10.0`), except `Platform.Shared` + the 3 Mongo services (`Sportsbook.API`, `QTech.API`, `CashOutStake.Servicev2`) on **`net8.0`** (MongoDB.Driver 2.11.6 breaks on net10 — ADR-14). Build SDK is 10.0; runtime images 10.0 (8.0 for the two net8 services with Dockerfiles).
+- Code targets **.NET 10** (`net10.0`), except `Platform.Shared` + the 3 Mongo services (`Sportsbook.API`, `QTech.API`, `CashOutStake.Servicev2`) on **`net8.0`** (MongoDB.Driver 2.11.6, 2.13.1 in `CashOutStake.Servicev2`, breaks on net10 — ADR-14). Build SDK is 10.0; runtime images 10.0 (8.0 for the two net8 services with Dockerfiles).
 - **Confirm the live variant** before editing duplicated code (`*.Service` vs `*.Servicev2`,
   `WebSocket.API` vs `Websocket.API2`).
 

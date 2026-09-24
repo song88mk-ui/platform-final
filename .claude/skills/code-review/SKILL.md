@@ -1,3 +1,8 @@
+---
+name: code-review
+description: Review a diff for correctness and platform-final conformance (blast radius, security, repository and BaseResponseDTO patterns, persistence, messaging, live variant). Use when reviewing a PR or a set of local changes in this repo.
+---
+
 # Skill: Code Review
 
 Review a diff for correctness + platform-final conformance.
@@ -8,7 +13,7 @@ Review a diff for correctness + platform-final conformance.
    `[ServiceFilter]` (R-6); no leaked stack traces (TD-04); guarded header parsing (AP-7).
 3. **Pattern conformance:** repository + `BaseResponseDTO`/`StatusCode`; thin controller; manual
    `.Select` mapping; `IConfiguration` indexer (no `IOptions<T>`); no new framework (AutoMapper/
-   FluentValidation/MediatR) — [docs/AntiPatterns.md](../../docs/AntiPatterns.md).
+   FluentValidation/MediatR) — [docs/AntiPatterns.md](../../../docs/AntiPatterns.md).
 4. **Persistence:** `AsNoTracking` reads; `TransactionScope` multi-write; audit-append; money via proc;
    no Mongo writes.
 5. **Messaging/observability:** correct ack + `CorrelationId`; OTel `Activity` + Serilog; trace through MQ.
@@ -17,4 +22,4 @@ Review a diff for correctness + platform-final conformance.
 
 ## Output
 Findings with file:line + severity + a conformance verdict. Cross-ref
-[docs/CodingStandards.md](../../docs/CodingStandards.md), [docs/BestPractices.md](../../docs/BestPractices.md).
+[docs/CodingStandards.md](../../../docs/CodingStandards.md), [docs/BestPractices.md](../../../docs/BestPractices.md).

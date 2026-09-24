@@ -1,3 +1,4 @@
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -8,6 +9,7 @@ using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;
 using Platform.Operator.Servicev2.Repository;
 using Platform.Operator.Servicev2.Telemetry;
+using Platform.Shared.Data.Platform;
 using Platform.Shared.Utility;
 using System;
 using Serilog;
@@ -39,6 +41,8 @@ namespace Platform.Operator.Servicev2
 
                     services.AddHttpClient();
                     services.AddSingleton<IMessageBroker, MessageBroker>();
+                    services.AddDbContextFactory<PlatformContext>(options =>
+                        options.UseSqlServer(hostContext.Configuration.GetConnectionString("Platform")));
                     services.AddSingleton<IBettingRepository, BettingRepository>();
                     services.AddHostedService<Worker>();
                 });

@@ -92,15 +92,18 @@
 - **Suggested investigation:** check argocd/other pipelines for how these are built/deployed (U-06).
 
 ### TD-10 — Thin automated-test net
-- **Evidence:** 3 of 41 projects have tests: `Platform.Shared.Test` (360 tests, 83.51% Stryker
+- **Evidence:** six test projects exist: `Platform.Shared.Test` (360 tests, 83.51% Stryker
   mutation score over `Extensions`/`Helpers`/`Utility`/`Providers`), `Platform.Sportsbook.API.Test`
   (13 tests over one pure static class), `Platform.Operator.API.Test` (209 tests, added GM-809, resettlement matrix added GM-815) and
-  `Platform.BetInfo.Service.Test` (12 tests, added GM-814). All run by a PR-only CI test job.
-  Settlement, placement and cashout remain untested.
+  `Platform.BetInfo.Service.Test` (12 tests, added GM-814), `Platform.CacheSync.Service.Test`
+  (13 tests, added GM-853) and `Platform.Operator.Servicev2.Test` (11 tests over the cashout wallet
+  retry path, added GM-862). All run by a PR-only CI test job. Settlement and placement remain
+  untested; of cashout, only the Operator.Servicev2 wallet retry path is covered.
 - **Files:** `Platform.Shared.Test/*`, `Platform.Sportsbook.API.Test/*`,
-  `Platform.Operator.API.Test/*`, `Platform.BetInfo.Service.Test/*`.
+  `Platform.Operator.API.Test/*`, `Platform.BetInfo.Service.Test/*`,
+  `Platform.CacheSync.Service.Test/*`, `Platform.Operator.Servicev2.Test/*`.
 - **Confidence:** **[Verified]**.
-- **Suggested investigation:** 32 inline `new DbContextOptionsBuilder<T>()` sites across 12 files
+- **Suggested investigation:** 28 inline `new DbContextOptionsBuilder<T>()` sites across 12 files
   still have no test seam. `Platform.BetInfo.Service` shows the fix: swap the inline construction
   for `IDbContextFactory<T>` and register it with `AddDbContextFactory`.
 

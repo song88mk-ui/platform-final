@@ -37,16 +37,20 @@ namespace Platform.Operator.Servicev2.Repository
         private readonly object _lock = new object();
         private readonly OrientalGamingConfigDTO _ogConfig;
         private readonly string _bettingConnectionString;
-        private readonly string _platformConnectionString;
+        private readonly IDbContextFactory<PlatformContext> _platformContextFactory;
         private readonly ILogger<BettingRepository> _logger;
 
         private readonly ActivitySource _activitySource;
         private static readonly TextMapPropagator Propagator = Propagators.DefaultTextMapPropagator;
 
-        public BettingRepository(IConfiguration configuration, Instrumentation instrumentation, ILogger<BettingRepository> logger)
+        // PlatformContext comes from a factory so the retry-row and operator-log paths can run
+        // against the EF in-memory provider in tests (same seam as BetInfo.Service, GM-814).
+        // CreateDbContext returns a fresh context per call, the lifetime the inline construction
+        // had. BettingContext is still built inline; nothing under test here touches it.
+        public BettingRepository(IConfiguration configuration, IDbContextFactory<PlatformContext> platformContextFactory, Instrumentation instrumentation, ILogger<BettingRepository> logger)
         {
             _bettingConnectionString = configuration.GetConnectionString("Betting");
-            _platformConnectionString = configuration.GetConnectionString("Platform");
+            _platformContextFactory = platformContextFactory;
             _ogConfig = configuration.GetSection("Custom").GetSection("OrientalGaming").Get<OrientalGamingConfigDTO>();
             _activitySource = instrumentation.ActivitySource;
             _logger = logger;
@@ -491,6 +495,12 @@ namespace Platform.Operator.Servicev2.Repository
                 }
             }
         }
+        // The retry row's Info is replayed by IsProcess/IsProcessPartial. OnBetSettlementRetry.OnBetSettlement
+        // is typed as the base class, and System.Text.Json serializes by declared type, so a partial cashout
+        // (OnBetSettlementPartial) lost CashoutStake, Stake, TrueStake and TaxedStake and replayed as zero.
+        // Serializing by runtime type keeps them. GM-862.
+        private static string SerializeRetryInfo(OnBetSettlement message) => JsonSerializer.Serialize(message, message.GetType());
+
         private void AddOrUpdateOperatorSettlementRetry(OnBetSettlementRetry message, string messageType, string correlationId, bool isSuccess)
         {
             using var activity = this._activitySource.StartActivity("AddOrUpdateOperatorSettlementRetry");
@@ -500,9 +510,7 @@ namespace Platform.Operator.Servicev2.Repository
 
             using (var scope = new TransactionScope(TransactionScopeOption.Required, new TransactionOptions { IsolationLevel = IsolationLevel.ReadCommitted }))
             {
-                var optionsBuilder = new DbContextOptionsBuilder<PlatformContext>().UseSqlServer(_platformConnectionString);
-
-                using (var context = new PlatformContext(optionsBuilder.Options))
+                using (var context = _platformContextFactory.CreateDbContext())
                 {
                     try
                     {
@@ -515,7 +523,7 @@ namespace Platform.Operator.Servicev2.Repository
                                 activity?.SetTag("bet.isnull", false);
 
                                 bet.MessageType = messageType;
-                                bet.Info = JsonSerializer.Serialize(message.OnBetSettlement);
+                                bet.Info = SerializeRetryInfo(message.OnBetSettlement);
                                 bet.IsRetry = false;
                                 bet.IsSuccess = isSuccess;
 
@@ -535,7 +543,7 @@ namespace Platform.Operator.Servicev2.Repository
                                     ClientCode = message.OnBetSettlement.Bet.ClientCode,
                                     Endpoint = message.OnBetSettlement.Bet.Endpoint,
                                     MessageType = messageType,
-                                    Info = JsonSerializer.Serialize(message.OnBetSettlement),
+                                    Info = SerializeRetryInfo(message.OnBetSettlement),
                                     OperatorToken = message.OnBetSettlement.Bet.OperatorToken,
                                     CorrelationId = correlationId,
                                     RetryCount = 0,
@@ -551,7 +559,7 @@ namespace Platform.Operator.Servicev2.Repository
                                 activity?.SetTag("bet.isretry", isRetry);
 
                                 bet.MessageType = messageType;
-                                bet.Info = JsonSerializer.Serialize(message.OnBetSettlement);
+                                bet.Info = SerializeRetryInfo(message.OnBetSettlement);
                                 bet.IsRetry = bet.RetryCount + 1 >= 8 ? false : true;
                                 bet.RetryCount = isRetry == true ? bet.RetryCount + 1 : bet.RetryCount;
 
@@ -587,9 +595,7 @@ namespace Platform.Operator.Servicev2.Repository
         {
             using (var scope = new TransactionScope(TransactionScopeOption.Required, new TransactionOptions { IsolationLevel = IsolationLevel.ReadCommitted }))
             {
-                var optionsBuilder = new DbContextOptionsBuilder<PlatformContext>().UseSqlServer(_platformConnectionString);
-
-                using var context = new PlatformContext(optionsBuilder.Options);
+                using var context = _platformContextFactory.CreateDbContext();
                 try
                 {
                     context.OperatorLog.Add(operatorLog);
@@ -607,16 +613,14 @@ namespace Platform.Operator.Servicev2.Repository
         {
             using (var scope = new TransactionScope(TransactionScopeOption.Required, new TransactionOptions { IsolationLevel = IsolationLevel.ReadUncommitted }))
             {
-                var optionsBuilder = new DbContextOptionsBuilder<PlatformContext>().UseSqlServer(_platformConnectionString);
-
-                using (var context = new PlatformContext(optionsBuilder.Options))
+                using (var context = _platformContextFactory.CreateDbContext())
                 {
                     var bet = context.OperatorSettlementRetry.Find(betId);
 
                     scope.Complete();
 
                     if (bet == null)
-                        return new Tuple<bool, OnBetSettlement>(false, JsonSerializer.Deserialize<OnBetSettlement>(bet.Info));
+                        return new Tuple<bool, OnBetSettlement>(false, null);
 
                     return new Tuple<bool, OnBetSettlement>(true, JsonSerializer.Deserialize<OnBetSettlement>(bet.Info));
                 }
@@ -627,16 +631,14 @@ namespace Platform.Operator.Servicev2.Repository
         {
             using (var scope = new TransactionScope(TransactionScopeOption.Required, new TransactionOptions { IsolationLevel = IsolationLevel.ReadUncommitted }))
             {
-                var optionsBuilder = new DbContextOptionsBuilder<PlatformContext>().UseSqlServer(_platformConnectionString);
-
-                using (var context = new PlatformContext(optionsBuilder.Options))
+                using (var context = _platformContextFactory.CreateDbContext())
                 {
                     var bet = context.OperatorSettlementRetry.Find(betId);
 
                     scope.Complete();
 
                     if (bet == null)
-                        return new Tuple<bool, OnBetSettlementPartial>(false, JsonSerializer.Deserialize<OnBetSettlementPartial>(bet.Info));
+                        return new Tuple<bool, OnBetSettlementPartial>(false, null);
 
                     return new Tuple<bool, OnBetSettlementPartial>(true, JsonSerializer.Deserialize<OnBetSettlementPartial>(bet.Info));
                 }
@@ -1748,7 +1750,7 @@ namespace Platform.Operator.Servicev2.Repository
                             Timestamp = DateTime.UtcNow
                         });
 
-                        RetryBetCashOut(new OnBetSettlementRetry { RemainingRetries = 0, OnBetSettlement = message }, payload, path, "OnBetFullCashOut", messageBroker, correlationId, threadId);
+                        RetryBetCashOut(new OnBetSettlementRetry { RemainingRetries = 0, OnBetSettlement = message }, payload, path, "OnBetPartialCashOut", messageBroker, correlationId, threadId);
                     }
                 }
             }
@@ -1767,7 +1769,7 @@ namespace Platform.Operator.Servicev2.Repository
                     Timestamp = DateTime.UtcNow
                 });
 
-                RetryBetCashOut(new OnBetSettlementRetry { RemainingRetries = 0, OnBetSettlement = message }, payload, path, "OnBetFullCashOut", messageBroker, correlationId, threadId);
+                RetryBetCashOut(new OnBetSettlementRetry { RemainingRetries = 0, OnBetSettlement = message }, payload, path, "OnBetPartialCashOut", messageBroker, correlationId, threadId);
             }
         }
 

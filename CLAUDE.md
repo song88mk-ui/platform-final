@@ -14,10 +14,10 @@ Song88 platform. Derived from the repository (see [`docs/`](docs/README.md), a 1
 This file is the quick operating manual; `docs/` is the authoritative deep reference.
 
 ## What this repo is
-- **42-project .NET solution** ([`Platform/Platform.sln`](Platform/Platform.sln)) — a
+- **44-project .NET solution** ([`Platform/Platform.sln`](Platform/Platform.sln)) — a
   **microservice, message-driven sportsbook backend**. Headless: **no UI here** (the UI is the
   sibling `platform-web` Blazor app).
-- **38 projects on `net10.0`; `Platform.Shared` + 3 Mongo services (`Sportsbook.API`, `QTech.API`, `CashOutStake.Servicev2`) on `net8.0`** (MongoDB.Driver 2.11.6 LINQ breaks on .NET 10; upgraded from `netcoreapp3.1`/`netstandard2.1`/`net7.0`/`net8.0`
+- **40 projects on `net10.0`; `Platform.Shared` + 3 Mongo services (`Sportsbook.API`, `QTech.API`, `CashOutStake.Servicev2`) on `net8.0`** (MongoDB.Driver 2.11.6 LINQ breaks on .NET 10; upgraded from `netcoreapp3.1`/`netstandard2.1`/`net7.0`/`net8.0`
   under GM-744); EF Core 8.0.30 (LTS - EF 10 needs net10, Shared is net8), Docker: sdk:10.0 build, aspnet:10.0 runtime (aspnet:8.0 for Sportsbook.API/CashOutStake.Servicev2).
 - Deployed as Docker images → AWS ECR → EKS via the sibling `argocd` repo.
 
@@ -28,8 +28,9 @@ dotnet build Platform/Platform.sln
 dotnet test Platform/Platform.sln
 ```
 
-Four test projects: `Platform.Shared.Test`, `Platform.Sportsbook.API.Test`,
-`Platform.Operator.API.Test`, `Platform.BetInfo.Service.Test`. CI runs them on pull requests only.
+Six test projects: `Platform.Shared.Test`, `Platform.Sportsbook.API.Test`,
+`Platform.Operator.API.Test`, `Platform.BetInfo.Service.Test`, `Platform.CacheSync.Service.Test`,
+`Platform.Operator.Servicev2.Test`. CI runs them on pull requests only.
 Restore needs `NUGET_PASSWORD` for the private feed.
 
 ## The 30-second architecture

@@ -5,12 +5,12 @@
 ## Solution file
 
 - Single solution: [`Platform/Platform.sln`](../Platform/Platform.sln).
-- **42 projects.** **[Verified]** (`find Platform -name "*.csproj" | wc -l` = 42).
+- **44 projects.** **[Verified]** (`find Platform -name "*.csproj" | wc -l` = 44).
   Note: `Platform.Cancellation.Service/` is **not** a project — it is an orphan directory
   containing only `bin`/`obj` leftovers (no `.csproj`, no solution entry). **[Verified]**
 - **Flat structure: the solution defines no solution folders, no nested-project grouping,
   and no "Solution Items".** **[Verified]** — `Platform.sln` contains no
-  `NestedProjects` section and no folder-type `Project(...)` entries. All 42 projects sit at
+  `NestedProjects` section and no folder-type `Project(...)` entries. All 44 projects sit at
   the solution root. Logical grouping exists only by project-name prefix convention
   (`Platform.*`), not by IDE folders.
 
@@ -34,7 +34,7 @@ platform-final/
 
 | Target | Count | Projects |
 |--------|------:|----------|
-| `net10.0` | 38 | All APIs, services, jobs, console, tests except the four below |
+| `net10.0` | 40 | All APIs, services, jobs, console, tests except the four below |
 | `net8.0` | 4 | `Platform.Shared`, `Platform.Sportsbook.API`, `Platform.QTech.API`, `Platform.CashOutStake.Servicev2` |
 
 **[Verified]** via `grep TargetFramework Platform/*/*.csproj`. Unified by the .NET 10
@@ -68,7 +68,7 @@ See [RepositoryMap.md](RepositoryMap.md) for the full annotated list and
 | **Jobs** (timed/loop workers) | 4 | `Job.CCF`, `Job.ForexEUR`, `Job.Operator.Score`, `Job.Resettlement` |
 | **Console** (utility/load test) | 1 | `BetPlacement.Console` |
 | **Shared library** | 1 | `Platform.Shared` |
-| **Test** | 4 | `Platform.Shared.Test`, `Platform.Sportsbook.API.Test`, `Platform.Operator.API.Test`, `Platform.BetInfo.Service.Test` |
+| **Test** | 6 | `Platform.Shared.Test`, `Platform.Sportsbook.API.Test`, `Platform.Operator.API.Test`, `Platform.BetInfo.Service.Test`, `Platform.CacheSync.Service.Test`, `Platform.Operator.Servicev2.Test` |
 | **Client/sample** | 1 | `Platform.WebSocket.Client` |
 
 ## Per-service sub-projects
@@ -90,8 +90,9 @@ in references) / **[Likely]** (naming):
 `app.path` → `app.image`); `Platform.Operator.Cashout.Service` **is** in the matrix.
 **[Verified]** A PR-only `test` job runs `dotnet test Platform/Platform.sln` on the .NET SDK
 10.0.x, so it picks up every test project in the solution automatically: currently
-`Platform.Shared.Test`, `Platform.Sportsbook.API.Test`, `Platform.Operator.API.Test` and
-`Platform.BetInfo.Service.Test`. **[Verified]** Projects present in
+`Platform.Shared.Test`, `Platform.Sportsbook.API.Test`, `Platform.Operator.API.Test`,
+`Platform.BetInfo.Service.Test`, `Platform.CacheSync.Service.Test` and
+`Platform.Operator.Servicev2.Test`. **[Verified]** Projects present in
 the solution but **absent from the build matrix** (i.e. not deployed as their own image):
 `Platform.AgentReports.API`, `Platform.AgentReports.Service`,
 `Platform.ESportOperator.Service`, `Platform.Oddin.API`,
@@ -99,7 +100,8 @@ the solution but **absent from the build matrix** (i.e. not deployed as their ow
 `Platform.RedCatOperator.API`, `Platform.WebSocket.API` (note: `Websocket.API2` builds as
 `platform-websocket-api`), `Platform.WebSocket.Client`, `Platform.BetPlacement.Console`,
 `Platform.Shared`, `Platform.Shared.Test`, `Platform.Sportsbook.API.Test`,
-`Platform.Operator.API.Test`, `Platform.BetInfo.Service.Test` (the four test projects run in
+`Platform.Operator.API.Test`, `Platform.BetInfo.Service.Test`, `Platform.CacheSync.Service.Test`,
+`Platform.Operator.Servicev2.Test` (the six test projects run in
 the test job instead; note that `Platform.Operator.API` and `Platform.BetInfo.Service`
 themselves **are** in the matrix, only their test projects are not). **[Verified]** by diffing the CI matrix against
 the project list. Why some shipping integrations (QTech, RedCat, Oddin, AgentReports) are not

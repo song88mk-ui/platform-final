@@ -130,12 +130,14 @@
 - **Suggested investigation:** observability-coverage audit; dependency-version alignment review.
 
 ## R-16 — Thin test safety net — **Risk: Medium**
-- **Evidence:** 3 of 41 projects have tests (`Platform.Shared.Test`, `Platform.Sportsbook.API.Test`,
-  `Platform.Operator.API.Test`, `Platform.BetInfo.Service.Test`). The shared kernel is gated by
+- **Evidence:** six test projects exist (`Platform.Shared.Test`, `Platform.Sportsbook.API.Test`,
+  `Platform.Operator.API.Test`, `Platform.BetInfo.Service.Test`, `Platform.CacheSync.Service.Test`,
+  `Platform.Operator.Servicev2.Test`). The shared kernel is gated by
   Stryker at `break 80`; the money-path services (settlement, cashout, placement) are still
-  untested, because their repositories build a `DbContext` inline and offer no seam.
+  largely untested (only the Operator.Servicev2 cashout wallet retry path is covered, GM-862), because their repositories build a `DbContext` inline and offer no seam.
 - **Files:** `Platform.Shared.Test/*`, `Platform.Sportsbook.API.Test/*`,
-  `Platform.Operator.API.Test/*`, `Platform.BetInfo.Service.Test/*`.
+  `Platform.Operator.API.Test/*`, `Platform.BetInfo.Service.Test/*`,
+  `Platform.CacheSync.Service.Test/*`, `Platform.Operator.Servicev2.Test/*`.
 - **Confidence:** **[Verified]**.
 - **Suggested investigation:** measure actual coverage; identify the highest-risk untested paths
   (settlement, cashout, placement).

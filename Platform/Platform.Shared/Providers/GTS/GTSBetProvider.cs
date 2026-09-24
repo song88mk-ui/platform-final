@@ -11,7 +11,6 @@ using Microsoft.Extensions.Configuration;
 using System.Linq;
 using Microsoft.Extensions.Logging;
 using Platform.Shared.Models.Provider.GTS;
-using System.Text.Json;
 using System.Collections.Generic;
 
 namespace Platform.Shared.Providers.GTS
@@ -119,29 +118,37 @@ namespace Platform.Shared.Providers.GTS
 
         public async void ProcessCancellation(Guid betId, string limitId, string clientCode, string correlationId, bool isBackOfficeTrigger = false)
         {
-            if (!Convert.ToBoolean(_configuration["Custom:IsProviderEnabled"]))
-                return;
-
             try
             {
+                _logger.LogInformation("ProcessCancellation start: {betId} ({clientCode}/{limitId}, correlationId={correlationId}, backOffice={isBackOfficeTrigger})",
+                    betId, clientCode, limitId, correlationId, isBackOfficeTrigger);
+
+                if (!Convert.ToBoolean(_configuration["Custom:IsProviderEnabled"]))
+                    return;
+
                 var testClientCodes = (_configuration["Custom:TestBetClientCodes"] ?? string.Empty).Split(',', StringSplitOptions.RemoveEmptyEntries);
                 string testPrefix = testClientCodes.Contains(clientCode, StringComparer.OrdinalIgnoreCase) ? "test" : string.Empty;
 
                 var token = await _auth.GetGTSAuthorizationToken();
                 if (token.StatusCode != StatusCode.Success)
+                {
+                    _logger.LogError("ProcessCancellation: GTS Authentication Failed for bet {betId}", betId);
                     return;
-
-                _logger.LogInformation("ProcessCancellation (Request) : {betId}", betId);
+                }
 
                 var result = await _gtsRepo.Cancellation(token.Result.Token, betId, limitId, clientCode, testPrefix);
 
-                _logger.LogInformation($"ProcessCancellation (Response) : {JsonSerializer.Serialize(result)}");
+                if (result.StatusCode != StatusCode.Success)
+                {
+                    _logger.LogError("ProcessCancellation: Cancellation Failed for bet {betId}: {message}-{result}", betId, result.Message, result.Result);
+                    return;
+                }
 
-                return;
+                _logger.LogInformation("ProcessCancellation: bet {betId} cancellation reported to GTS", betId);
             }
             catch (Exception ex)
             {
-                _logger.LogError($"ProcessCancellation Error: {ex.Message}-{ex.StackTrace}");
+                _logger.LogError(ex, "ProcessCancellation Error for bet {betId}", betId);
             }
         }
 

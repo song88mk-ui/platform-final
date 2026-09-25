@@ -3310,13 +3310,13 @@ namespace Platform.API.Repository
             // caller already believes about its own state.
             var isFullCashoutRequest = (request.CashoutStakePercent ?? 1) >= 1;
 
-            var webPropsResponse = await _webPropsRepository.GetClientFeatureFlags(clientResponse.Result.ClientCode);
+            var webPropsResponse = await _webPropsRepository.GetClientFeatureFlags(clientResponse.Result.ClientId.ToString());
 
             if (webPropsResponse.StatusCode != StatusCode.Success || webPropsResponse.Result?.Features == null)
             {
                 // Fail closed: if we can't confirm cashout is currently allowed for this client,
                 // we must not let it through just because webprops-api hiccupped.
-                _logger.LogError($"[CashoutBet] unable to verify webprops config for clientCode={clientResponse.Result.ClientCode}, denying cashout. status={webPropsResponse.StatusCode} message={webPropsResponse.Message}");
+                _logger.LogError($"[CashoutBet] unable to verify webprops config for clientId={clientResponse.Result.ClientId}, denying cashout. status={webPropsResponse.StatusCode} message={webPropsResponse.Message}");
 
                 return new BaseResponseDTO<BetCashOutResponseDTO>
                 {

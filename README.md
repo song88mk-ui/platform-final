@@ -71,6 +71,9 @@ Common sections (per service `appsettings.json`):
 - `API` - base URLs of the other services this one calls over HTTP, e.g. Platform.API
   has `API:PlatformBettingAPI`, `API:PlatformSportsbookAPI`; several services have
   `API:RabbitMQAPI`. Point these at wherever you run the target service locally.
+  Platform.API's `API:WebProps:Uri` / `API:WebProps:Security:ApiKey` (webprops-api, read
+  by the `CashoutBet` guardrail) ship **empty** and must be set per environment
+  (`API__WebProps__Uri=...`); while unset, every cashout is denied (fails closed).
 - `MessageBroker` - RabbitMQ connection (`Host`, `Port`, `Username`, `Password`,
   `VirtualHost`, `Exchange` - the topic exchange is `e.central`).
 - `Custom` - per-service feature flags and API keys (`Custom:APIKey`,

@@ -31,16 +31,27 @@ namespace Platform.API.Repository
             _logger = logger;
         }
 
-        public async Task<BaseResponseDTO<WebPropsConfigResponseDTO>> GetClientFeatureFlags(string clientCode)
+        public async Task<BaseResponseDTO<WebPropsConfigResponseDTO>> GetClientFeatureFlags(string clientId)
         {
+            if (_httpClient.BaseAddress == null)
+            {
+                _logger.LogError($"[GetClientFeatureFlags] API:WebProps:Uri is not configured, cannot verify clientId={clientId}");
+
+                return new BaseResponseDTO<WebPropsConfigResponseDTO>
+                {
+                    StatusCode = StatusCode.Error,
+                    Message = "API:WebProps:Uri is not configured"
+                };
+            }
+
             try
             {
-                var response = await _httpClient.GetAsync($"/api/v1/config/{clientCode.ToUpper()}");
+                var response = await _httpClient.GetAsync($"/api/v1/config/{clientId.ToUpper()}");
                 var content = await response.Content.ReadAsStringAsync();
 
                 if (!response.IsSuccessStatusCode)
                 {
-                    _logger.LogError($"[GetClientFeatureFlags] clientCode={clientCode} status={response.StatusCode} content={content}");
+                    _logger.LogError($"[GetClientFeatureFlags] clientId={clientId} status={response.StatusCode} content={content}");
 
                     return new BaseResponseDTO<WebPropsConfigResponseDTO>
                     {
@@ -59,7 +70,7 @@ namespace Platform.API.Repository
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, $"[GetClientFeatureFlags] error clientCode={clientCode}");
+                _logger.LogError(ex, $"[GetClientFeatureFlags] error clientId={clientId}");
 
                 return new BaseResponseDTO<WebPropsConfigResponseDTO>
                 {

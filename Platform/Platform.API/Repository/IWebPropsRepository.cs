@@ -6,6 +6,6 @@ namespace Platform.API.Repository
 {
     public interface IWebPropsRepository
     {
-        Task<BaseResponseDTO<WebPropsConfigResponseDTO>> GetClientFeatureFlags(string clientCode);
+        Task<BaseResponseDTO<WebPropsConfigResponseDTO>> GetClientFeatureFlags(string clientId);
     }
 }

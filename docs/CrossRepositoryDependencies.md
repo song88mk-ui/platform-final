@@ -44,6 +44,21 @@ registry in [Contracts.md](Contracts.md).
 - **Config:** also reads a `platform-webprops` CDN config service (whether part of platform-final is **[Unknown]**).
 - **Auth:** never holds end-user creds beyond the opaque operator token; server-side only.
 
+### platform-webprops (webprops-api) — per-client site config `[Verified]` / `[Verified-sibling]`
+- `Platform.API`'s `WebPropsRepository` calls `GET /api/v1/config/{clientId}` (`API:WebProps:Uri`,
+  `x-api-key`) on every `CashoutBet` to enforce BO's `Features.FullCashout`/`PartialCashout`
+  (BO-106, fails closed).
+- `API:WebProps:*` ships **empty** in `appsettings.json` and must be injected per env via argocd
+  (`API__WebProps__Uri`, `API__WebProps__Security__ApiKey`) - bo-api does the same in
+  `apps/corp-apps/bo-api/{env}.yaml`. Unset => `WebPropsRepository` logs
+  "API:WebProps:Uri is not configured" and every cashout is denied. `apps/platform/platform-api{,-ro}/*.yaml`
+  set `API__WebProps__Uri: http://platform-webprops-api:3000` (in-cluster, same as platform-web's
+  `Config__BaseURL`); `API__WebProps__Security__ApiKey` is not set there **[Unknown]** whether
+  webprops-api requires `x-api-key` on GET.
+- **The key is the client GUID (`Client.ClientId`, uppercased) — not `ClientCode`.** Same key
+  backoffice-final's Client Site Config writes (its request field is misleadingly named
+  `ClientCode` but carries the GUID) and platform-web reads (`client_id`).
+
 ### odds-engine-2 — catalogue + odds producer `[Verified-sibling]`
 - **Writes the MongoDB `Sportsbook` collections** platform-final reads (`Fixture`, `Market`,
   `Selection`, `MarketMapping`, `BettingStatus`; `Maintenance` not found written by OE2 —

@@ -94,10 +94,16 @@ namespace Platform.API
             services.AddHttpClient<IOperatorRepository, OperatorRepository>();
             services.AddHttpClient<ISportsbookRepository, SportsbookRepository>();
             services.AddHttpClient<ICasinoRepository, CasinoRepository>();
+            // API:WebProps:* ships empty in appsettings and must be injected per env (argocd). Guarded so a
+            // missing value only fails CashoutBet (WebPropsRepository fails closed) - an unguarded
+            // new Uri("") here would throw on every PlatformRepository resolve and take down the whole API.
             services.AddHttpClient<IWebPropsRepository, WebPropsRepository>(client =>
             {
-                client.BaseAddress = new Uri(Configuration["API:WebProps:Uri"]);
-                client.DefaultRequestHeaders.Add("x-api-key", Configuration["API:WebProps:Security:ApiKey"]);
+                if (Uri.TryCreate(Configuration["API:WebProps:Uri"], UriKind.Absolute, out var webPropsUri))
+                    client.BaseAddress = webPropsUri;
+
+                if (!string.IsNullOrEmpty(Configuration["API:WebProps:Security:ApiKey"]))
+                    client.DefaultRequestHeaders.Add("x-api-key", Configuration["API:WebProps:Security:ApiKey"]);
             });
 
             services.AddSwaggerGen(c =>

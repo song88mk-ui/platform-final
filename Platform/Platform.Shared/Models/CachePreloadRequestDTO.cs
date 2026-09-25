@@ -22,6 +22,7 @@ namespace Platform.Shared.Models
     {
         public string StringId { get; set; }
         public string TargetLanguage { get; set; }
+        public string SourceText { get; set; }
         public string TargetText { get; set; }
     }
 

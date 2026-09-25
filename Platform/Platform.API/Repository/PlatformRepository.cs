@@ -4881,7 +4881,8 @@ namespace Platform.API.Repository
                         {
                             StId = t.StringId,
                             LaCo = t.TargetLanguage,
-                            Tx = t.TargetText ?? string.Empty
+                            Tx = t.TargetText ?? string.Empty,
+                            SrcTx = t.SourceText
                         })
                         .ToList()
                 };

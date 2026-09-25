@@ -20,5 +20,12 @@ namespace Platform.Shared.MessageModels
         public string StId { get; set; }
         public string LaCo { get; set; } // target language code, e.g. "ZH" | "ES" | "FR"
         public string Tx { get; set; }   // translated text; empty string clears the translation
+
+        // The row's SOURCE_TEXT (2026-09, GM-852; may be null from senders that have not been
+        // updated yet). Lets OE.Adapter/OE.Translation.Service keep their content-addressed index
+        // current without a restart, and lets the Mongo change path scope a market-template
+        // wording update to exactly the markets whose current name carries that wording. Wire name
+        // matches OE.Shared's TranslationChangeItem.SrcTx.
+        public string SrcTx { get; set; }
     }
 }

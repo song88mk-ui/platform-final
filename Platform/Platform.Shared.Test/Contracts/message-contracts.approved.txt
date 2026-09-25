@@ -342,5 +342,6 @@ SecondaryInfo
   BetAmount -> bet_amount: Double
 TranslationChangeItem
   LaCo -> LaCo: String
+  SrcTx -> SrcTx: String
   StId -> StId: String
   Tx -> Tx: String

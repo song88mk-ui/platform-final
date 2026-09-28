@@ -59,6 +59,9 @@ Restore needs `NUGET_PASSWORD` for the private feed.
    is inert. Access control = API-key **ActionFilters** applied per-controller via `[ServiceFilter]`.
    **A new controller without a filter attribute is completely open** (no global fallback). (R-6,
    [docs/Authentication.md](docs/Authentication.md))
+   `Platform/Platform.API/ActionFilters/APIKeyFilter.cs:46` calls `clientId.ToUpper()` on the
+   `x-client-id` header with no null check, so a valid `x-api-key` without that header is a 500
+   (NullReferenceException), not a 4xx (GM-873). `Platform.ClientPlatform.API` has its own copy.
 4. **No global exception handler.** Errors are shaped per-controller try/catch → `BaseResponseDTO`
    with a business `StatusCode`; unguarded actions leak a bare 500. Don't return `ex.StackTrace`. (TD-04)
 5. **platform-final never writes MongoDB.** If you think you need to, you're probably in the wrong repo
@@ -69,6 +72,12 @@ Restore needs `NUGET_PASSWORD` for the private feed.
    secrets are dev/staging fallbacks (prod = AWS SSM). (TD-01)
 8. **Caches are per-pod** (`MemoryCache.Default`); invalidation is event-driven via `CacheSync.Service`
    — use the prefix convention so eviction works. ([docs/CacheInvalidation.md](docs/CacheInvalidation.md))
+9. **Config key sections are not interchangeable.** `appsettings.json` defaults point at localhost,
+   and deployed values come from env vars in `../argocd/apps/platform/<service>/{dev,stg,prd}.yaml`,
+   where `A__B` maps to `A:B`. A wrong section fails silently back to the default. Example:
+   `Sportsbook.API/Repository/RabbitMQRepository.cs:23` reads `API:RabbitMQAPI`, but argocd
+   `prd.yaml` sets `Custom__RabbitMQAPI`, so PRD calls `localhost:55866` (DEVOPS-389). When you
+   add or rename a key, check all three env files.
 
 ## How this team writes code (match it — don't introduce new patterns)
 - **Repository pattern**: `IXxxRepository`+`XxxRepository` in each project's Repository folder, async, return

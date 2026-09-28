@@ -5,6 +5,7 @@ using Platform.Shared.MessageModels;
 using Platform.Shared.Models;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.Json;
 using System.Threading.Tasks;
 using Xunit;
 
@@ -143,6 +144,24 @@ namespace Platform.CacheSync.Service.Test.Repository
             // The relay must forward the message itself. Re-projecting it here would drop any
             // field Platform.Shared's copy does not declare.
             Assert.Same(message, published.Payload);
+        }
+
+        // Assert.Same above proves the relay forwards the object, not what reaches the wire. The
+        // broker serializes with System.Text.Json defaults (MessageBroker.cs), so SrcTx must survive
+        // that serialization or OddsEngine loses the wording scope (GM-852).
+        [Fact]
+        public async Task ProcessTranslationChange_RelayedPayloadSerializesSrcTx()
+        {
+            var sportsbook = new FakeSportsbookRepository();
+            var broker = new FakeMessageBroker();
+            var message = MessageWith(new TranslationChangeItem { StId = "MaTe:16", LaCo = "ZH", Tx = "总进球", SrcTx = "Total Goals" });
+
+            await CreateRepository(sportsbook, broker).ProcessTranslationChange(message);
+
+            var json = JsonSerializer.Serialize((OnTranslationChangeMessage)Assert.Single(broker.Published).Payload);
+
+            var item = Assert.Single(JsonDocument.Parse(json).RootElement.GetProperty("Tr").EnumerateArray());
+            Assert.Equal("Total Goals", item.GetProperty("SrcTx").GetString());
         }
 
         [Fact]

@@ -9,6 +9,7 @@ using Platform.Shared.MessageModels;
 using Platform.Shared.Models;
 using Platform.Shared.Utility;
 using Platform.Shared.Extensions;
+using Platform.Shared.Helpers;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -4871,21 +4872,7 @@ namespace Platform.API.Repository
             // which purges the Sportsbook.API translation cache and relays them to OE.Adapter.Service.
             if (request.CacheType == CacheType.DynamicTranslation && request.Translations?.Count > 0)
             {
-                var message = new OnTranslationChangeMessage
-                {
-                    Tr = request.Translations
-                        .Where(t => t != null
-                            && !string.IsNullOrWhiteSpace(t.StringId)
-                            && !string.IsNullOrWhiteSpace(t.TargetLanguage))
-                        .Select(t => new TranslationChangeItem
-                        {
-                            StId = t.StringId,
-                            LaCo = t.TargetLanguage,
-                            Tx = t.TargetText ?? string.Empty,
-                            SrcTx = t.SourceText
-                        })
-                        .ToList()
-                };
+                var message = TranslationChangeMapper.ToMessage(request.Translations);
 
                 if (message.Tr.Count > 0)
                 {

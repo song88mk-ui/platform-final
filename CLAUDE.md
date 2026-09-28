@@ -34,6 +34,11 @@ Six test projects: `Platform.Shared.Test`, `Platform.Sportsbook.API.Test`,
 `Platform.Operator.Servicev2.Test`. CI runs them on pull requests only.
 Restore needs `NUGET_PASSWORD` for the private feed.
 
+`Platform.API` has no test project. Put its testable logic in `Platform.Shared` and test it in
+`Platform.Shared.Test`, as `Platform/Platform.Shared/Helpers/TranslationChangeMapper.cs` does for
+the cachepreload translation mapping (GM-874). A static class outside `MessageModels` changes
+neither the `PublicTypeContractTests` sweep nor `message-contracts.approved.txt`.
+
 ## The 30-second architecture
 - **One public gateway** `Platform.API` (REST) → fans out over HTTP to `Betting.API`,
   `Sportsbook.API`, the operator endpoint (`IOperatorRepository`), Casino (QTech) and WebProps. It has no

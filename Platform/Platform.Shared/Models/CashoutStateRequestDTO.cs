@@ -9,6 +9,9 @@ namespace Platform.Shared.Models
     public class CashoutStateRequestDTO
     {
         public Guid BetId { get; set; }
+        // GM-861: populated so GetCashOut can verify the bet belongs to the caller.
+        public string UserId { get; set; }
+        public string ClientId { get; set; }
     }
 
     public class CashoutStateResponseDTO

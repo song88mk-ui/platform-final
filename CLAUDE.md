@@ -3,9 +3,10 @@
 ## FIRST INSTRUCTION (every prompt, before anything else)
 On **every** prompt, before acting:
 1. **Consult `CLAUDE.md` and [`AGENTS.md`](AGENTS.md) first.**
-2. **Follow the mandatory development workflow** (see [§ Permanent development workflow](#permanent-development-workflow-mandatory-every-task)): understand → search the repo → consult `docs/` → trace end-to-end **in the actual code and cite `file:line`** (never answer from memory) → identify reuse and risks → explain the plan and **wait for approval before any architectural change** → make the **smallest possible change** → validate → update docs.
-3. **Label every claim `verified` / `assumption` / `unknown` — never guess.**
-4. **Production is READ-ONLY:** do not run queries, deploy, change schema, or invalidate caches unless **explicitly instructed**.
+2. **Fetch latest before investigating.** Run `git fetch origin` and compare against `origin/main` for this repo and any sibling repo you read from, before citing file contents or repo/deployment state as fact — a local checkout can be stale by hundreds of commits.
+3. **Follow the mandatory development workflow** (see [§ Permanent development workflow](#permanent-development-workflow-mandatory-every-task)): understand → search the repo → consult `docs/` → trace end-to-end **in the actual code and cite `file:line`** (never answer from memory) → identify reuse and risks → explain the plan and **wait for approval before any architectural change** → make the **smallest possible change** → validate → update docs.
+4. **Label every claim `verified` / `assumption` / `unknown` — never guess.**
+5. **Production is READ-ONLY:** do not run queries, deploy, change schema, or invalidate caches unless **explicitly instructed**.
 
 > A `UserPromptSubmit` hook in [`.claude/settings.json`](.claude/settings.json) re-injects these rules on every prompt so they are never skipped.
 
@@ -157,6 +158,8 @@ Follow these steps in order on every task (Phase 12 standing rule):
 - **External repos: identify dependencies, don't invent behavior.** Siblings (`../odds-engine-2`,
   `../Auth`, `../backoffice-final`, `../bet-genius`, `../platform-web`, `../argocd`,
   `../infrastructure`) are read-only references; **never modify files outside this repo**.
+- **Fetch latest before investigating.** `git fetch origin` and compare against `origin/main` for
+  this repo and any sibling repo, before citing file contents or repo/deployment state as fact.
 - **Keep docs + CLAUDE.md/AGENTS.md/commands/skills/playbooks synchronized** with architectural changes.
 
 ## Scope & build reminders (repo-specific)

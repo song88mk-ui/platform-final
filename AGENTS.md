@@ -44,6 +44,9 @@ architectural changes** → implement the **smallest possible change** → **val
 See [CLAUDE.md](CLAUDE.md) §Engineering principles.
 
 ## Investigation defaults
+- **Fetch latest first.** `git fetch origin` and compare against `origin/main` for this repo and any
+  sibling repo, before citing file contents or repo/deployment state as fact — a local checkout can
+  be stale by hundreds of commits.
 - **Read-only first** for production investigations ([.claude/playbooks/production-readonly.md](.claude/playbooks/production-readonly.md)).
 - **Errors:** check the body `StatusCode` (not HTTP code); see [docs/knowledge/Troubleshooting.md](docs/knowledge/Troubleshooting.md).
 - **Use sub-agents** for breadth (sweeping many files); keep conclusions, not file dumps.

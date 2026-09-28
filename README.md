@@ -2,7 +2,7 @@
 
 Core .NET sportsbook backend of the Song88 platform - the "Platform API" consumed by the
 sibling `platform-web` Blazor sportsbook frontend. It is a headless, microservice,
-message-driven backend: a 44-project solution (`Platform/Platform.sln`) containing REST
+message-driven backend: a 45-project solution (`Platform/Platform.sln`) containing REST
 APIs, ~18 RabbitMQ background workers, and a SignalR websocket hub. There is no UI in
 this repository.
 
@@ -23,7 +23,7 @@ This README is a practical local run/test guide. The deep reference lives in
 | `Platform.Websocket.API2` | SignalR hub | Real-time hub at `/platform`, MessagePack; consumed by `platform-web` (fed by `odds-engine-2`) |
 | `Platform.*.Service`, `Platform.Job.*` | Workers | ~18 `BackgroundService` RabbitMQ consumers (settlement, cashout, cache sync, ...) |
 | `Platform.Shared` | Class library | Shared kernel: entities, `DbContext`s, message contracts, enums. Platform-wide blast radius - treat as public API. |
-| `Platform.Shared.Test`, `Platform.Sportsbook.API.Test`, `Platform.Operator.API.Test`, `Platform.BetInfo.Service.Test`, `Platform.CacheSync.Service.Test`, `Platform.Operator.Servicev2.Test` | xUnit tests | See "Running tests" |
+| `Platform.Shared.Test`, `Platform.Sportsbook.API.Test`, `Platform.Operator.API.Test`, `Platform.BetInfo.Service.Test`, `Platform.CacheSync.Service.Test`, `Platform.Operator.Servicev2.Test`, `Platform.Betting.API.Test` | xUnit tests | See "Running tests" |
 
 Note: some services exist in duplicated variants (`*.Service` vs `*.Servicev2`,
 `WebSocket.API` vs `Websocket.API2`). Confirm the live variant before working on one -
@@ -544,7 +544,7 @@ Plain REST endpoints on the same host (`Controllers/SportsbookController.cs`):
 
 ## Running tests
 
-Six xUnit test projects exist; all target `net10.0`:
+Seven xUnit test projects exist; all target `net10.0`:
 
 ```
 # pure unit tests over the shared kernel
@@ -564,6 +564,10 @@ dotnet test Platform/Platform.CacheSync.Service.Test
 
 # cashout wallet-retry tests against the EF in-memory provider and a loopback operator stub
 dotnet test Platform/Platform.Operator.Servicev2.Test
+
+# GM-861 cashout ownership check: a UserId/ClientId mismatch is rejected before anything
+# else runs, against the EF in-memory provider
+dotnet test Platform/Platform.Betting.API.Test
 ```
 
 No external services are required, including for the repository tests: they run against

@@ -678,7 +678,7 @@ namespace Platform.CashOut.Service.Repository
                         BaseAddress = new Uri(_configuration["API:PlatformBettingAPI"])
                     };
 
-                    var initial = httpClient.PostAsync("v1/bet/cashout/state", new StringContent(JsonSerializer.Serialize(new CashoutStateRequestDTO { BetId = message.BetId }), System.Text.Encoding.UTF8, "application/json")).Result;
+                    var initial = httpClient.PostAsync("v1/bet/cashout/state", new StringContent(JsonSerializer.Serialize(new CashoutStateRequestDTO { BetId = message.BetId, UserId = message.UserId, ClientId = message.ClientId }), System.Text.Encoding.UTF8, "application/json")).Result;
 
                     if (initial.IsSuccessStatusCode)
                     {

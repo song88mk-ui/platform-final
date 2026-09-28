@@ -3448,6 +3448,21 @@ namespace Platform.Betting.API.Repository
                 };
             }
 
+            // GM-861: this used to load the bet by BetId only, with nothing checking it
+            // belongs to the caller - a player authenticated on any client could cash out
+            // (and be credited for) a bet placed by another player by supplying a leaked or
+            // observed BetId. Bet_Not_Found rather than a more specific code, so an
+            // unauthorized caller cannot distinguish "not yours" from "does not exist".
+            if (!string.Equals(bet.UserId, request.UserId, StringComparison.OrdinalIgnoreCase)
+                || !string.Equals(bet.ClientId, request.ClientId, StringComparison.OrdinalIgnoreCase))
+            {
+                return new BaseResponseDTO<BetCashOutResponseDTO>
+                {
+                    StatusCode = StatusCode.Bet_Not_Found,
+                    Message = StatusCode.Bet_Not_Found.ToString().Replace('_', ' ')
+                };
+            }
+
             if (request.CashOutStakePercent <= 0 || request.CashOutStakePercent > 1)
             {
                 return new BaseResponseDTO<BetCashOutResponseDTO>
@@ -3634,6 +3649,17 @@ namespace Platform.Betting.API.Repository
                 {
                     StatusCode = StatusCode.CashOut_Is_Unavailable,
                     Message = StatusCode.CashOut_Is_Unavailable.ToString().Replace('_', ' ')
+                };
+            }
+
+            // GM-861: same ownership check as CashOutBet above - see that comment.
+            if (!string.Equals(bet.UserId, request.UserId, StringComparison.OrdinalIgnoreCase)
+                || !string.Equals(bet.ClientId, request.ClientId, StringComparison.OrdinalIgnoreCase))
+            {
+                return new BaseResponseDTO<CashoutStateResponseDTO>
+                {
+                    StatusCode = StatusCode.Bet_Not_Found,
+                    Message = StatusCode.Bet_Not_Found.ToString().Replace('_', ' ')
                 };
             }
 

@@ -150,29 +150,48 @@ namespace Platform.CashOut.Service.Repository
                                 // Double-cashout guard: two concurrent messages for the same bet can
                                 // both pass the initial Running check (a plain ReadCommitted read
                                 // releases its shared lock immediately) and the GTS gate is read-only,
-                                // so it accepts both. Re-read the status under UPDLOCK — held to the
-                                // end of the transaction, it serializes concurrent settlers; the loser
-                                // sees CashedOut here and declines instead of settling twice.
-                                var lockedStatusId = context.Bet
+                                // so it accepts both. Re-read the row under UPDLOCK — held to the end
+                                // of the transaction, it serializes concurrent settlers; the loser
+                                // blocks here until the winner commits.
+                                //
+                                // GM-865: a full cashout (or settlement) flips BetStatusId away from
+                                // Running, so checking status alone catches that race. A partial
+                                // cashout does not - the bet stays Running - so a second concurrent
+                                // partial that read `bet` above before this lock would otherwise pass
+                                // this check and then compute its share from stale, pre-first-cashout
+                                // stake values in SettleBet below, corrupting Bet.Stake/TrueStake on
+                                // SaveChanges. Copying the locked row's current stake fields onto the
+                                // already-tracked `bet` (rather than a second FromSqlRaw().AsTracking()
+                                // for the same key, which EF rejects as a duplicate tracked instance)
+                                // makes SettleBet operate on whatever the lock's winner already
+                                // committed.
+                                var lockedBet = context.Bet
                                     .FromSqlRaw("SELECT * FROM [Bet] WITH (UPDLOCK, ROWLOCK) WHERE [BetId] = {0}", message.BetId)
                                     .AsNoTracking()
-                                    .Select(b => b.BetStatusId)
                                     .FirstOrDefault();
 
-                                if (lockedStatusId != (int)BetStatus.Running)
+                                if (lockedBet == null || lockedBet.BetStatusId != (int)BetStatus.Running)
                                 {
                                     messageBroker.Publish(new OnBetStatus
                                     {
                                         ClientId = message.ClientId.ToString().ToUpper(),
                                         UserId = message.UserId,
                                         BetId = message.BetId.ToString().ToUpper(),
-                                        BetStatus = (BetStatus)lockedStatusId,
+                                        BetStatus = lockedBet != null ? (BetStatus)lockedBet.BetStatusId : (BetStatus)bet.BetStatusId,
                                         Message = "Cashout request has been declined"
                                     }, "OnBetStatus", $"r.bet.betstatus.{message.ClientCode.ToLower()}", correlationId, 10);
 
                                     _logger.LogWarning("{@betId} - Cashout declined: bet is no longer Running (concurrent cashout/settlement)", message.BetId);
                                     return;
                                 }
+
+                                bet.Stake = lockedBet.Stake;
+                                bet.TrueStake = lockedBet.TrueStake;
+                                bet.StakeReal = lockedBet.StakeReal;
+                                bet.StakeBonus = lockedBet.StakeBonus;
+                                bet.TaxedStake = lockedBet.TaxedStake;
+                                bet.TaxedWinnings = lockedBet.TaxedWinnings;
+                                bet.IsPartialCashout = lockedBet.IsPartialCashout;
 
                                 var payload = new OnBetSettlement();
                                 payload.ChannelTypeId = message.ChannelTypeId;

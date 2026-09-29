@@ -3,6 +3,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using MongoDB.Driver;
+using Platform.Shared.Calculators;
 using Platform.Shared.Data.Betting;
 using Platform.Shared.Extensions;
 using Platform.Shared.Data.Sportsbook.Entities;
@@ -65,10 +66,12 @@ namespace Platform.CashOutStake.Servicev2.Repository
                 BetStatusId = s.BetStatusId,
                 TrueStake = s.TrueStake,
                 Stake = s.Stake,
+                StakeBonus = s.StakeBonus,
                 Odds = s.Odds,
                 StakeTax = s.StakeTax,
                 WinningsTax = s.WinningsTax,
-                OddsTypeId = s.OddsTypeId
+                OddsTypeId = s.OddsTypeId,
+                IsPartialCashout = s.IsPartialCashout
             }).ToList();
 
             foreach (var bet in bets)
@@ -94,8 +97,11 @@ namespace Platform.CashOutStake.Servicev2.Repository
                     IsBinary = s.IsBinary
                 }).ToList();
 
+                // GM-864: this used to be `return`, which stopped preloading the entire bet
+                // list at the first excluded bet - every running bet after it in the query got
+                // no cashout offer at all until re-added by odds change or replacement.
                 if (betSelections.Count == 0 || betSelections.Any(c => c.SportId.IsVirtualSportId() || c.FixtureTypeId == (int)FixtureType.Outright)) //|| c.BetSelectionStatusId != (int)BetStatus.Running
-                    return;
+                    continue;
 
                 bet.BetSelections.AddRange(betSelections);
 
@@ -157,6 +163,7 @@ namespace Platform.CashOutStake.Servicev2.Repository
                 BetStatusId = message.Bet.BetStatusId,
                 TrueStake = message.Bet.TrueStake,
                 Stake = message.Bet.Stake,
+                StakeBonus = message.Bet.StakeBonus,
                 Odds = message.Bet.Odds,
                 StakeTax = message.Bet.StakeTax,
                 WinningsTax = message.Bet.WinningsTax,
@@ -429,14 +436,10 @@ namespace Platform.CashOutStake.Servicev2.Repository
         }
         private OnCashOutChange GetCashOut(BetMemory bet, OnExternalOddsChangeMessage message)
         {
-            var remaining = bet.TrueStake;
-
-            var finalStake = remaining;
-
-            var taxedStake = finalStake - (finalStake / (1 + bet.StakeTax));
-            var stake = remaining - taxedStake;
-
-            var probabilites = new List<Probabilities>();
+            // The stake/tax breakdown and the value formula itself now live in
+            // CashOutCalculator (Platform.Shared) - see the call below. This method only
+            // determines eligibility and collects each selection's probability.
+            var probabilites = new List<CashOutSelectionInput>();
             var hasProbabilityChanged = false;
 
             if (message.IsSuspended == true)
@@ -476,216 +479,58 @@ namespace Platform.CashOutStake.Servicev2.Repository
                 if (betSelection.Probability != selectionResult.Pr)
                     hasProbabilityChanged = true;
 
-                probabilites.Add(new Probabilities
+                probabilites.Add(new CashOutSelectionInput
                 {
                     BetSelectionId = betSelection.BetSelectionId,
-                    CashOutStatusId = 1,
                     Probability = selectionResult.Pr,
                     WonProbability = selectionResult.WoPr,
                     LostProbability = selectionResult.LoPr,
                     VoidProbability = selectionResult.VoPr,
                     HalfWonProbability = selectionResult.HaWoPr,
                     HalfLostProbability = selectionResult.HaLoPr,
-                    BetSelectionStatusId = betSelection.BetSelectionStatusId
+                    BetSelectionStatusId = betSelection.BetSelectionStatusId,
+                    Odds = betSelection.Odds,
+                    DeadHeatFactor = betSelection.DeadHeatFactor,
+                    IsBinary = betSelection.IsBinary
                 });
             }
 
-            if (bet.BetSelections.Count > 1)
+            var calculation = CashOutCalculator.Calculate(new CashOutCalculationInput
             {
-                var parlayProbabilities = new List<Probabilities>();
-                var validStatus = new List<int> { (int)BetStatus.Won, (int)BetStatus.HalfWon, (int)BetStatus.HalfLost, (int)BetStatus.Void };
+                TrueStake = bet.TrueStake,
+                Stake = bet.Stake,
+                StakeBonus = bet.StakeBonus,
+                StakeTax = bet.StakeTax,
+                WinningsTax = bet.WinningsTax,
+                OddsTypeId = bet.OddsTypeId,
+                Odds = bet.Odds,
+                HasProbabilityChanged = hasProbabilityChanged,
+                Selections = probabilites
+            });
 
-                foreach (var probability in probabilites)
-                {
-                    if (validStatus.Contains(probability.BetSelectionStatusId))
-                    {
-                        probability.Probability = 1;
-                        parlayProbabilities.Add(probability);
-                    }
-                    else
-                        parlayProbabilities.Add(probability);
-                }
-
-                var finalProbability = parlayProbabilities.Where(c => c.Probability > 0).Select(s => s.Probability).Aggregate((a, b) => a * b);
-                var totalOdds = GetTotalOdds(bet.BetSelections.Select(ss => new Tuple<BetStatus, decimal, decimal>((BetStatus)ss.BetSelectionStatusId, ss.Odds, ss.DeadHeatFactor)).ToList());
-
-                var cashOutStake = (stake * totalOdds) * Convert.ToDecimal(finalProbability);
-
-                cashOutStake = cashOutStake - (cashOutStake * 0.10m);
-
-                var taxedWinnings = (cashOutStake - stake) * bet.WinningsTax;
-
-                if (cashOutStake > stake)
-                    cashOutStake = cashOutStake - taxedWinnings;
-                else
-                    taxedWinnings = 0;
-
-                var finalCashOutStake = cashOutStake;
-
-                if (!hasProbabilityChanged)
-                    finalCashOutStake = stake - (stake * 0.10m);
-
-                if (finalCashOutStake == 0 || finalCashOutStake > stake * totalOdds)
-                {
-                    return new OnCashOutChange
-                    {
-                        ClientId = bet.ClientId,
-                        UserId = bet.UserId,
-                        BetId = bet.BetId.ToString().ToUpper(),
-                        CashOutStatus = CashOutStatus.Unavailable,
-                        CashOutStake = 0m
-                    };
-                }
-                else
-                {
-                    return new OnCashOutChange
-                    {
-                        ClientId = bet.ClientId,
-                        UserId = bet.UserId,
-                        BetId = bet.BetId.ToString().ToUpper(),
-                        CashOutStatus = CashOutStatus.Available,
-                        CashOutStake = Convert.ToDecimal(finalCashOutStake.ToString().TrimEnd('0').TrimEnd('.'))
-                    };
-                }
-            }
-            else
+            if (calculation.CashOutStatus != CashOutStatus.Available)
             {
-                decimal cashOutStake = 0m;
-                var remainingStake = bet.Stake;
-
-                if (probabilites.First().WonProbability > 0 ||
-                    probabilites.First().LostProbability > 0 ||
-                    probabilites.First().VoidProbability > 0 ||
-                    probabilites.First().HalfWonProbability > 0 ||
-                    probabilites.First().HalfLostProbability > 0)
+                return new OnCashOutChange
                 {
-                    var won = 0m;
-                    var halfWon = 0m;
-
-                    if (OddsTypeHelper.GetOddsByOddsType(bet.OddsTypeId, bet.BetSelections.First().Odds, bet.BetSelections.First().IsBinary) < 0 && (bet.OddsTypeId == (int)OddsType.Indonesian || bet.OddsTypeId == (int)OddsType.Malaysian))
-                    {
-                        won = Convert.ToDecimal(probabilites.First().WonProbability) * (stake + remainingStake);
-                        halfWon = Convert.ToDecimal(probabilites.First().HalfWonProbability) * ((remainingStake / 2) + stake);
-                    }
-                    else
-                    {
-                        won = Convert.ToDecimal(probabilites.First().WonProbability) * (stake * bet.Odds);
-                        halfWon = Convert.ToDecimal(probabilites.First().HalfWonProbability) * (stake * ((bet.Odds + 1) / 2));
-                    }
-
-                    var lost = Convert.ToDecimal(probabilites.First().LostProbability) * (stake * 0);
-                    var voidd = Convert.ToDecimal(probabilites.First().VoidProbability) * (stake * 1);
-                    var halfLost = Convert.ToDecimal(probabilites.First().HalfLostProbability) * (stake / 2);
-
-                    cashOutStake = won + lost + voidd + halfWon + halfLost;
-                }
-                else
-                {
-                    if (OddsTypeHelper.GetOddsByOddsType(bet.OddsTypeId, bet.BetSelections.First().Odds, bet.BetSelections.First().IsBinary) < 0 && (bet.OddsTypeId == (int)OddsType.Indonesian || bet.OddsTypeId == (int)OddsType.Malaysian))
-                        cashOutStake = (stake + remainingStake) * Convert.ToDecimal(probabilites.First().Probability);
-                    else
-                        cashOutStake = (stake * bet.Odds) * Convert.ToDecimal(probabilites.First().Probability);
-                }
-
-                cashOutStake = cashOutStake - (cashOutStake * 0.10m);
-
-                var taxedWinnings = (cashOutStake - stake) * bet.WinningsTax;
-
-                if (cashOutStake > stake)
-                    cashOutStake = cashOutStake - taxedWinnings;
-                else
-                    taxedWinnings = 0;
-
-                var finalCashOutStake = cashOutStake;
-
-                if (!hasProbabilityChanged)
-                    finalCashOutStake = stake - (stake * 0.10m);
-
-                if (OddsTypeHelper.GetOddsByOddsType(bet.OddsTypeId, bet.BetSelections.First().Odds, bet.BetSelections.First().IsBinary) < 0 && (bet.OddsTypeId == (int)OddsType.Indonesian || bet.OddsTypeId == (int)OddsType.Malaysian))
-                {
-                    if (finalCashOutStake <= stake + bet.Stake)
-                    {
-                        return new OnCashOutChange
-                        {
-                            ClientId = bet.ClientId,
-                            UserId = bet.UserId,
-                            BetId = bet.BetId.ToString().ToUpper(),
-                            CashOutStatus = CashOutStatus.Available,
-                            CashOutStake = Convert.ToDecimal(finalCashOutStake.ToString().TrimEnd('0').TrimEnd('.'))
-                        };
-                    }
-                    else
-                    {
-                        return new OnCashOutChange
-                        {
-                            ClientId = bet.ClientId,
-                            UserId = bet.UserId,
-                            BetId = bet.BetId.ToString().ToUpper(),
-                            CashOutStatus = CashOutStatus.Unavailable,
-                            CashOutStake = 0m
-                        };
-                    }
-                }
-                else
-                {
-                    if (finalCashOutStake <= stake * bet.Odds)
-                    {
-                        return new OnCashOutChange
-                        {
-                            ClientId = bet.ClientId,
-                            UserId = bet.UserId,
-                            BetId = bet.BetId.ToString().ToUpper(),
-                            CashOutStatus = CashOutStatus.Available,
-                            CashOutStake = Convert.ToDecimal(finalCashOutStake.ToString().TrimEnd('0').TrimEnd('.'))
-                        };
-                    }
-                    else
-                    {
-                        return new OnCashOutChange
-                        {
-                            ClientId = bet.ClientId,
-                            UserId = bet.UserId,
-                            BetId = bet.BetId.ToString().ToUpper(),
-                            CashOutStatus = CashOutStatus.Unavailable,
-                            CashOutStake = 0m
-                        };
-                    }
-                }
-            }
-        }
-        private static decimal GetTotalOdds(List<Tuple<BetStatus, decimal, decimal>> selections)
-        {
-            var values = new List<decimal>();
-
-            foreach (var selection in selections)
-            {
-                switch (selection.Item1)
-                {
-                    case BetStatus.Lost:
-                        values.Add(0m);
-                        break;
-                    case BetStatus.HalfWon:
-                        values.Add((selection.Item2 + 1) / 2);
-                        break;
-                    case BetStatus.HalfLost:
-                        values.Add(0.5m);
-                        break;
-                    case BetStatus.Won:
-                        values.Add(selection.Item2 * selection.Item3);
-                        break;
-                    case BetStatus.Void:
-                        values.Add(1m);
-                        break;
-                    case BetStatus.Cancelled:
-                        values.Add(1m);
-                        break;
-                    case BetStatus.Running:
-                        values.Add(selection.Item2);
-                        break;
-                }
+                    ClientId = bet.ClientId,
+                    UserId = bet.UserId,
+                    BetId = bet.BetId.ToString().ToUpper(),
+                    CashOutStatus = CashOutStatus.Unavailable,
+                    CashOutStake = 0m
+                };
             }
 
-            return values.Aggregate((a, b) => a * b);
+            return new OnCashOutChange
+            {
+                ClientId = bet.ClientId,
+                UserId = bet.UserId,
+                BetId = bet.BetId.ToString().ToUpper(),
+                CashOutStatus = CashOutStatus.Available,
+                // Preserves this service's existing (pre-GM-866) rounding behaviour - trims
+                // trailing zeros via a string round-trip - unchanged, since GM-866 did not
+                // flag this and Betting.API does not do it, so unifying it was not in scope.
+                CashOutStake = Convert.ToDecimal(calculation.CashOutStake.ToString().TrimEnd('0').TrimEnd('.'))
+            };
         }
 
         public void ProcessOnBetSettlement(OnExternalBetSettlementMessage onBetSettlement, IMessageBroker messageBroker)
@@ -710,6 +555,7 @@ namespace Platform.CashOutStake.Servicev2.Repository
         public int BetStatusId { get; set; }
         public decimal TrueStake { get; set; }
         public decimal Stake { get; set; }
+        public decimal StakeBonus { get; set; }
         public decimal Odds { get; set; }
         public decimal StakeTax { get; set; }
         public decimal WinningsTax { get; set; }
@@ -797,19 +643,6 @@ namespace Platform.CashOutStake.Servicev2.Repository
         public double HalfWonProbability { get; set; }
         public double HalfLostProbability { get; set; }
     }
-    public class Probabilities
-    {
-        public Guid BetSelectionId { get; set; }
-        public double WonProbability { get; set; }
-        public double LostProbability { get; set; }
-        public double VoidProbability { get; set; }
-        public double HalfWonProbability { get; set; }
-        public double HalfLostProbability { get; set; }
-        public double Probability { get; set; }
-        public int CashOutStatusId { get; set; }
-        public int BetSelectionStatusId { get; set; }
-    }
-
     public class OnExternalBetSettlementMessage
     {
         public long MarketId { get; set; }

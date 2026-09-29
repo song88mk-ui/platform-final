@@ -2,7 +2,7 @@
 
 Core .NET sportsbook backend of the Song88 platform - the "Platform API" consumed by the
 sibling `platform-web` Blazor sportsbook frontend. It is a headless, microservice,
-message-driven backend: a 45-project solution (`Platform/Platform.sln`) containing REST
+message-driven backend: a 46-project solution (`Platform/Platform.sln`) containing REST
 APIs, ~18 RabbitMQ background workers, and a SignalR websocket hub. There is no UI in
 this repository.
 
@@ -23,7 +23,7 @@ This README is a practical local run/test guide. The deep reference lives in
 | `Platform.Websocket.API2` | SignalR hub | Real-time hub at `/platform`, MessagePack; consumed by `platform-web` (fed by `odds-engine-2`) |
 | `Platform.*.Service`, `Platform.Job.*` | Workers | ~18 `BackgroundService` RabbitMQ consumers (settlement, cashout, cache sync, ...) |
 | `Platform.Shared` | Class library | Shared kernel: entities, `DbContext`s, message contracts, enums. Platform-wide blast radius - treat as public API. |
-| `Platform.Shared.Test`, `Platform.Sportsbook.API.Test`, `Platform.Operator.API.Test`, `Platform.BetInfo.Service.Test`, `Platform.CacheSync.Service.Test`, `Platform.Operator.Servicev2.Test`, `Platform.Betting.API.Test` | xUnit tests | See "Running tests" |
+| `Platform.Shared.Test`, `Platform.Sportsbook.API.Test`, `Platform.Operator.API.Test`, `Platform.BetInfo.Service.Test`, `Platform.CacheSync.Service.Test`, `Platform.Operator.Servicev2.Test`, `Platform.Betting.API.Test`, `Platform.API.Test`, `Platform.CashOutStake.Servicev2.Test` | xUnit tests | See "Running tests" |
 
 Note: some services exist in duplicated variants (`*.Service` vs `*.Servicev2`,
 `WebSocket.API` vs `Websocket.API2`). Confirm the live variant before working on one -
@@ -544,7 +544,7 @@ Plain REST endpoints on the same host (`Controllers/SportsbookController.cs`):
 
 ## Running tests
 
-Seven xUnit test projects exist; all target `net10.0`:
+Nine xUnit test projects exist; all target `net10.0` except `Platform.CashOutStake.Servicev2.Test` (`net8.0`, matching the service it covers):
 
 ```
 # pure unit tests over the shared kernel
@@ -568,6 +568,14 @@ dotnet test Platform/Platform.Operator.Servicev2.Test
 # GM-861 cashout ownership check: a UserId/ClientId mismatch is rejected before anything
 # else runs, against the EF in-memory provider
 dotnet test Platform/Platform.Betting.API.Test
+
+# BO-106 webprops cashout guardrail: the lookup key and each FullCashout/PartialCashout
+# combination, against the EF in-memory provider and a fake WebPropsRepository/HttpClient
+dotnet test Platform/Platform.API.Test
+
+# GM-864 preload regression (an excluded bet no longer stops the rest of the list from
+# loading) and partial-cashout audit history, against the EF in-memory provider
+dotnet test Platform/Platform.CashOutStake.Servicev2.Test
 ```
 
 No external services are required, including for the repository tests: they run against
@@ -576,6 +584,23 @@ PR-only test job (`dotnet test Platform/Platform.sln`, `.github/workflows/ci.yml
 test project is picked up as soon as it is added to `Platform.sln`. Still run them locally
 before pushing. New services are expected to ship with a matching xUnit test project (see
 `CLAUDE.md`).
+
+### GM-865 - live database concurrency test (not part of the standard suite)
+
+`Platform.CashOut.Service.Test` (`GM865ConcurrentPartialCashoutTest.cs`) reproduces two
+concurrent partial cashouts on the same bet against a real SQL Server - the row-lock race this
+covers cannot be reproduced with EF InMemory. It is deliberately **not** added to
+`Platform.sln` and needs a live database, so it never runs as part of `dotnet test
+Platform/Platform.sln` or CI:
+
+```
+GM865_DEV_BETTING_CONNECTION_STRING="Server=<dev host>,1433;Database=Betting;User Id=sa;Password=<dev sa password>;TrustServerCertificate=true;Encrypt=false;" \
+  dotnet test Platform/Platform.CashOut.Service.Test
+```
+
+Needs Twingate access to the dev database NLB; the host and `sa` password are the same pair
+used for ad-hoc `sqlcmd` access to the dev SQL Server (helmfile `sapassword` value - ask the
+team if you do not already have it). Seeds one bet, cleans it up afterward either way.
 
 ## Dependent services
 

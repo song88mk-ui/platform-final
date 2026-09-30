@@ -18,7 +18,11 @@ namespace Platform.Shared.Data.Platform
             modelBuilder.Entity<OperatorLog>().HasKey(k => new { k.Id });
             modelBuilder.Entity<OperatorAudit>().HasKey(k => new { k.Id });
             modelBuilder.Entity<ConfidenceFactor>().HasKey(k => new { k.Timestamp, k.UserId });
-            modelBuilder.Entity<OperatorSettlementRetry>().HasKey(k => new { k.BetId });
+            // GM-862: BetId alone let a second independent wallet-call failure on the same bet
+            // silently overwrite an earlier pending retry (only one row per bet). CorrelationId is
+            // minted fresh per attempt and preserved unchanged across every replay of that attempt,
+            // so it is the correct discriminator for "one failure episode".
+            modelBuilder.Entity<OperatorSettlementRetry>().HasKey(k => new { k.BetId, k.CorrelationId });
             modelBuilder.Entity<NegativeTest>().HasKey(k => new { k.ClientId });
             modelBuilder.Entity<TestConfig>().HasKey(k => new { k.ClientId });
             modelBuilder.Entity<ESportOperatorLog>().HasKey(k => new { k.Id });

@@ -57,10 +57,13 @@ namespace Platform.Operator.Servicev2.Test.Repository
             Bet = PartialCashout(endpoint).Bet
         };
 
+        // GM-862: OperatorSettlementRetry is keyed by (BetId, CorrelationId). These tests each
+        // drive a single attempt per bet, so a plain BetId filter still identifies one row; the
+        // GM-862 composite-key tests below assert the multi-row behavior directly.
         private OperatorSettlementRetry StoredRetry(Guid betId)
         {
             using var context = _factory.CreateDbContext();
-            return context.OperatorSettlementRetry.Find(betId);
+            return context.OperatorSettlementRetry.SingleOrDefault(r => r.BetId == betId);
         }
 
         public static IEnumerable<object[]> FailedWalletResponses => new List<object[]>
@@ -119,17 +122,19 @@ namespace Platform.Operator.Servicev2.Test.Repository
             using var wallet = new OperatorStubServer(HttpStatusCode.InternalServerError, "");
             var message = PartialCashout(wallet.Endpoint);
             var repository = CreateRepository();
+            var correlationId = Guid.NewGuid().ToString();
 
-            repository.ProcessBetPartialCashOut(message, _broker, Guid.NewGuid().ToString(), ThreadId);
+            repository.ProcessBetPartialCashOut(message, _broker, correlationId, ThreadId);
 
             // Job.Resettlement deserializes the row as the base OnBetSettlement before republishing,
             // so the replayed message carries only the base fields. The repository must reload the
-            // partial amounts from the retry row.
+            // partial amounts from the retry row. It also republishes under the row's own
+            // CorrelationId (GM-862: the row's key), which a real replay always carries unchanged.
             wallet.Status = HttpStatusCode.OK;
             wallet.Body = "{\"statusId\":1000,\"balance\":540}";
             var replay = new OnBetSettlementPartial { Bet = message.Bet, IsRetry = true };
 
-            repository.ProcessBetPartialCashOut(replay, _broker, Guid.NewGuid().ToString(), ThreadId);
+            repository.ProcessBetPartialCashOut(replay, _broker, correlationId, ThreadId);
 
             var replayed = JsonDocument.Parse(wallet.Requests.Last().Body).RootElement;
             Assert.Equal(PartialPath, wallet.Requests.Last().Path);
@@ -176,6 +181,72 @@ namespace Platform.Operator.Servicev2.Test.Repository
             CreateRepository().ProcessBetFullCashOut(message, _broker, Guid.NewGuid().ToString(), ThreadId);
 
             Assert.Equal("OnBetFullCashOut", StoredRetry(message.Bet.BetId).MessageType);
+        }
+
+        // GM-862: OperatorSettlementRetry used to be keyed by BetId alone, so a second independent
+        // failure on the same bet silently overwrote an earlier still-pending retry. The key is now
+        // (BetId, CorrelationId); these two tests cover the overwrite directly.
+        [Fact]
+        public void PartialCashout_TwoIndependentFailuresOnSameBet_BothRetriesPersist()
+        {
+            using var wallet = new OperatorStubServer(HttpStatusCode.InternalServerError, "");
+            var repository = CreateRepository();
+            var betId = Guid.NewGuid();
+
+            var first = PartialCashout(wallet.Endpoint);
+            first.Bet.BetId = betId;
+            first.CashoutStake = 30m;
+            repository.ProcessBetPartialCashOut(first, _broker, Guid.NewGuid().ToString(), ThreadId);
+
+            var second = PartialCashout(wallet.Endpoint);
+            second.Bet.BetId = betId;
+            second.CashoutStake = 20m;
+            repository.ProcessBetPartialCashOut(second, _broker, Guid.NewGuid().ToString(), ThreadId);
+
+            using var context = _factory.CreateDbContext();
+            var rows = context.OperatorSettlementRetry.Where(r => r.BetId == betId).ToList();
+
+            Assert.Equal(2, rows.Count);
+            var stakes = rows
+                .Select(r => JsonSerializer.Deserialize<OnBetSettlementPartial>(r.Info).CashoutStake)
+                .OrderBy(s => s)
+                .ToList();
+            Assert.Equal(new[] { 20m, 30m }, stakes);
+        }
+
+        [Fact]
+        public void PartialCashout_SuccessOnOneAttempt_LeavesAnIndependentPendingAttemptOnTheSameBetAlone()
+        {
+            using var wallet = new OperatorStubServer(HttpStatusCode.InternalServerError, "");
+            var repository = CreateRepository();
+            var betId = Guid.NewGuid();
+            var firstCorrelationId = Guid.NewGuid().ToString();
+
+            var first = PartialCashout(wallet.Endpoint);
+            first.Bet.BetId = betId;
+            first.CashoutStake = 30m;
+            repository.ProcessBetPartialCashOut(first, _broker, firstCorrelationId, ThreadId);
+
+            // A second, independent, first-try-successful partial cashout on the same bet never
+            // creates a row of its own (the table only tracks failures) - the point of this test is
+            // that it must not reach into and resolve the first attempt's still-pending row either,
+            // which is exactly what the old BetId-only key let happen.
+            wallet.Status = HttpStatusCode.OK;
+            wallet.Body = "{\"statusId\":1000,\"balance\":520}";
+
+            var second = PartialCashout(wallet.Endpoint);
+            second.Bet.BetId = betId;
+            second.CashoutStake = 20m;
+            repository.ProcessBetPartialCashOut(second, _broker, Guid.NewGuid().ToString(), ThreadId);
+
+            using var context = _factory.CreateDbContext();
+            var rows = context.OperatorSettlementRetry.Where(r => r.BetId == betId).ToList();
+
+            var stillPending = Assert.Single(rows);
+            Assert.Equal(firstCorrelationId, stillPending.CorrelationId);
+            Assert.True(stillPending.IsRetry);
+            Assert.False(stillPending.IsSuccess);
+            Assert.Equal(30m, JsonSerializer.Deserialize<OnBetSettlementPartial>(stillPending.Info).CashoutStake);
         }
     }
 }

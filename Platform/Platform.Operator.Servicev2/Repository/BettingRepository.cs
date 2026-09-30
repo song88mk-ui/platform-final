@@ -514,7 +514,7 @@ namespace Platform.Operator.Servicev2.Repository
                 {
                     try
                     {
-                        var bet = context.OperatorSettlementRetry.Find(message.OnBetSettlement.Bet.BetId);
+                        var bet = context.OperatorSettlementRetry.Find(message.OnBetSettlement.Bet.BetId, correlationId);
 
                         if (isSuccess)
                         {
@@ -609,13 +609,17 @@ namespace Platform.Operator.Servicev2.Repository
                 }
             }
         }
-        private Tuple<bool, OnBetSettlement> IsProcess(Guid betId)
+        // GM-862: OperatorSettlementRetry is keyed by (BetId, CorrelationId), not BetId alone, so a
+        // second independent failure on the same bet no longer overwrites an earlier pending retry.
+        // correlationId is stable across every replay of the same attempt (Job.Resettlement
+        // republishes the row's own CorrelationId), so it identifies the specific row to reload.
+        private Tuple<bool, OnBetSettlement> IsProcess(Guid betId, string correlationId)
         {
             using (var scope = new TransactionScope(TransactionScopeOption.Required, new TransactionOptions { IsolationLevel = IsolationLevel.ReadUncommitted }))
             {
                 using (var context = _platformContextFactory.CreateDbContext())
                 {
-                    var bet = context.OperatorSettlementRetry.Find(betId);
+                    var bet = context.OperatorSettlementRetry.Find(betId, correlationId);
 
                     scope.Complete();
 
@@ -627,13 +631,13 @@ namespace Platform.Operator.Servicev2.Repository
             }
         }
 
-        private Tuple<bool, OnBetSettlementPartial> IsProcessPartial(Guid betId)
+        private Tuple<bool, OnBetSettlementPartial> IsProcessPartial(Guid betId, string correlationId)
         {
             using (var scope = new TransactionScope(TransactionScopeOption.Required, new TransactionOptions { IsolationLevel = IsolationLevel.ReadUncommitted }))
             {
                 using (var context = _platformContextFactory.CreateDbContext())
                 {
-                    var bet = context.OperatorSettlementRetry.Find(betId);
+                    var bet = context.OperatorSettlementRetry.Find(betId, correlationId);
 
                     scope.Complete();
 
@@ -1172,7 +1176,7 @@ namespace Platform.Operator.Servicev2.Repository
 
             if (message.IsRetry)
             {
-                var initialMessage = IsProcess(message.Bet.BetId);
+                var initialMessage = IsProcess(message.Bet.BetId, correlationId);
 
                 if (initialMessage.Item1 == false)
                     return;
@@ -1363,7 +1367,7 @@ namespace Platform.Operator.Servicev2.Repository
         {
             if (message.IsRetry)
             {
-                var initialMessage = IsProcess(message.Bet.BetId);
+                var initialMessage = IsProcess(message.Bet.BetId, correlationId);
 
                 if (initialMessage.Item1 == false)
                     return;
@@ -1600,7 +1604,7 @@ namespace Platform.Operator.Servicev2.Repository
         {
             if (message.IsRetry)
             {
-                var initialMessage = IsProcessPartial(message.Bet.BetId);
+                var initialMessage = IsProcessPartial(message.Bet.BetId, correlationId);
 
                 if (initialMessage.Item1 == false)
                     return;
@@ -1781,7 +1785,7 @@ namespace Platform.Operator.Servicev2.Repository
 
             if (message.IsRetry)
             {
-                var initialMessage = IsProcess(message.Bet.BetId);
+                var initialMessage = IsProcess(message.Bet.BetId, correlationId);
 
                 if (initialMessage.Item1 == false)
                     return;
@@ -2008,7 +2012,7 @@ namespace Platform.Operator.Servicev2.Repository
 
             if (message.IsRetry)
             {
-                var initialMessage = IsProcess(message.Bet.BetId);
+                var initialMessage = IsProcess(message.Bet.BetId, correlationId);
 
                 if (initialMessage.Item1 == false)
                     return;
@@ -2389,7 +2393,7 @@ namespace Platform.Operator.Servicev2.Repository
 
             if (message.IsRetry)
             {
-                var initialMessage = IsProcess(message.Bet.BetId);
+                var initialMessage = IsProcess(message.Bet.BetId, correlationId);
 
                 if (initialMessage.Item1 == false)
                     return;
@@ -2592,7 +2596,7 @@ namespace Platform.Operator.Servicev2.Repository
         {
             if (message.IsRetry)
             {
-                var initialMessage = IsProcess(message.Bet.BetId);
+                var initialMessage = IsProcess(message.Bet.BetId, correlationId);
 
                 if (initialMessage.Item1 == false)
                     return;

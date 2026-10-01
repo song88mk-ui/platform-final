@@ -1333,6 +1333,11 @@ namespace Platform.API.Repository
                 };
             }
 
+            // GM-858: without x-country-code or CF-IPCountry the provider's geo check fails and
+            // the stream is reported as not available, so make the missing header visible
+            if (string.IsNullOrWhiteSpace(IPCountryCode))
+                _logger.LogWarning("GetLivestream: empty country code for clientId={ClientId}, providerFixtureId={ProviderFixtureId}; x-country-code and CF-IPCountry are both missing", clientId, request.ProviderFixtureId);
+
             return await _sportsbookRepository.GetLivestream(new LivestreamRequestDTO
             {
                 ProviderFixtureId = request.ProviderFixtureId,

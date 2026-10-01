@@ -29,15 +29,21 @@ dotnet build Platform/Platform.sln
 dotnet test Platform/Platform.sln
 ```
 
-Six test projects: `Platform.Shared.Test`, `Platform.Sportsbook.API.Test`,
-`Platform.Operator.API.Test`, `Platform.BetInfo.Service.Test`, `Platform.CacheSync.Service.Test`,
-`Platform.Operator.Servicev2.Test`. CI runs them on pull requests only.
-Restore needs `NUGET_PASSWORD` for the private feed.
+Ten test projects, one per `Platform/*.Test` folder. Nine are in `Platform/Platform.sln`;
+`Platform.CashOut.Service.Test` is not, so `dotnet test Platform/Platform.sln` skips it.
+CI runs them on pull requests only. Restore needs `NUGET_PASSWORD` for the private feed.
 
-`Platform.API` has no test project. Put its testable logic in `Platform.Shared` and test it in
-`Platform.Shared.Test`, as `Platform/Platform.Shared/Helpers/TranslationChangeMapper.cs` does for
-the cachepreload translation mapping (GM-874). A static class outside `MessageModels` changes
-neither the `PublicTypeContractTests` sweep nor `message-contracts.approved.txt`.
+`Platform.API.Test` tests `PlatformRepository` directly: seed `InMemoryPlatformContext`, pass
+hand-written fakes for the repositories the method reaches and `null!` for the rest (see
+`Platform/Platform.API.Test/Repository/CashoutBetWebPropsGuardrailTests.cs`). Pure logic shared across services still belongs
+in `Platform.Shared` and `Platform.Shared.Test`, as `Platform/Platform.Shared/Helpers/TranslationChangeMapper.cs`
+does (GM-874). A static class outside `MessageModels` changes neither the `PublicTypeContractTests`
+sweep nor `message-contracts.approved.txt`.
+
+Mutation testing uses `dotnet-stryker`. `Platform/Platform.Shared.Test/stryker-config.json` ignores the `Log*`
+methods, so it never mutates a log statement. To test a log call, run from the test project folder
+with `--mutate "**/Repository/<File>.cs"` and filter the JSON report by line. A `{start..end}` span
+on `--mutate` removed every mutant in our runs.
 
 ## The 30-second architecture
 - **One public gateway** `Platform.API` (REST) → fans out over HTTP to `Betting.API`,

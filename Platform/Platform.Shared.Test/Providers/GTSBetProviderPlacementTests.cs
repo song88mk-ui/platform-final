@@ -397,6 +397,27 @@ namespace Platform.Shared.Test.Providers
         }
 
         [Fact]
+        public async Task ProcessSettlement_CancelledBet_ForwardsCancelledStatusToGts()
+        {
+            // GM-837: a bet manually cancelled via API must sync its Cancelled status to GTS.
+            // Platform.Provider.Service.Worker routes the Cancelled-status payload through this
+            // same settlement-style path (forcing IsAudit = true, since the publishers of a bare
+            // cancellation payload never set it) - verify GTS actually receives the Cancelled
+            // bet as-is, carrying the status through to GetGtsBetStatus/SendBet.
+            var auth = new FakeGtsAuthRepository();
+            var repo = new FakeGtsRepository();
+            var settlement = Settlement();
+            settlement.Bet.BetStatusId = (int)BetStatus.Cancelled;
+
+            await CreateProvider(auth, repo).ProcessSettlement(settlement, "corr-1");
+
+            Assert.Equal(1, repo.SendBetCalls);
+            Assert.True(repo.LastSendBet!.Value.IsSettled);
+            Assert.Equal(settlement.Bet.BetId, repo.LastSendBet!.Value.Request.Bet.BetId);
+            Assert.Equal((int)BetStatus.Cancelled, repo.LastSendBet!.Value.Request.Bet.BetStatusId);
+        }
+
+        [Fact]
         public async Task ProcessSettlement_AuthFails_SendsNothing()
         {
             var auth = new FakeGtsAuthRepository();

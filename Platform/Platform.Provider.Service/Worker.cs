@@ -204,7 +204,28 @@ namespace Platform.Provider.Service
                                     msg.ChannelTypeId,
                                     betProviderFactory,
                                     correlationId,
-                                    (payload, provider, correlationId) => _bettingRepository.ProcessBetCancellation(payload.Bet.BetId, payload.Bet.LimitId, payload.Bet.ClientCode, provider, correlationId)
+                                    (payload, provider, correlationId) =>
+                                    {
+                                        _bettingRepository.ProcessBetCancellation(payload.Bet.BetId, payload.Bet.LimitId, payload.Bet.ClientCode, provider, correlationId);
+
+                                        // GM-837: ProcessCancellation only cancels the provider-side pre-placement
+                                        // reservation (GTS: bet-reservation-cancellations) - it never updates the
+                                        // confirmed bet's recorded status. Route the same Cancelled-status payload
+                                        // through ProcessSettlement (GTS: SendBet, a settlement-style update) so
+                                        // providers that sync bet status this way see the Cancelled status.
+                                        // No-op for providers whose ProcessSettlement is a no-op (MTS).
+                                        //
+                                        // ProcessSettlement gates on IsAudit (GM-800: skip legs that didn't change
+                                        // the bet), but the publishers of this specific cancellation payload
+                                        // (e.g. Platform.Settlement.Service ProcessBackOfficeBetCancellation, the
+                                        // manual "cancel via API" path this ticket is about) build the message
+                                        // without ever setting IsAudit, so it defaults to false and would be
+                                        // silently dropped by that gate. Reaching this handler already means the
+                                        // bet's status changed to Cancelled, so force it here rather than trust
+                                        // the publisher.
+                                        payload.IsAudit = true;
+                                        _bettingRepository.ProcessBetSettlement(payload, provider, correlationId);
+                                    }
                                 ));
                             break;
 

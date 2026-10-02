@@ -324,8 +324,9 @@ Two controllers (`Platform/Platform.API/Controllers/`):
 
 **IntegrationController** (61 endpoints) - the public surface `platform-web` calls.
 Class-level `APIKeyFilter`: `x-api-key` must equal `Custom:APIKey` (or
-`Custom:WebSocketAPIKey`); OrientalGaming clients are additionally identified via
-`x-client-id` / `x-og-*` headers. Routes by area:
+`Custom:WebSocketAPIKey`). Except with the WebSocket key, `x-client-id` is required
+(400, StatusCode 102, when missing or blank); OrientalGaming clients are additionally
+identified via `x-client-id` / `x-og-*` headers. Routes by area:
 
 - Authentication: `POST v1/authentication/login`, `POST v1/authentication/logout`,
   `GET v1/authentication/og`

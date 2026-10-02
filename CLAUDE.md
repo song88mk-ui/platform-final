@@ -73,9 +73,10 @@ on `--mutate` removed every mutant in our runs. No mutator removes an extension 
    is inert. Access control = API-key **ActionFilters** applied per-controller via `[ServiceFilter]`.
    **A new controller without a filter attribute is completely open** (no global fallback). (R-6,
    [docs/Authentication.md](docs/Authentication.md))
-   `Platform/Platform.API/ActionFilters/APIKeyFilter.cs:46` calls `clientId.ToUpper()` on the
-   `x-client-id` header with no null check, so a valid `x-api-key` without that header is a 500
-   (NullReferenceException), not a 4xx (GM-873). `Platform.ClientPlatform.API` has its own copy.
+   `Platform/Platform.API/ActionFilters/APIKeyFilter.cs` returns 400 with StatusCode 102 when a
+   valid `x-api-key` (not the WebSocket key) arrives without `x-client-id`. Before GM-873 that was
+   a NullReferenceException and a 500. `Platform/Platform.API.Test/ActionFilters/APIKeyFilterTests.cs`
+   shows how to unit-test a filter. `Platform.ClientPlatform.API` has its own copy.
 4. **No global exception handler.** Errors are shaped per-controller try/catch → `BaseResponseDTO`
    with a business `StatusCode`; unguarded actions leak a bare 500. Don't return `ex.StackTrace`. (TD-04)
 5. **platform-final never writes MongoDB.** If you think you need to, you're probably in the wrong repo

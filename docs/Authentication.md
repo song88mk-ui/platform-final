@@ -27,9 +27,11 @@ Every protected controller is decorated `[ServiceFilter(typeof(<Filter>))]`. The
 - Reads `x-api-key`; rejects unless it equals `Custom:APIKey` **or** `Custom:WebSocketAPIKey`
   → else `StatusCode.Missing_Or_Unsupported_APIKey_In_Request_Headers` (101). (L27–38)
 - If the key is the **WebSocket** key, it returns early (trusted server-to-server). (L40)
-- Otherwise, for **Oriental Gaming** client-ids (`Custom:OrientalGaming:ClientIds`), it parses
+- Otherwise `x-client-id` must be present and not blank → else
+  `StatusCode.Missing_Or_Unsupported_ClientId_In_Request_Headers` (102). (L46–55, GM-873)
+- Then, for **Oriental Gaming** client-ids (`Custom:OrientalGaming:ClientIds`), it parses
   the `x-og-*` headers (player code, game code, pool id, bet limit, timestamp, signature,
-  currency, language, SB-launch) into `BaseController.OGParameters`. (L43–64)
+  currency, language, SB-launch) into `BaseController.OGParameters`. (L57–75)
 - **Note:** the "operator token" (`x-operator-token`) used by the front-end is **not validated by
   this filter** — it is forwarded downstream to the operator/wallet layer for validation. The
   `StatusCode.Missing_Or_Unsupported_OperatorToken_In_Request_Headers` (103) /
@@ -77,10 +79,11 @@ A heavier, DB-backed check: **[Verified]**
 ## Security implications (observations) `[Verified]`
 - Shared static API keys (committed in `appsettings.json`) are the primary gate → see
   [TechnicalDebt.md](TechnicalDebt.md) TD-01.
-- `APIKeyFilter` dereferences `clientId.ToUpper()` and parses `x-og-*` headers with
-  `int.Parse`/`long.Parse`/`bool.Parse` **without null/format guards** → a malformed OG header
-  on an OG client-id can throw, surfacing as a 500 (no exception middleware). Robustness/DoS
-  consideration. **[Verified]**
+- `APIKeyFilter` rejects a missing or blank `x-client-id` with 102 (GM-873, 2026-10-02). Before
+  that it called `clientId.ToUpper()` on null, and PRD logged about 960 NullReferenceExceptions a
+  day as 500s. It still parses `x-og-*` headers with `int.Parse`/`long.Parse`/`bool.Parse`
+  **without null/format guards** → a malformed OG header on an OG client-id can throw, surfacing
+  as a 500 (no exception middleware). Robustness/DoS consideration. **[Verified]**
 - Auth checks are **per-action filters**; a new controller that forgets the `[ServiceFilter]`
   attribute is **unprotected** (no global fallback policy). **[Verified]** — see
   [Authorization.md](Authorization.md).

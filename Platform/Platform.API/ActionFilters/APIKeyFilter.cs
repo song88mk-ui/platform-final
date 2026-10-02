@@ -43,6 +43,17 @@ namespace Platform.API.ActionFilters
             var ogClientIds = _configuration["Custom:OrientalGaming:ClientIds"].Split(',');
             var clientId = context.HttpContext.Request.Headers["x-client-id"].FirstOrDefault();
 
+            if (string.IsNullOrWhiteSpace(clientId))
+            {
+                context.Result = new BadRequestObjectResult(new
+                {
+                    StatusCode = StatusCode.Missing_Or_Unsupported_ClientId_In_Request_Headers,
+                    Message = StatusCode.Missing_Or_Unsupported_ClientId_In_Request_Headers.ToString().Replace('_', ' ')
+                });
+
+                return;
+            }
+
             if (ogClientIds.Contains(clientId.ToUpper()))
             {
                 var isSbLaunch = context.HttpContext.Request.Headers["x-og-issblaunch"].FirstOrDefault();

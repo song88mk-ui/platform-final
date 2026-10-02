@@ -96,9 +96,11 @@
   mutation score over `Extensions`/`Helpers`/`Utility`/`Providers`), `Platform.Sportsbook.API.Test`
   (13 tests over one pure static class), `Platform.Operator.API.Test` (209 tests, added GM-809, resettlement matrix added GM-815) and
   `Platform.BetInfo.Service.Test` (12 tests, added GM-814), `Platform.CacheSync.Service.Test`
-  (13 tests, added GM-853) and `Platform.Operator.Servicev2.Test` (11 tests over the cashout wallet
-  retry path, added GM-862). All run by a PR-only CI test job. Settlement and placement remain
-  untested; of cashout, only the Operator.Servicev2 wallet retry path is covered.
+  (13 tests, added GM-853) and `Platform.Operator.Servicev2.Test` (16 tests: the cashout wallet
+  retry path and host registration, added GM-862, and OG bet placement key masking, added GM-880).
+  All run by a PR-only CI test job. Settlement remains untested. Of placement, only the
+  OG failure-path logging is covered (GM-880); of cashout, only the Operator.Servicev2 wallet
+  retry path.
 - **Files:** `Platform.Shared.Test/*`, `Platform.Sportsbook.API.Test/*`,
   `Platform.Operator.API.Test/*`, `Platform.BetInfo.Service.Test/*`,
   `Platform.CacheSync.Service.Test/*`, `Platform.Operator.Servicev2.Test/*`.
@@ -185,6 +187,12 @@
 - **Fix:** all three calls now log `privateKey.Mask()` / `_ogConfig.PrivateAPIKey.Mask()`. `Mask()`
   is a new `Platform.Shared.Extensions.StringExtensions` method (keeps the last 4 characters,
   replaces the rest with `*`), covered by `Platform.Shared.Test/Extensions/StringExtensionsTests.cs`.
+  The three call sites are covered by
+  `Platform.Operator.Servicev2.Test/Repository/BettingRepositoryOGKeyLoggingTests.cs`, which drives
+  each failure path against `OperatorStubServer` with a capturing logger and fails if any log line
+  holds the raw key. Stryker cannot guard the call sites, because `stryker-config.json` ignores
+  `Log*` calls and no mutator removes `.Mask()` from an argument. Removing any one `.Mask()` fails
+  at least one of these tests (checked by hand).
   Reuse it for any other secret that must appear in a log line rather than inventing ad-hoc masking.
   See the rule 7 entry in [CLAUDE.md](../CLAUDE.md) for the standing policy this established.
 - **Not in scope of the code fix:** rotating the exposed OG private key, and restricting/deleting

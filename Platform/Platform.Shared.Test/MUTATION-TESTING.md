@@ -60,6 +60,10 @@ text, which is brittle and says nothing about behaviour. It is noise removal, no
 inflation - the reason codes that callers actually branch on are ordinary strings elsewhere in
 the method and are still mutated.
 
+Stryker also cannot tell whether a log call's arguments are safe. Removing `.Mask()` from a
+secret passed to `LogError` produces no mutant, so that is tested directly instead
+(`Platform.Operator.Servicev2.Test/Repository/BettingRepositoryOGKeyLoggingTests.cs`, GM-880).
+
 ## Baseline (2026-09-10, after GM-807)
 
 **Overall score 83.51%** - 395 killed, 55 survived, 23 not covered by any test, out of 473

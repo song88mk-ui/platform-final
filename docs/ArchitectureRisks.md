@@ -134,7 +134,7 @@
   `Platform.Operator.API.Test`, `Platform.BetInfo.Service.Test`, `Platform.CacheSync.Service.Test`,
   `Platform.Operator.Servicev2.Test`). The shared kernel is gated by
   Stryker at `break 80`; the money-path services (settlement, cashout, placement) are still
-  largely untested (only the Operator.Servicev2 cashout wallet retry path is covered, GM-862), because their repositories build a `DbContext` inline and offer no seam.
+  largely untested (only the Operator.Servicev2 cashout wallet retry path, GM-862, and the OG placement failure-path logging, GM-880, are covered), because their repositories build a `DbContext` inline and offer no seam.
 - **Files:** `Platform.Shared.Test/*`, `Platform.Sportsbook.API.Test/*`,
   `Platform.Operator.API.Test/*`, `Platform.BetInfo.Service.Test/*`,
   `Platform.CacheSync.Service.Test/*`, `Platform.Operator.Servicev2.Test/*`.

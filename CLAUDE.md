@@ -43,7 +43,9 @@ sweep nor `message-contracts.approved.txt`.
 Mutation testing uses `dotnet-stryker`. `Platform/Platform.Shared.Test/stryker-config.json` ignores the `Log*`
 methods, so it never mutates a log statement. To test a log call, run from the test project folder
 with `--mutate "**/Repository/<File>.cs"` and filter the JSON report by line. A `{start..end}` span
-on `--mutate` removed every mutant in our runs.
+on `--mutate` removed every mutant in our runs. No mutator removes an extension call such as
+`.Mask()` from a log argument, so guard that with a capturing-logger test, as
+`Platform/Platform.Operator.Servicev2.Test/Repository/BettingRepositoryOGKeyLoggingTests.cs` does (GM-880).
 
 ## The 30-second architecture
 - **One public gateway** `Platform.API` (REST) → fans out over HTTP to `Betting.API`,

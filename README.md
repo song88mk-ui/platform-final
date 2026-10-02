@@ -562,7 +562,8 @@ dotnet test Platform/Platform.BetInfo.Service.Test
 # translation relay tests against a fake message broker
 dotnet test Platform/Platform.CacheSync.Service.Test
 
-# cashout wallet-retry tests against the EF in-memory provider and a loopback operator stub
+# cashout wallet-retry tests, and GM-880 OG bet placement tests that no log line holds the raw
+# private key, against the EF in-memory provider and a loopback operator stub
 dotnet test Platform/Platform.Operator.Servicev2.Test
 
 # GM-861 cashout ownership check: a UserId/ClientId mismatch is rejected before anything

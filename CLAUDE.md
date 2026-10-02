@@ -80,8 +80,14 @@ on `--mutate` removed every mutant in our runs.
    (odds-engine-2 owns the catalogue). ([docs/MongoDb.md](docs/MongoDb.md))
 6. **Money is stored-proc only** (`Wallet.API`, `decimal(26,12)`); **parameterize all `FromSqlRaw`**
    (AgentReports interpolates — TD-01b/AP-2, do not copy it).
-7. **Secrets:** never commit new secrets; never print secret values. Committed settings-file
-   secrets are dev/staging fallbacks (prod = AWS SSM). (TD-01)
+7. **Secrets:** never commit new secrets; never print secret values, including in log statements.
+   GM-880 (2026-09-30): `Platform.Operator.Servicev2/Repository/BettingRepository.cs` logged
+   `_ogConfig.PrivateAPIKey` in plaintext across three `_logger.LogError` calls on every failed OG
+   bet placement, visible to anyone with Grafana/Loki read access on PRD. Fixed by masking with
+   `Platform.Shared.Extensions.StringExtensions.Mask()` (keeps the last 4 characters, masks the
+   rest), reuse it for any other secret that needs to appear in a log line, rather than passing
+   the raw value as a template argument. Committed settings-file secrets are dev/staging fallbacks
+   (prod = AWS SSM). (TD-01)
 8. **Caches are per-pod** (`MemoryCache.Default`); invalidation is event-driven via `CacheSync.Service`
    — use the prefix convention so eviction works. ([docs/CacheInvalidation.md](docs/CacheInvalidation.md))
 9. **Config key sections are not interchangeable.** `appsettings.json` defaults point at localhost,
@@ -135,8 +141,10 @@ Follow these steps in order on every task (Phase 12 standing rule):
    contract, a new pattern, or a new project/service).
 10. **Implement the smallest possible change.**
 11. **Validate** compilation (.NET 10 / `net10.0`) and behavior (run the relevant checklist).
-12. **Update documentation** if architectural knowledge changed (the update-docs command; keep CLAUDE.md/AGENTS.md/
-    commands/skills/playbooks in sync). **Also update `README.md` in the same change whenever the change
+12. **Update documentation for every change**, not only when architectural knowledge changed, a
+    bug fix, security fix, or resolved debt item belongs in `docs/` (TechnicalDebt.md or whichever
+    file already covers it) too (the update-docs command; keep CLAUDE.md/AGENTS.md/commands/skills/
+    playbooks in sync). **Also update `README.md` in the same change whenever the change
     affects anything the README documents** (projects/frameworks, prerequisites, build/run/test
     instructions, configuration, endpoints) — the README must never describe a repo state that no
     longer exists.

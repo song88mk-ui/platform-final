@@ -175,6 +175,22 @@
   validate query translation against the odds-engine-2-owned catalogue, then move the 4
   net8 projects to `net10.0` and EF Core to 10.x.
 
+### TD-19 - Secret value logged in plaintext (`BettingRepository.cs`) - **Resolved** (2026-10-02, GM-880)
+- **Evidence (historical):** three `_logger.LogError` calls in
+  `Platform.Operator.Servicev2/Repository/BettingRepository.cs` (originally lines 1035, 1092, 1158
+  at tag `v0.1.124-prd`) passed `_ogConfig.PrivateAPIKey`/`privateKey` as a template argument on
+  every failed OG bet placement. PRD logs ship to Loki, so the key was readable by anyone with
+  Grafana read access; confirmed present in 20 PRD log lines on 2026-09-30.
+- **Files:** `Platform.Operator.Servicev2/Repository/BettingRepository.cs`.
+- **Fix:** all three calls now log `privateKey.Mask()` / `_ogConfig.PrivateAPIKey.Mask()`. `Mask()`
+  is a new `Platform.Shared.Extensions.StringExtensions` method (keeps the last 4 characters,
+  replaces the rest with `*`), covered by `Platform.Shared.Test/Extensions/StringExtensionsTests.cs`.
+  Reuse it for any other secret that must appear in a log line rather than inventing ad-hoc masking.
+  See the rule 7 entry in [CLAUDE.md](../CLAUDE.md) for the standing policy this established.
+- **Not in scope of the code fix:** rotating the exposed OG private key, and restricting/deleting
+  the already-ingested Loki lines (both ops actions, tracked on the ticket, not in this repo).
+- **Confidence:** **[Verified]** (traced in code, tests passing).
+
 ## Consolidated cross-views
 - **Duplicate implementations** → TD-07 (+ AntiPatterns AP-8): v1/v2 projects, duplicated MessageBroker.
 - **Dead code** → TD-15: JwtParser, commented SQL blocks, superseded v1 services/WebSocket.API.

@@ -144,5 +144,35 @@ namespace Platform.Shared.Test.Extensions
 
             Assert.Throws<NullReferenceException>(() => nullInput.ConvertToUnicodeEscape());
         }
+
+        [Theory]
+        [InlineData("abcdefgh", "****efgh")]
+        [InlineData("1234567890123456", "************3456")]
+        public void Mask_LongerThanSuffix_KeepsLastFourChars(string input, string expected)
+        {
+            Assert.Equal(expected, input.Mask());
+        }
+
+        [Theory]
+        [InlineData("a", "*")]
+        [InlineData("abcd", "****")]
+        public void Mask_AtOrShorterThanSuffixLength_MasksEntireInput(string input, string expected)
+        {
+            Assert.Equal(expected, input.Mask());
+        }
+
+        [Theory]
+        [InlineData(null)]
+        [InlineData("")]
+        public void Mask_NullOrEmpty_ReturnsInputUnchanged(string input)
+        {
+            Assert.Equal(input, input.Mask());
+        }
+
+        [Fact]
+        public void Mask_CustomSuffixLength_KeepsThatManyChars()
+        {
+            Assert.Equal("*******890", "1234567890".Mask(3));
+        }
     }
 }

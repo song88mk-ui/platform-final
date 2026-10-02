@@ -71,5 +71,16 @@ namespace Platform.Shared.Extensions
 
         private static string EscapeSequence(this char c) => $@"\u{(int)c:X4}";
 
+        public static string Mask(this string input, int visibleSuffixLength = 4)
+        {
+            if (string.IsNullOrEmpty(input))
+                return input;
+
+            if (input.Length <= visibleSuffixLength)
+                return new string('*', input.Length);
+
+            return new string('*', input.Length - visibleSuffixLength) + input[^visibleSuffixLength..];
+        }
+
     }
 }

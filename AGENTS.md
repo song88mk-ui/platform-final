@@ -20,7 +20,11 @@ is the agent-oriented summary — read [CLAUDE.md](CLAUDE.md) first.
    platform-web before changing. (R-2, [docs/Contracts.md](docs/Contracts.md))
 3. **Code targets .NET 10 (`net10.0`)**, except Platform.Shared + the 3 Mongo services on **`net8.0`** (MongoDB.Driver 2.11.6 net10 incompatibility, ADR-14). Build SDK 10.0 (GM-744).
 4. **Never write MongoDB** from platform-final (odds-engine-2 owns the catalogue).
-5. **Never commit or print secrets.** Don't reproduce values from `appsettings.json`.
+5. **Never commit or print secrets, in a log line or anywhere else.** Don't reproduce values from
+   `appsettings.json`. GM-880 found a private API key printed in three `_logger.LogError` calls in
+   `Platform.Operator.Servicev2/Repository/BettingRepository.cs`; mask with
+   `Platform.Shared.Extensions.StringExtensions.Mask()` if a secret must appear in a log line. See
+   [CLAUDE.md](CLAUDE.md) rule 7 and [docs/TechnicalDebt.md](docs/TechnicalDebt.md) TD-19.
 6. **Every new controller needs a `[ServiceFilter(typeof(<Filter>))]`** — there is no global auth fallback.
 7. **Parameterize SQL** (`FromSqlRaw("proc {0}", arg)` / `SqlParameter`); never string-interpolate (AP-2).
 

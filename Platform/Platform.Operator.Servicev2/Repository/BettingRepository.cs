@@ -1038,7 +1038,7 @@ namespace Platform.Operator.Servicev2.Repository
                             Timestamp = DateTime.UtcNow
                         });
 
-                        _logger.LogError("BetPlacement OG Failed {ClientId} {BetId} {Signature} {Key} {ResultStatusCode} {hash} {payload}", betData.ClientId, betData.BetId.ToString(), signature, privateKey, result.Code, hash, info);
+                        _logger.LogError("BetPlacement OG Failed {ClientId} {BetId} {Signature} {Key} {ResultStatusCode} {hash} {payload}", betData.ClientId, betData.BetId.ToString(), signature, privateKey.Mask(), result.Code, hash, info);
 
                         CancelBet(betData.BetId, "Operator Error", Guid.NewGuid().ToString().ToUpper(), messageBroker, false, message.IsBoosted, threadId, true);
                     }
@@ -1095,7 +1095,7 @@ namespace Platform.Operator.Servicev2.Repository
                 }
                 else
                 {
-                    _logger.LogError("BetPlacement OG GetClient Failed {ClientId} {BetId} {Signature} {Key}", betData.ClientId, betData.BetId.ToString(), signature, privateKey);
+                    _logger.LogError("BetPlacement OG GetClient Failed {ClientId} {BetId} {Signature} {Key}", betData.ClientId, betData.BetId.ToString(), signature, privateKey.Mask());
 
                     if (response.StatusCode == HttpStatusCode.BadRequest)
                     {
@@ -1162,7 +1162,7 @@ namespace Platform.Operator.Servicev2.Repository
                 });
 
                 _logger.LogError("Error BetPLacement OG: Exception: {message}, StackTrace: {@stackTrace}, Privatekey: {@privateKey}, Payload: {@payload}",
-                        ex.Message, ex.StackTrace, _ogConfig.PrivateAPIKey, JsonSerializer.Serialize(message));
+                        ex.Message, ex.StackTrace, _ogConfig.PrivateAPIKey.Mask(), JsonSerializer.Serialize(message));
 
                 CancelBet(betData.BetId, "Operator Error", Guid.NewGuid().ToString().ToUpper(), messageBroker, false, message.IsBoosted, threadId, true);
             }

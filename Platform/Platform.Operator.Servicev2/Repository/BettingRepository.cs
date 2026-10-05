@@ -892,6 +892,7 @@ namespace Platform.Operator.Servicev2.Repository
             var path = "/api/v2/platform/transaction/bulk/debit";
 
             var betData = message.Bet;
+            OGRequestDTO ogParam = null;
 
             try
             {
@@ -902,7 +903,7 @@ namespace Platform.Operator.Servicev2.Repository
                 var publicKey = _ogConfig.PublicAPIKey;
                 var privateKey = _ogConfig.PrivateAPIKey;
                 var vendorName = _ogConfig.VendorName;
-                var ogParam = message.Bet.OperatorToken.ToOGParam();
+                ogParam = message.Bet.OperatorToken.ToOGParam();
                 var trueStake = Convert.ToDecimal(GetOgRedenominatedValue(ogParam.OGCurrencyCode, betData.TrueStake).Truncate()).Parse();
 
                 var betSelectionData = new
@@ -1040,7 +1041,7 @@ namespace Platform.Operator.Servicev2.Repository
 
                         _logger.LogError("BetPlacement OG Failed {ClientId} {BetId} {Signature} {Key} {ResultStatusCode} {hash} {payload}", betData.ClientId, betData.BetId.ToString(), signature, privateKey.Mask(), result.Code, hash, info);
 
-                        CancelBet(betData.BetId, "Operator Error", Guid.NewGuid().ToString().ToUpper(), messageBroker, false, message.IsBoosted, threadId, true);
+                        CancelBet(betData.BetId, "Operator Error", Guid.NewGuid().ToString().ToUpper(), messageBroker, false, message.IsBoosted, threadId, true, ogParam);
                     }
                     else
                     {
@@ -1164,7 +1165,7 @@ namespace Platform.Operator.Servicev2.Repository
                 _logger.LogError("Error BetPLacement OG: Exception: {message}, StackTrace: {@stackTrace}, Privatekey: {@privateKey}, Payload: {@payload}",
                         ex.Message, ex.StackTrace, _ogConfig.PrivateAPIKey.Mask(), JsonSerializer.Serialize(message));
 
-                CancelBet(betData.BetId, "Operator Error", Guid.NewGuid().ToString().ToUpper(), messageBroker, false, message.IsBoosted, threadId, true);
+                CancelBet(betData.BetId, "Operator Error", Guid.NewGuid().ToString().ToUpper(), messageBroker, false, message.IsBoosted, threadId, true, ogParam);
             }
         }
 
@@ -2594,6 +2595,12 @@ namespace Platform.Operator.Servicev2.Repository
 
         public void ProcesssBetCancellationOG(OnBetSettlement message, IMessageBroker messageBroker, string correlationId, string threadId, OGRequestDTO ogParam)
         {
+            if (ogParam == null)
+            {
+                _logger.LogError("ProcesssBetCancellationOG called with no OG parameters; BetId {BetId} was cancelled locally but OG was not notified", message.Bet.BetId);
+                return;
+            }
+
             if (message.IsRetry)
             {
                 var initialMessage = IsProcess(message.Bet.BetId, correlationId);

@@ -99,6 +99,15 @@ on `--mutate` removed every mutant in our runs. No mutator removes an extension 
    `Sportsbook.API/Repository/RabbitMQRepository.cs:23` reads `API:RabbitMQAPI`, but argocd
    `prd.yaml` sets `Custom__RabbitMQAPI`, so PRD calls `localhost:55866` (DEVOPS-389). When you
    add or rename a key, check all three env files.
+10. **An optional parameter that only matters on one branch is easy to forget at the call site.**
+    GM-879 (2026-09-30): both `CancelBet(..., isOGClient: true, ...)` call sites in
+    `Platform.Operator.Servicev2/Repository/BettingRepository.cs`'s `ProcesssBetPlacementOG` set
+    `isOGClient: true` but left the optional `OGParameters` argument at its `null` default, so
+    `ProcesssBetCancellationOG` dereferenced a null `OGRequestDTO` and threw outside its own try
+    block, crashing before OG was notified and before the retry path ever ran. Fixed by passing the
+    already-parsed `ogParam` through both call sites and adding a null guard in
+    `ProcesssBetCancellationOG` (TD-20). When adding a new `isOGClient: true` call site, pass
+    `OGParameters` explicitly.
 
 ## How this team writes code (match it — don't introduce new patterns)
 - **Repository pattern**: `IXxxRepository`+`XxxRepository` in each project's Repository folder, async, return

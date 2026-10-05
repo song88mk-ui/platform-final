@@ -199,6 +199,52 @@
   the already-ingested Loki lines (both ops actions, tracked on the ticket, not in this repo).
 - **Confidence:** **[Verified]** (traced in code, tests passing).
 
+### TD-20 - OG bet cancellation crashed with a null `OGRequestDTO` (`BettingRepository.cs`) - **Resolved** (2026-10-02, GM-879)
+- **Evidence (historical):** both `CancelBet(..., isOGClient: true, ...)` call sites in
+  `ProcesssBetPlacementOG` (originally lines 1037 and 1161 at tag `v0.1.124-prd`) omitted the
+  `OGParameters` argument, so it defaulted to `null`. `CancelBet` forwarded that `null` into
+  `ProcesssBetCancellationOG`, which dereferenced `ogParam.OGCurrencyCode` outside its own try
+  block and threw `NullReferenceException` before the cancellation reached OG. The catch block hit
+  the same bug calling `CancelBet` a second time, so `RetryBetCancellation` never ran. Confirmed in
+  PRD Loki: 10 occurrences on 2026-09-30 between 02:00-03:59 UTC, all client OGE, all following an
+  OG `E-103` response on `/api/v2/platform/transaction/bulk/debit`.
+- **Files:** `Platform.Operator.Servicev2/Repository/BettingRepository.cs`.
+- **Fix:** `ogParam` is now hoisted above the `try` block in `ProcesssBetPlacementOG` so both
+  `CancelBet` call sites can pass it through. `ProcesssBetCancellationOG` also got its own null
+  guard that logs and returns instead of throwing, since `StringExtensions.ToOGParam()` can
+  independently return `null` for a malformed `OperatorToken`, not only when a caller forgets to
+  pass it. Covered by
+  `Platform.Operator.Servicev2.Test/Repository/BettingRepositoryOGCancellationTests.cs`, which
+  drives `ProcesssBetCancellationOG` directly against `OperatorStubServer`. `CancelBet`'s own
+  local-cancel step builds a SQL Server `BettingContext` inline from the `Betting` connection
+  string, with no `IDbContextFactory` seam, so it cannot be driven from a unit test. The two
+  `CancelBet` call sites were verified by reading the diff, not by an automated test.
+- **Mutation testing (2026-10-02):** a Stryker run on `BettingRepository.cs` (run from
+  `Platform.Operator.Servicev2.Test`, `Log*` methods ignored) found that the first two tests
+  killed only 11 of the 130 mutants in `ProcesssBetCancellationOG`. The suite now covers the
+  rollback payload (OG currency and game code, redenominated amount, single or multiple bet, team
+  names), the `OnBetStatus`, reports, back-office and `OnWalletChange` publishes, the operator
+  logs, and the retry row on each failure branch. It kills 83 mutants. Of the 8 that still
+  survive, 3 are the message-type literal described below, 3 sit on the `S-101`
+  transaction-status path (the stub returns one body for every request), and 2 are equivalent. All
+  mutants on the two `CancelBet` call sites (lines 1044 and 1168) still survive, for the
+  connection-string reason above.
+- **Found by the mutation tests, not fixed (outside GM-879):**
+  - **GM-892:** when the rollback request itself throws, for example because OG is unreachable,
+    the `catch` block calls `GetOGTransactionStatus` with no guard. The exception escapes and no
+    `OperatorSettlementRetry` row is written. `OgUnreachable_ThrowsBeforeAnyRetryIsStored` pins
+    this behaviour.
+  - **GM-893:** the three failure branches and the `catch` block publish
+    `"OnBetBackofficeCancellation"` with a lowercase `o`, in both `ProcesssBetCancellationOG` and
+    the non-OG `ProcesssBetCancellation` (8 sites). `Platform.Settlement.Service/Worker.cs:115` and
+    `Platform.Provider.Service/Worker.cs:189` switch on `"OnBetBackOfficeCancellation"`, so those
+    messages match no case. The success paths spell it correctly.
+- **Not in scope of the code fix:** confirming the settlement state of the two example PRD bet IDs
+  from the ticket (`3703da0a-dd8b-4a8d-f33d-08df196c1dc0`, `4fa9363a-2745-4db1-f33e-08df196c1dc0`)
+  on our side and OG's side, requested on the ticket but not checked here (production is read-only
+  by default; flagged back to the ticket reporter).
+- **Confidence:** **[Verified]** (traced in code, tests passing).
+
 ## Consolidated cross-views
 - **Duplicate implementations** → TD-07 (+ AntiPatterns AP-8): v1/v2 projects, duplicated MessageBroker.
 - **Dead code** → TD-15: JwtParser, commented SQL blocks, superseded v1 services/WebSocket.API.

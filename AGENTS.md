@@ -27,6 +27,11 @@ is the agent-oriented summary — read [CLAUDE.md](CLAUDE.md) first.
    [CLAUDE.md](CLAUDE.md) rule 7 and [docs/TechnicalDebt.md](docs/TechnicalDebt.md) TD-19.
 6. **Every new controller needs a `[ServiceFilter(typeof(<Filter>))]`** — there is no global auth fallback.
 7. **Parameterize SQL** (`FromSqlRaw("proc {0}", arg)` / `SqlParameter`); never string-interpolate (AP-2).
+8. **An optional argument defaulting to `null` still has to be supplied at every call site that needs
+   it.** GM-879: a `CancelBet(..., isOGClient: true, ...)` call left the optional `OGParameters`
+   argument at its default, so the OG cancellation path dereferenced a null `OGRequestDTO` and
+   crashed before OG was notified. See [CLAUDE.md](CLAUDE.md) rule 10 and
+   [docs/TechnicalDebt.md](docs/TechnicalDebt.md) TD-20.
 
 ## Mandatory workflow (Phase 12 — every task)
 Understand → **search repo** (`/find-*`) → **consult docs** → **trace end-to-end** (`/trace-*`) →

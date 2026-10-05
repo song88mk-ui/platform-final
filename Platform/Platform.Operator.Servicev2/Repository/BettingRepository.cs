@@ -36,21 +36,21 @@ namespace Platform.Operator.Servicev2.Repository
         private List<Tuple<string, HttpClient>> _httpClients = new List<Tuple<string, HttpClient>>();
         private readonly object _lock = new object();
         private readonly OrientalGamingConfigDTO _ogConfig;
-        private readonly string _bettingConnectionString;
         private readonly IDbContextFactory<PlatformContext> _platformContextFactory;
+        private readonly IDbContextFactory<BettingContext> _bettingContextFactory;
         private readonly ILogger<BettingRepository> _logger;
 
         private readonly ActivitySource _activitySource;
         private static readonly TextMapPropagator Propagator = Propagators.DefaultTextMapPropagator;
 
-        // PlatformContext comes from a factory so the retry-row and operator-log paths can run
-        // against the EF in-memory provider in tests (same seam as BetInfo.Service, GM-814).
-        // CreateDbContext returns a fresh context per call, the lifetime the inline construction
-        // had. BettingContext is still built inline; nothing under test here touches it.
-        public BettingRepository(IConfiguration configuration, IDbContextFactory<PlatformContext> platformContextFactory, Instrumentation instrumentation, ILogger<BettingRepository> logger)
+        // PlatformContext and BettingContext both come from a factory so the retry-row,
+        // operator-log, CancelBet and AcceptBet paths can run against the EF in-memory provider in
+        // tests (same seam as BetInfo.Service, GM-814). CreateDbContext returns a fresh context per
+        // call, the lifetime the inline construction had.
+        public BettingRepository(IConfiguration configuration, IDbContextFactory<PlatformContext> platformContextFactory, IDbContextFactory<BettingContext> bettingContextFactory, Instrumentation instrumentation, ILogger<BettingRepository> logger)
         {
-            _bettingConnectionString = configuration.GetConnectionString("Betting");
             _platformContextFactory = platformContextFactory;
+            _bettingContextFactory = bettingContextFactory;
             _ogConfig = configuration.GetSection("Custom").GetSection("OrientalGaming").Get<OrientalGamingConfigDTO>();
             _activitySource = instrumentation.ActivitySource;
             _logger = logger;
@@ -137,9 +137,7 @@ namespace Platform.Operator.Servicev2.Repository
 
             using (var scope = new TransactionScope(TransactionScopeOption.Required, new TransactionOptions { IsolationLevel = IsolationLevel.ReadCommitted }))
             {
-                var optionsBuilder = new DbContextOptionsBuilder<BettingContext>().UseSqlServer(_bettingConnectionString);
-
-                using (var context = new BettingContext(optionsBuilder.Options))
+                using (var context = _bettingContextFactory.CreateDbContext())
                 {
                     try
                     {
@@ -310,9 +308,7 @@ namespace Platform.Operator.Servicev2.Repository
 
             using (var scope = new TransactionScope(TransactionScopeOption.Required, new TransactionOptions { IsolationLevel = IsolationLevel.ReadCommitted }))
             {
-                var optionsBuilder = new DbContextOptionsBuilder<BettingContext>().UseSqlServer(_bettingConnectionString);
-
-                using (var context = new BettingContext(optionsBuilder.Options))
+                using (var context = _bettingContextFactory.CreateDbContext())
                 {
                     try
                     {

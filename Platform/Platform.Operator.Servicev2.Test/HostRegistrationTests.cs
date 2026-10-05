@@ -1,14 +1,16 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Platform.Operator.Servicev2.Repository;
+using Platform.Shared.Data.Betting;
 using Platform.Shared.Data.Platform;
 
 namespace Platform.Operator.Servicev2.Test
 {
     // Builds the real host from Program.CreateHostBuilder and resolves out of it.
     //
-    // GM-862 changed BettingRepository to take IDbContextFactory<PlatformContext>, which only
-    // works if Program.cs registers the factory. A missing AddDbContextFactory would compile and
+    // GM-862 changed BettingRepository to take IDbContextFactory<PlatformContext>, and the
+    // BettingContext seam added IDbContextFactory<BettingContext>. Each only works if Program.cs
+    // registers the factory. A missing AddDbContextFactory would compile and
     // then fail at startup, in a worker with no HTTP surface to notice it. Same checks as
     // BetInfo.Service.Test's HostRegistrationTests.
     //
@@ -24,6 +26,16 @@ namespace Platform.Operator.Servicev2.Test
             Assert.Same(
                 host.Services.GetRequiredService<IDbContextFactory<PlatformContext>>(),
                 host.Services.GetRequiredService<IDbContextFactory<PlatformContext>>());
+        }
+
+        [Fact]
+        public void Host_ResolvesTheBettingContextFactoryAsASingleton()
+        {
+            using var host = Program.CreateHostBuilder(Array.Empty<string>()).Build();
+
+            Assert.Same(
+                host.Services.GetRequiredService<IDbContextFactory<BettingContext>>(),
+                host.Services.GetRequiredService<IDbContextFactory<BettingContext>>());
         }
 
         [Fact]

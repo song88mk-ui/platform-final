@@ -20,11 +20,13 @@ namespace Platform.Operator.Servicev2.Test.Repository
         private const string ThreadId = "1";
 
         private readonly InMemoryPlatformContextFactory _factory = new InMemoryPlatformContextFactory();
+        private readonly InMemoryBettingContextFactory _bettingFactory = new InMemoryBettingContextFactory();
         private readonly FakeMessageBroker _broker = new FakeMessageBroker();
 
         private BettingRepository CreateRepository() => new BettingRepository(
             new ConfigurationBuilder().Build(),
             _factory,
+            _bettingFactory,
             new Instrumentation(),
             NullLogger<BettingRepository>.Instance);
 

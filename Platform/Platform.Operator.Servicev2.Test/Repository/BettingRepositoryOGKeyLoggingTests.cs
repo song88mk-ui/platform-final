@@ -15,9 +15,10 @@ namespace Platform.Operator.Servicev2.Test.Repository
     // an extension call from an argument. These tests drive each failure path and fail if any log
     // line carries the raw key, so reverting one Mask() call breaks its test.
     //
-    // CancelBet builds a SQL Server BettingContext inline with no connection string, so it throws
-    // after each failure path logs. That throw reaches the catch-all, which logs again, and then
-    // escapes the method. The tests tolerate it and assert only on what was logged.
+    // These tests do not seed the bet in the in-memory betting database, so CancelBet's local
+    // cancel finds nothing and logs, and the cancellation that follows runs on an empty Bet and
+    // can throw. The tests tolerate that and assert only on what was logged.
+    // BettingRepositoryOGCancellationTests covers the CancelBet call sites with a seeded bet.
     public class BettingRepositoryOGKeyLoggingTests
     {
         private const string PrivateKey = "og-private-key-0123456789abcdef";
@@ -25,6 +26,7 @@ namespace Platform.Operator.Servicev2.Test.Repository
         private const string ThreadId = "1";
 
         private readonly InMemoryPlatformContextFactory _factory = new InMemoryPlatformContextFactory();
+        private readonly InMemoryBettingContextFactory _bettingFactory = new InMemoryBettingContextFactory();
         private readonly FakeMessageBroker _broker = new FakeMessageBroker();
         private readonly CapturingLogger _logger = new CapturingLogger();
 
@@ -39,6 +41,7 @@ namespace Platform.Operator.Servicev2.Test.Repository
                 })
                 .Build(),
             _factory,
+            _bettingFactory,
             new Instrumentation(),
             _logger);
 

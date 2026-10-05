@@ -9,6 +9,7 @@ using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;
 using Platform.Operator.Servicev2.Repository;
 using Platform.Operator.Servicev2.Telemetry;
+using Platform.Shared.Data.Betting;
 using Platform.Shared.Data.Platform;
 using Platform.Shared.Utility;
 using System;
@@ -43,6 +44,8 @@ namespace Platform.Operator.Servicev2
                     services.AddSingleton<IMessageBroker, MessageBroker>();
                     services.AddDbContextFactory<PlatformContext>(options =>
                         options.UseSqlServer(hostContext.Configuration.GetConnectionString("Platform")));
+                    services.AddDbContextFactory<BettingContext>(options =>
+                        options.UseSqlServer(hostContext.Configuration.GetConnectionString("Betting")));
                     services.AddSingleton<IBettingRepository, BettingRepository>();
                     services.AddHostedService<Worker>();
                 });

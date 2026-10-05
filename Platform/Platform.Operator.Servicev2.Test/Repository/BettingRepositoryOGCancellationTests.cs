@@ -15,10 +15,9 @@ namespace Platform.Operator.Servicev2.Test.Repository
     // GM-879: both CancelBet call sites in ProcesssBetPlacementOG passed isOGClient: true without
     // the OG parameters, so ProcesssBetCancellationOG dereferenced a null ogParam and threw a
     // NullReferenceException before the cancellation ever reached OG. These tests exercise
-    // ProcesssBetCancellationOG directly, the method both call sites feed into, rather than going
-    // through CancelBet: CancelBet's own local-cancel step builds a SQL Server BettingContext
-    // inline (UseSqlServer on the "Betting" connection string) with no factory seam, so it cannot
-    // be driven from a unit test.
+    // ProcesssBetCancellationOG directly, the method both call sites feed into.
+    // BettingRepositoryOGPlacementCancelTests drives the two call sites themselves, through
+    // ProcesssBetPlacementOG and CancelBet.
     //
     // The rollback tests below were added from a Stryker run on BettingRepository.cs: each one
     // kills mutants on ProcesssBetCancellationOG that survived the original two tests.
@@ -28,6 +27,7 @@ namespace Platform.Operator.Servicev2.Test.Repository
         private const string DebitPath = "/api/v2/platform/transaction/bulk/debit";
 
         private readonly InMemoryPlatformContextFactory _factory = new InMemoryPlatformContextFactory();
+        private readonly InMemoryBettingContextFactory _bettingFactory = new InMemoryBettingContextFactory();
         private readonly FakeMessageBroker _broker = new FakeMessageBroker();
 
         // VND is a high currency, so OG amounts are divided by 1000. The bet's own CurrencyCode is
@@ -43,6 +43,7 @@ namespace Platform.Operator.Servicev2.Test.Repository
                 ["Custom:OrientalGaming:HighCurrenciesAsString"] = "VND"
             }).Build(),
             _factory,
+            _bettingFactory,
             new Instrumentation(),
             NullLogger<BettingRepository>.Instance);
 

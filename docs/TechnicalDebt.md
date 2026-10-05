@@ -215,10 +215,12 @@
   independently return `null` for a malformed `OperatorToken`, not only when a caller forgets to
   pass it. Covered by
   `Platform.Operator.Servicev2.Test/Repository/BettingRepositoryOGCancellationTests.cs`, which
-  drives `ProcesssBetCancellationOG` directly against `OperatorStubServer`. `CancelBet`'s own
-  local-cancel step builds a SQL Server `BettingContext` inline from the `Betting` connection
-  string, with no `IDbContextFactory` seam, so it cannot be driven from a unit test. The two
-  `CancelBet` call sites were verified by reading the diff, not by an automated test.
+  drives `ProcesssBetCancellationOG` directly against `OperatorStubServer`, and by
+  `BettingRepositoryOGPlacementCancelTests.cs`, which drives both `CancelBet` call sites through
+  `ProcesssBetPlacementOG` with a bet seeded in the in-memory betting database. Those call-site
+  tests became possible when GM-894 gave `BettingRepository` an
+  `IDbContextFactory<BettingContext>`. Before that, `CancelBet` built a SQL Server
+  `BettingContext` inline and could not run in a unit test.
 - **Mutation testing (2026-10-02):** a Stryker run on `BettingRepository.cs` (run from
   `Platform.Operator.Servicev2.Test`, `Log*` methods ignored) found that the first two tests
   killed only 11 of the 130 mutants in `ProcesssBetCancellationOG`. The suite now covers the
@@ -226,9 +228,9 @@
   names), the `OnBetStatus`, reports, back-office and `OnWalletChange` publishes, the operator
   logs, and the retry row on each failure branch. It kills 83 mutants. Of the 8 that still
   survive, 3 are the message-type literal described below, 3 sit on the `S-101`
-  transaction-status path (the stub returns one body for every request), and 2 are equivalent. All
-  mutants on the two `CancelBet` call sites (lines 1044 and 1168) still survive, for the
-  connection-string reason above.
+  transaction-status path (the stub returns one body for every request), and 2 are equivalent.
+  After GM-894, all 8 mutants on the two `CancelBet` call sites are killed, and removing
+  `ogParam` from either call site fails both call-site tests.
 - **Found by the mutation tests, not fixed (outside GM-879):**
   - **GM-892:** when the rollback request itself throws, for example because OG is unreachable,
     the `catch` block calls `GetOGTransactionStatus` with no guard. The exception escapes and no

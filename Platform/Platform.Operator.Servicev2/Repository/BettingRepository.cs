@@ -2865,27 +2865,48 @@ namespace Platform.Operator.Servicev2.Repository
                 });
 
                 var isRetry = true;
-                var transactionStatus = GetOGTransactionStatus(message, "rollback", correlationId, threadId, publicKey, vendorName, privateKey);
+
+                // GM-892: OG is probably unreachable here too (that is why we are in this catch block), so the
+                // status lookup can throw. Treat a failure as "status unknown" so the retry row is still stored.
+                var transactionStatus = new OGTransactionResponseDTO();
+                try
+                {
+                    transactionStatus = GetOGTransactionStatus(message, "rollback", correlationId, threadId, publicKey, vendorName, privateKey);
+                }
+                catch (Exception statusEx)
+                {
+                    _logger.LogError(statusEx, "ProcesssBetCancellationOG: OG transaction status lookup failed for BetId: {BetId}, CorrelationId: {CorrelationId}; treating the rollback status as unknown", message.Bet.BetId, correlationId);
+                }
+
                 if (transactionStatus.TransactionStatus == "rollback")
                 {
                     // wallet endpoint
-                    var walletRequest = new
+                    try
                     {
-                        player_code = payload.PlayerCode,
-                        timestamp = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()
-                    };
-                    var signatureEx = walletRequest.ToSignOG(privateKey);
-                    var walletResponse = GetHttpClient(threadId, message.Bet.Endpoint, message.Bet.OperatorToken, message.Bet.ClientId, message.Bet.IsAgent, publicKey, vendorName).GetAsync($"{message.Bet.Endpoint}/api/v2/platform/player/balance?player_code={walletRequest.player_code}&timestamp={walletRequest.timestamp}&signature={signatureEx}").Result;
-                    var walletResult = JsonSerializer.Deserialize<OGWalletResponseDTO>(walletResponse.Content.ReadAsStringAsync().Result, _jsonOptionsCaseSensitive);
-                    if (walletResult.Code == "S-100")
-                    {
-                        messageBroker.Publish(new OnWalletChange
+                        var walletRequest = new
                         {
-                            ClientId = message.Bet.ClientId.ToUpper(),
-                            UserId = message.Bet.UserId,
-                            Balance = Convert.ToDecimal(walletResult.Balance)
-                        }, "OnWalletChange", $"r.wallet.{message.Bet.ClientCode.ToString().ToLower()}", correlationId, 10);
+                            player_code = payload.PlayerCode,
+                            timestamp = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()
+                        };
+                        var signatureEx = walletRequest.ToSignOG(privateKey);
+                        var walletResponse = GetHttpClient(threadId, message.Bet.Endpoint, message.Bet.OperatorToken, message.Bet.ClientId, message.Bet.IsAgent, publicKey, vendorName).GetAsync($"{message.Bet.Endpoint}/api/v2/platform/player/balance?player_code={walletRequest.player_code}&timestamp={walletRequest.timestamp}&signature={signatureEx}").Result;
+                        var walletResult = JsonSerializer.Deserialize<OGWalletResponseDTO>(walletResponse.Content.ReadAsStringAsync().Result, _jsonOptionsCaseSensitive);
+                        if (walletResult.Code == "S-100")
+                        {
+                            messageBroker.Publish(new OnWalletChange
+                            {
+                                ClientId = message.Bet.ClientId.ToUpper(),
+                                UserId = message.Bet.UserId,
+                                Balance = Convert.ToDecimal(walletResult.Balance)
+                            }, "OnWalletChange", $"r.wallet.{message.Bet.ClientCode.ToString().ToLower()}", correlationId, 10);
+                        }
                     }
+                    catch (Exception walletEx)
+                    {
+                        // The rollback is already confirmed at OG, so the wallet refresh must not stop the retry row below.
+                        _logger.LogError(walletEx, "ProcesssBetCancellationOG: OG wallet balance refresh failed for BetId: {BetId}, CorrelationId: {CorrelationId}", message.Bet.BetId, correlationId);
+                    }
+
                     AddOrUpdateOperatorSettlementRetry(new OnBetSettlementRetry { OnBetSettlement = message }, "OnBetCancellation", correlationId, true);
                     isRetry = false;
                 }

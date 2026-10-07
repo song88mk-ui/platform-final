@@ -232,10 +232,35 @@
   After GM-894, all 8 mutants on the two `CancelBet` call sites are killed, and removing
   `ogParam` from either call site fails both call-site tests.
 - **Found by the mutation tests, not fixed (outside GM-879):**
-  - **GM-892:** when the rollback request itself throws, for example because OG is unreachable,
-    the `catch` block calls `GetOGTransactionStatus` with no guard. The exception escapes and no
-    `OperatorSettlementRetry` row is written. `OgUnreachable_ThrowsBeforeAnyRetryIsStored` pins
-    this behaviour.
+  - **GM-892 (fixed 2026-10-07):** when the rollback request itself threw, for example because OG
+    was unreachable, the `catch` block called `GetOGTransactionStatus` with no guard. That call
+    threw against the same endpoint, the exception escaped before `AddOrUpdateOperatorSettlementRetry`
+    ran, and no `OperatorSettlementRetry` row was written, so Job.Resettlement had nothing to
+    replay and the player's stake stayed debited at OG. When reached from bet placement, the
+    exception also landed in the placement `catch`, which called `CancelBet` a second time.
+    The status lookup in the `catch` block is now in its own try/catch (a failure is logged and
+    treated as "status unknown", so the existing fallback publishes the back-office cancellation
+    and stores the retry row). The wallet balance refresh that follows a confirmed rollback is
+    guarded the same way. Its failure used to escape before the pending retry row was closed
+    (`IsRetry = false`), so Job.Resettlement would replay a cancellation OG had already rolled
+    back. The `S-101` branch needed no edit: an exception there lands in the same `catch` block.
+  - **Replay verified:** `AddOrUpdateOperatorSettlementRetry` never reads `RemainingRetries`, so
+    the fallback row is stored with `RetryCount = 0`, `IsRetry = true`, `IsSuccess = false`.
+    `Platform.Job.Resettlement/Worker.cs:67-68` selects `IsRetry && RetryCount < MaxRetryCount`
+    and republishes the stored `Info`, so the row is replayed.
+  - **Tests (`Platform.Operator.Servicev2.Test`, 47 passing):** `OperatorStubServer` gained
+    `PathResponses` so one test can answer the debit, transaction status and wallet balance paths
+    differently. New cases cover an unreadable and a 500 status answer, an unrelated status, a
+    confirmed rollback (balance published, pending row closed), a failing wallet refresh (three
+    shapes), a wallet error code, both `S-101` paths, the stored row being replayable, and a
+    rejected debit not asking for the status. `OgUnreachable_ThrowsBeforeAnyRetryIsStored` became
+    `OgUnreachable_StoresARetryForTheCancellationAndDoesNotThrow`, and
+    `DebitResponseCannotBeRead_CancelsLocallyAndSendsTheRollback` now expects no exception and a
+    stored retry. With the production change reverted, 9 of these fail (the rest guard behaviour
+    that was already correct), so they do exercise the fix.
+  - **Unknown:** PRD frequency. A search of PRD operator-service logs (2026-09-09 to 2026-10-07)
+    found no occurrence, but the `OperatorLog` table is not in Loki, so absence there is not
+    conclusive.
   - **GM-893:** the three failure branches and the `catch` block publish
     `"OnBetBackofficeCancellation"` with a lowercase `o`, in both `ProcesssBetCancellationOG` and
     the non-OG `ProcesssBetCancellation` (8 sites). `Platform.Settlement.Service/Worker.cs:115` and

@@ -331,21 +331,248 @@ namespace Platform.Operator.Servicev2.Test.Repository
             Assert.Contains(loggedResponse, response.Info);
         }
 
-        // Pins current behaviour, not endorsed: when the rollback call itself throws, the catch
-        // block calls GetOGTransactionStatus against the same unreachable endpoint without a guard,
-        // so the exception escapes and no retry row is written. Tracked as GM-892.
+        // GM-892: when the rollback call itself throws, the catch block asks OG for the transaction
+        // status, which throws against the same unreachable endpoint. That failure is treated as
+        // "status unknown", so the retry row is still stored and nothing escapes.
         [Fact]
-        public void OgUnreachable_ThrowsBeforeAnyRetryIsStored()
+        public void OgUnreachable_StoresARetryForTheCancellationAndDoesNotThrow()
         {
             var endpoint = OperatorStubServer.UnreachableEndpoint();
             var message = Cancellation(endpoint);
 
-            Assert.ThrowsAny<Exception>(() => Cancel(message));
+            var exception = Record.Exception(() => Cancel(message));
 
-            Assert.Null(StoredRetry(message.Bet.BetId));
+            Assert.Null(exception);
+            var retry = StoredRetry(message.Bet.BetId);
+            Assert.NotNull(retry);
+            Assert.Equal("OnBetCancellation", retry.MessageType);
+            Assert.Equal("corr-1", retry.CorrelationId);
+            Assert.False(retry.IsSuccess);
+            Assert.DoesNotContain(_broker.Published, p => p.MessageType == "OnWalletChange");
+            Assert.Equal(2, BackOfficeCancellations(message));
             using var context = _factory.CreateDbContext();
             var response = Assert.Single(context.OperatorLog, l => l.BetId == message.Bet.BetId.ToString().ToUpper() && l.Direction == "RESPONSE");
             Assert.Equal($"{endpoint}{DebitPath}", response.URL);
+        }
+
+        // GM-892: the catch block's recovery calls. The debit answers 200 with a body that cannot be
+        // parsed, which throws inside the try block and lands in the catch block. Each test then
+        // sets what OG answers on the transaction status and wallet balance paths.
+        private const string StatusPath = "/api/v2/platform/vendor/transaction-status";
+        private const string WalletPath = "/api/v2/platform/player/balance";
+
+        private static OperatorStubServer OgWhoseDebitCannotBeRead() => new OperatorStubServer(HttpStatusCode.OK, "not json");
+
+        private static int RequestsTo(OperatorStubServer og, string path) => og.Requests.Count(r => r.Path == path);
+
+        // The method publishes one back-office cancellation before it calls OG. Every failure
+        // fallback publishes a second one, so 2 means the fallback ran and 1 means it did not. The
+        // message type is not used because the two spellings differ (GM-893).
+        private int BackOfficeCancellations(OnBetSettlement message) =>
+            _broker.Published.Count(p => p.Payload is OnBetBackofficeCancellation c && c.BetId == message.Bet.BetId);
+
+        private void SeedPendingRetry(OnBetSettlement message, string correlationId = "corr-1")
+        {
+            using var context = _factory.CreateDbContext();
+            context.OperatorSettlementRetry.Add(new OperatorSettlementRetry
+            {
+                BetId = message.Bet.BetId,
+                CorrelationId = correlationId,
+                MessageType = "OnBetCancellation",
+                IsRetry = true
+            });
+            context.SaveChanges();
+        }
+
+        private void AssertRetryStoredForReplay(OnBetSettlement message)
+        {
+            var retry = StoredRetry(message.Bet.BetId);
+            Assert.NotNull(retry);
+            Assert.Equal("OnBetCancellation", retry.MessageType);
+            Assert.Equal("corr-1", retry.CorrelationId);
+            Assert.True(retry.IsRetry);
+            Assert.False(retry.IsSuccess);
+            Assert.Equal(0, retry.RetryCount);
+            Assert.Equal(2, BackOfficeCancellations(message));
+            Assert.DoesNotContain(_broker.Published, p => p.MessageType == "OnWalletChange");
+        }
+
+        [Fact]
+        public void DebitThrows_StatusLookupCannotBeRead_StoresARetryAndDoesNotThrow()
+        {
+            using var og = OgWhoseDebitCannotBeRead();
+            og.PathResponses[StatusPath] = (HttpStatusCode.OK, "not json");
+            var message = Cancellation(og.Endpoint);
+
+            var exception = Record.Exception(() => Cancel(message));
+
+            Assert.Null(exception);
+            AssertRetryStoredForReplay(message);
+            Assert.Equal(1, RequestsTo(og, DebitPath));
+            Assert.Equal(1, RequestsTo(og, StatusPath));
+            Assert.Equal(0, RequestsTo(og, WalletPath));
+        }
+
+        [Fact]
+        public void DebitThrows_StatusLookupFails_ReplaysTheRetryOnTheNextAttempt()
+        {
+            using var og = OgWhoseDebitCannotBeRead();
+            og.PathResponses[StatusPath] = (HttpStatusCode.OK, "not json");
+            var message = Cancellation(og.Endpoint);
+            Cancel(message);
+
+            // The stored row is exactly what Platform.Job.Resettlement selects: IsRetry and under
+            // the retry cap. Its Info must round-trip into the message the job republishes.
+            using var context = _factory.CreateDbContext();
+            var retry = context.OperatorSettlementRetry.Single(r => r.IsRetry && r.RetryCount < 8);
+            Assert.Equal(message.Bet.BetId, retry.BetId);
+            var replayed = JsonSerializer.Deserialize<OnBetSettlement>(retry.Info);
+            Assert.Equal(message.Bet.BetId, replayed.Bet.BetId);
+            Assert.Equal(message.Bet.Endpoint, replayed.Bet.Endpoint);
+        }
+
+        [Fact]
+        public void DebitThrows_StatusLookupGetsAServerError_StoresARetryAndDoesNotThrow()
+        {
+            using var og = OgWhoseDebitCannotBeRead();
+            og.PathResponses[StatusPath] = (HttpStatusCode.InternalServerError, "");
+            var message = Cancellation(og.Endpoint);
+
+            var exception = Record.Exception(() => Cancel(message));
+
+            Assert.Null(exception);
+            AssertRetryStoredForReplay(message);
+            Assert.Equal(1, RequestsTo(og, StatusPath));
+        }
+
+        [Fact]
+        public void DebitThrows_OgReportsAnotherStatus_StoresARetryWithoutReadingTheWallet()
+        {
+            using var og = OgWhoseDebitCannotBeRead();
+            og.PathResponses[StatusPath] = (HttpStatusCode.OK, "{\"rs_code\":\"S-100\",\"transaction_status\":\"success\"}");
+            var message = Cancellation(og.Endpoint);
+
+            var exception = Record.Exception(() => Cancel(message));
+
+            Assert.Null(exception);
+            AssertRetryStoredForReplay(message);
+            Assert.Equal(0, RequestsTo(og, WalletPath));
+        }
+
+        [Fact]
+        public void DebitThrows_OgConfirmsTheRollback_PublishesTheBalanceAndClosesThePendingRetry()
+        {
+            using var og = OgWhoseDebitCannotBeRead();
+            og.PathResponses[StatusPath] = (HttpStatusCode.OK, "{\"rs_code\":\"S-100\",\"transaction_status\":\"rollback\"}");
+            og.PathResponses[WalletPath] = (HttpStatusCode.OK, "{\"rs_code\":\"S-100\",\"balance\":\"540\"}");
+            var message = Cancellation(og.Endpoint);
+            SeedPendingRetry(message);
+
+            var exception = Record.Exception(() => Cancel(message));
+
+            Assert.Null(exception);
+            var wallet = Assert.IsType<OnWalletChange>(Assert.Single(_broker.Published, p => p.MessageType == "OnWalletChange").Payload);
+            Assert.Equal(540m, wallet.Balance);
+            Assert.Equal("user-1", wallet.UserId);
+            var retry = StoredRetry(message.Bet.BetId);
+            Assert.True(retry.IsSuccess);
+            Assert.False(retry.IsRetry);
+            Assert.Equal(1, BackOfficeCancellations(message));
+            Assert.Equal(1, RequestsTo(og, WalletPath));
+        }
+
+        [Theory]
+        [InlineData(HttpStatusCode.OK, "not json")]
+        [InlineData(HttpStatusCode.OK, "")]
+        [InlineData(HttpStatusCode.InternalServerError, "")]
+        public void DebitThrows_OgConfirmsTheRollback_WalletRefreshFails_StillClosesThePendingRetry(HttpStatusCode walletStatus, string walletBody)
+        {
+            using var og = OgWhoseDebitCannotBeRead();
+            og.PathResponses[StatusPath] = (HttpStatusCode.OK, "{\"rs_code\":\"S-100\",\"transaction_status\":\"rollback\"}");
+            og.PathResponses[WalletPath] = (walletStatus, walletBody);
+            var message = Cancellation(og.Endpoint);
+            SeedPendingRetry(message);
+
+            var exception = Record.Exception(() => Cancel(message));
+
+            // The rollback is confirmed at OG, so a failed balance refresh must not leave the
+            // retry open: the job would replay a cancellation OG has already rolled back.
+            Assert.Null(exception);
+            var retry = StoredRetry(message.Bet.BetId);
+            Assert.True(retry.IsSuccess);
+            Assert.False(retry.IsRetry);
+            Assert.DoesNotContain(_broker.Published, p => p.MessageType == "OnWalletChange");
+            Assert.Equal(1, BackOfficeCancellations(message));
+            Assert.Equal(1, RequestsTo(og, WalletPath));
+        }
+
+        [Fact]
+        public void DebitThrows_OgConfirmsTheRollback_WalletAnswersAnErrorCode_ClosesThePendingRetryWithoutPublishing()
+        {
+            using var og = OgWhoseDebitCannotBeRead();
+            og.PathResponses[StatusPath] = (HttpStatusCode.OK, "{\"rs_code\":\"S-100\",\"transaction_status\":\"rollback\"}");
+            og.PathResponses[WalletPath] = (HttpStatusCode.OK, "{\"rs_code\":\"E-000\",\"balance\":\"540\"}");
+            var message = Cancellation(og.Endpoint);
+            SeedPendingRetry(message);
+
+            var exception = Record.Exception(() => Cancel(message));
+
+            Assert.Null(exception);
+            Assert.DoesNotContain(_broker.Published, p => p.MessageType == "OnWalletChange");
+            var retry = StoredRetry(message.Bet.BetId);
+            Assert.True(retry.IsSuccess);
+            Assert.False(retry.IsRetry);
+        }
+
+        // The S-101 branch asks for the transaction status inside the try block. A failure there
+        // lands in the catch block, which asks again; neither failure may escape.
+        [Fact]
+        public void DebitAnswersS101_StatusLookupCannotBeRead_StoresARetryAndDoesNotThrow()
+        {
+            using var og = new OperatorStubServer(HttpStatusCode.OK, "{\"rs_code\":\"S-101\"}");
+            og.PathResponses[StatusPath] = (HttpStatusCode.OK, "not json");
+            var message = Cancellation(og.Endpoint);
+
+            var exception = Record.Exception(() => Cancel(message));
+
+            Assert.Null(exception);
+            AssertRetryStoredForReplay(message);
+            Assert.Equal(1, RequestsTo(og, DebitPath));
+            Assert.Equal(2, RequestsTo(og, StatusPath));
+        }
+
+        [Fact]
+        public void DebitAnswersS101_OgConfirmsTheRollback_WalletRefreshFails_StillClosesThePendingRetry()
+        {
+            using var og = new OperatorStubServer(HttpStatusCode.OK, "{\"rs_code\":\"S-101\"}");
+            og.PathResponses[StatusPath] = (HttpStatusCode.OK, "{\"rs_code\":\"S-100\",\"transaction_status\":\"rollback\"}");
+            og.PathResponses[WalletPath] = (HttpStatusCode.OK, "not json");
+            var message = Cancellation(og.Endpoint);
+            SeedPendingRetry(message);
+
+            var exception = Record.Exception(() => Cancel(message));
+
+            // The failed balance read in the S-101 branch throws into the catch block, which
+            // repeats the status and balance calls. The second balance failure is the guarded one.
+            Assert.Null(exception);
+            var retry = StoredRetry(message.Bet.BetId);
+            Assert.True(retry.IsSuccess);
+            Assert.False(retry.IsRetry);
+            Assert.Equal(2, RequestsTo(og, WalletPath));
+        }
+
+        // Regression guard: an OG client that is reachable but answers the debit with an error must
+        // not take the catch block's recovery path at all.
+        [Fact]
+        public void DebitRejectedByOg_DoesNotAskForTheTransactionStatus()
+        {
+            using var og = new OperatorStubServer(HttpStatusCode.OK, "{\"rs_code\":\"E-000\",\"rs_message\":\"rejected\"}");
+            var message = Cancellation(og.Endpoint);
+
+            Cancel(message);
+
+            Assert.Equal(0, RequestsTo(og, StatusPath));
+            Assert.Equal(0, RequestsTo(og, WalletPath));
         }
     }
 }

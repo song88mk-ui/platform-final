@@ -145,10 +145,10 @@ namespace Platform.Operator.Servicev2.Test.Repository
             Assert.Equal(2, og.Requests.Count);
         }
 
-        // Pins current behaviour around GM-892: OG answers every request with invalid JSON, so the
-        // rollback's own response handling also fails and the exception escapes. What matters here
-        // is that the catch block cancelled the bet and sent the rollback with the OG parameters.
-        // The escaping exception is asserted so this test fails, and is updated, when GM-892 lands.
+        // GM-892: OG answers every request with invalid JSON, so the rollback's own response
+        // handling fails and so does the transaction status lookup in its catch block. The lookup
+        // failure is treated as "status unknown", so nothing escapes and the retry row is stored.
+        // The catch block also cancelled the bet and sent the rollback with the OG parameters.
         [Fact]
         public void DebitResponseCannotBeRead_CancelsLocallyAndSendsTheRollback()
         {
@@ -157,10 +157,15 @@ namespace Platform.Operator.Servicev2.Test.Repository
 
             var exception = Place(message);
 
-            Assert.NotNull(exception);
+            Assert.Null(exception);
 
             AssertCancelledLocally(message.Bet.BetId);
             Rollback(og);
+
+            using var context = _factory.CreateDbContext();
+            var retry = Assert.Single(context.OperatorSettlementRetry, r => r.BetId == message.Bet.BetId);
+            Assert.Equal("OnBetCancellation", retry.MessageType);
+            Assert.False(retry.IsSuccess);
         }
     }
 }

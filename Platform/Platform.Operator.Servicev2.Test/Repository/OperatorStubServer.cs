@@ -33,6 +33,11 @@ namespace Platform.Operator.Servicev2.Test.Repository
 
         internal string Body { get; set; }
 
+        // Optional per-path answers that win over Status and Body, for flows that make several
+        // different OG calls (debit, transaction status, wallet balance) and need each to answer
+        // differently. The path is the URL path without the query string.
+        internal Dictionary<string, (HttpStatusCode Status, string Body)> PathResponses { get; } = new Dictionary<string, (HttpStatusCode, string)>();
+
         internal List<(string Path, string Body)> Requests { get; } = new List<(string, string)>();
 
         // A port that was free a moment ago and has nothing listening on it, for the
@@ -60,8 +65,11 @@ namespace Platform.Operator.Servicev2.Test.Repository
                         Requests.Add((context.Request.Url.AbsolutePath, requestBody));
                 }
 
-                var bytes = Encoding.UTF8.GetBytes(Body);
-                context.Response.StatusCode = (int)Status;
+                var (status, body) = PathResponses.TryGetValue(context.Request.Url.AbsolutePath, out var perPath)
+                    ? perPath
+                    : (Status, Body);
+                var bytes = Encoding.UTF8.GetBytes(body);
+                context.Response.StatusCode = (int)status;
                 context.Response.ContentType = "application/json";
                 await context.Response.OutputStream.WriteAsync(bytes);
                 context.Response.Close();

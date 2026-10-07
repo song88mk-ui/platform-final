@@ -108,6 +108,14 @@ on `--mutate` removed every mutant in our runs. No mutator removes an extension 
     already-parsed `ogParam` through both call sites and adding a null guard in
     `ProcesssBetCancellationOG` (TD-20). When adding a new `isOGClient: true` call site, pass
     `OGParameters` explicitly.
+11. **A `catch` block that makes another network call must guard it.** GM-892: the `catch` block
+    of `ProcesssBetCancellationOG` asked OG for the transaction status (and then the wallet
+    balance) with no guard. When OG was unreachable that second call threw too, the exception
+    escaped before `AddOrUpdateOperatorSettlementRetry` ran, and no `OperatorSettlementRetry` row
+    was written, so Job.Resettlement had nothing to replay. Both calls now sit in their own
+    try/catch: a failed status lookup means "status unknown" and falls through to the retry row,
+    and a failed wallet refresh no longer stops a pending retry row from being closed (TD-20). Do
+    the same for any recovery path that talks to the system that just failed.
 
 ## How this team writes code (match it — don't introduce new patterns)
 - **Repository pattern**: `IXxxRepository`+`XxxRepository` in each project's Repository folder, async, return

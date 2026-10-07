@@ -32,6 +32,11 @@ is the agent-oriented summary — read [CLAUDE.md](CLAUDE.md) first.
    argument at its default, so the OG cancellation path dereferenced a null `OGRequestDTO` and
    crashed before OG was notified. See [CLAUDE.md](CLAUDE.md) rule 10 and
    [docs/TechnicalDebt.md](docs/TechnicalDebt.md) TD-20.
+9. **A `catch` block that makes another network call must guard it.** GM-892: the OG cancellation
+   `catch` block asked OG for the transaction status and wallet balance unguarded, so when OG was
+   unreachable the exception escaped before the `OperatorSettlementRetry` row was written. Guard
+   the second call and treat its failure as "status unknown". See [CLAUDE.md](CLAUDE.md) rule 11
+   and [docs/TechnicalDebt.md](docs/TechnicalDebt.md) TD-20.
 
 ## Mandatory workflow (Phase 12 — every task)
 Understand → **search repo** (`/find-*`) → **consult docs** → **trace end-to-end** (`/trace-*`) →

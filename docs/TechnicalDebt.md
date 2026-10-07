@@ -272,6 +272,48 @@
   by default; flagged back to the ticket reporter).
 - **Confidence:** **[Verified]** (traced in code, tests passing).
 
+### TD-21 - CashOutStake Mongo fallback blocked the consumer and dropped cashout offers (`BettingRepository.cs`) - **Resolved** (2026-10-07, GM-901)
+- **Evidence (historical):** `Platform.CashOutStake.Servicev2/appsettings.json` shipped a real
+  `preprod` Atlas connection string as the default for `ConnectionStrings:MongoDB-Sportsbook`, plus
+  a real MSSQL `sa` connection string for `Betting` (same class of issue as TD-01, specific instance
+  here). `argocd/apps/platform/cashoutstake-service/{dev,stg,prd}.yaml` didn't set the Mongo key
+  (DEVOPS-404), so all three environments silently ran on the unreachable preprod default. Each
+  failed lookup blocked the single-threaded RabbitMQ handler in `Worker.MessageReceivedEvent` for
+  the driver's 30s default server-selection timeout; `ProcessPartialCashOut` mutated the in-memory
+  stake before the lookup, so a failure meant `OnCashOutChange` was never published and the player
+  kept the stale offer; and nothing was cached on failure, so every later message for the same
+  bet/market/selection repeated the same 30s block. Confirmed in PRD Loki: 13 `TimeoutException`s
+  between 2026-10-06 09:59-12:57 UTC at the same minutes as 14 partial cashouts, with no
+  `Process Partial CashOut` log line following any of them.
+- **Files:** `Platform.CashOutStake.Servicev2/appsettings.json`,
+  `Platform.CashOutStake.Servicev2/Repository/BettingRepository.cs`.
+- **Fix:** `appsettings.json` no longer ships either real credential - both `MongoDB-Sportsbook` and
+  `Betting` default to an empty string, so a deployment that forgets to set them fails immediately
+  and visibly instead of silently falling back to a value that happens to parse. The
+  `BettingRepository` constructor now throws `InvalidOperationException` at startup if
+  `ConnectionStrings:MongoDB-Sportsbook` is missing or blank (the service fails loudly instead of
+  silently falling back), and sets
+  `MongoClientSettings.ServerSelectionTimeout` to 5s when the connection string doesn't already
+  specify one. `PreloadMarket`/`PreloadSelection` now wrap the Mongo `Find` call in a try/catch,
+  record the failure per market/selection id in a `ConcurrentDictionary`, and skip retrying the
+  same id for 30s - so a down Mongo degrades to "cashout unavailable" (via `GetCashOut`'s existing
+  null-cache branch) instead of throwing, and `ProcessPartialCashOut`/`ProcessCashOut` always reach
+  their `messageBroker.Publish` call regardless of Mongo health. Covered by
+  `Platform.CashOutStake.Servicev2.Test/Repository/MongoLookupResilienceTests.cs` (constructor
+  fail-fast, offer still published after a failed lookup, second lookup skips Mongo during the
+  backoff window), driven against an address nothing listens on with a short
+  `serverSelectionTimeoutMS` so the suite stays fast.
+- **Not in scope of the code fix:** `DEVOPS-404` (adding the Mongo key to the three argocd env
+  files) was a separate, already-merged change - confirmed deployed by the absence of
+  `TimeoutException`s in PRD Loki since 2026-10-06T13:24:41Z and by `Process Partial CashOut` log
+  lines succeeding afterward. Rotating the two credentials that were committed in plaintext here is
+  a separate ops action, same as TD-01. The identical leaked preprod Mongo/`sa` credential is also
+  still committed in `Platform.Sportsbook.API/appsettings.json`, `Platform.QTech.API/appsettings.json`
+  and `Platform.CashOut.Service/appsettings.json` - out of scope for this ticket, tracked under the
+  broader TD-01.
+- **Confidence:** **[Verified]** (traced in code and prod Loki; build passing; local test execution
+  blocked by this machine's Smart App Control policy - see summary).
+
 ## Consolidated cross-views
 - **Duplicate implementations** → TD-07 (+ AntiPatterns AP-8): v1/v2 projects, duplicated MessageBroker.
 - **Dead code** → TD-15: JwtParser, commented SQL blocks, superseded v1 services/WebSocket.API.

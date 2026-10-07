@@ -12,6 +12,7 @@ using Platform.Shared.Helpers;
 using Platform.Shared.MessageModels;
 using Platform.Shared.Utility;
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
@@ -33,6 +34,14 @@ namespace Platform.CashOutStake.Servicev2.Repository
         private IMongoCollection<Market> marketCollection;
         private IMongoCollection<Selection> selectionCollection;
 
+        // GM-901: a failed market/selection lookup (Mongo unreachable) used to leave nothing
+        // cached, so every later message for the same bet hit Mongo again and blocked the
+        // RabbitMQ consumer for the full server-selection timeout. These track the last failure
+        // per id so PreloadMarket/PreloadSelection can skip retrying until the backoff elapses.
+        private readonly ConcurrentDictionary<long, DateTime> _failedMarketLookups = new ConcurrentDictionary<long, DateTime>();
+        private readonly ConcurrentDictionary<long, DateTime> _failedSelectionLookups = new ConcurrentDictionary<long, DateTime>();
+        private static readonly TimeSpan FailedLookupBackoff = TimeSpan.FromSeconds(30);
+
         public BettingRepository(IServiceProvider serviceProvider, IConfiguration configuration, IMemCache memCache, ILogger<BettingRepository> logger)
         {
             _serviceProvider = serviceProvider;
@@ -40,7 +49,21 @@ namespace Platform.CashOutStake.Servicev2.Repository
             _memCache = memCache;
             _logger = logger;
 
-            var client = new MongoClient(_configuration["ConnectionStrings:MongoDB-Sportsbook"]);
+            var mongoConnectionString = _configuration["ConnectionStrings:MongoDB-Sportsbook"];
+
+            if (string.IsNullOrWhiteSpace(mongoConnectionString))
+                throw new InvalidOperationException("ConnectionStrings:MongoDB-Sportsbook is not configured.");
+
+            var mongoSettings = MongoClientSettings.FromConnectionString(mongoConnectionString);
+
+            // GM-901: the driver's default server-selection timeout is 30s, so every lookup
+            // against an unreachable Mongo blocked the RabbitMQ consumer for 30s. Only apply the
+            // shorter default when the connection string doesn't already specify one, so a
+            // caller (e.g. a test) can still opt into a different value via the URI.
+            if (!mongoConnectionString.Contains("serverSelectionTimeoutMS", StringComparison.OrdinalIgnoreCase))
+                mongoSettings.ServerSelectionTimeout = TimeSpan.FromSeconds(5);
+
+            var client = new MongoClient(mongoSettings);
             _db = client.GetDatabase("Sportsbook");
 
             marketCollection = _db.GetCollection<Market>("Market");
@@ -342,11 +365,23 @@ namespace Platform.CashOutStake.Servicev2.Repository
 
             if (marketResult == null)
             {
-                var filter = Builders<Market>.Filter.Eq("MaId", marketId);
-                var projection = Builders<Market>.Projection.Include(c => c.Id).Include(c => c.MaId).Include(c => c.MaStId);
-                var result = marketCollection.Find(filter).Project<CashOutMarketFilter>(projection).FirstOrDefault();
+                if (_failedMarketLookups.TryGetValue(marketId, out var lastFailure) && DateTime.UtcNow - lastFailure < FailedLookupBackoff)
+                    return;
 
-                _memCache.AddOrUpdateCache(marketKey, result, expiration);
+                try
+                {
+                    var filter = Builders<Market>.Filter.Eq("MaId", marketId);
+                    var projection = Builders<Market>.Projection.Include(c => c.Id).Include(c => c.MaId).Include(c => c.MaStId);
+                    var result = marketCollection.Find(filter).Project<CashOutMarketFilter>(projection).FirstOrDefault();
+
+                    _memCache.AddOrUpdateCache(marketKey, result, expiration);
+                    _failedMarketLookups.TryRemove(marketId, out _);
+                }
+                catch (Exception ex)
+                {
+                    _failedMarketLookups[marketId] = DateTime.UtcNow;
+                    _logger.LogError(ex, "Failed to preload market {MarketId} from MongoDB", marketId);
+                }
             }
             else if (isPartial == false)
             {
@@ -385,11 +420,23 @@ namespace Platform.CashOutStake.Servicev2.Repository
 
             if (selectionResult == null)
             {
-                var filter = Builders<Selection>.Filter.Eq("SeId", selectionId);
-                var projection = Builders<Selection>.Projection.Include(c => c.Id).Include(c => c.SeId).Include(c => c.MaId).Include(c => c.MaStId).Include(c => c.IsAc).Include(c => c.Pr).Include(c => c.WoPr).Include(c => c.LoPr).Include(c => c.VoPr).Include(c => c.HaWoPr).Include(c => c.HaLoPr).Include(c => c.SeStId);
-                var result = selectionCollection.Find(filter).Project<CashOutSelectionFilter>(projection).FirstOrDefault();
+                if (_failedSelectionLookups.TryGetValue(selectionId, out var lastFailure) && DateTime.UtcNow - lastFailure < FailedLookupBackoff)
+                    return;
 
-                _memCache.AddOrUpdateCache(selectionKey, result, expiration);
+                try
+                {
+                    var filter = Builders<Selection>.Filter.Eq("SeId", selectionId);
+                    var projection = Builders<Selection>.Projection.Include(c => c.Id).Include(c => c.SeId).Include(c => c.MaId).Include(c => c.MaStId).Include(c => c.IsAc).Include(c => c.Pr).Include(c => c.WoPr).Include(c => c.LoPr).Include(c => c.VoPr).Include(c => c.HaWoPr).Include(c => c.HaLoPr).Include(c => c.SeStId);
+                    var result = selectionCollection.Find(filter).Project<CashOutSelectionFilter>(projection).FirstOrDefault();
+
+                    _memCache.AddOrUpdateCache(selectionKey, result, expiration);
+                    _failedSelectionLookups.TryRemove(selectionId, out _);
+                }
+                catch (Exception ex)
+                {
+                    _failedSelectionLookups[selectionId] = DateTime.UtcNow;
+                    _logger.LogError(ex, "Failed to preload selection {SelectionId} from MongoDB", selectionId);
+                }
             }
             else if (isPartial == false)
             {

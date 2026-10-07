@@ -38,6 +38,7 @@ namespace Platform.CashOutStake.Servicev2.Repository
         // cached, so every later message for the same bet hit Mongo again and blocked the
         // RabbitMQ consumer for the full server-selection timeout. These track the last failure
         // per id so PreloadMarket/PreloadSelection can skip retrying until the backoff elapses.
+        // A market/selection Mongo doesn't have is backed off the same way.
         private readonly ConcurrentDictionary<long, DateTime> _failedMarketLookups = new ConcurrentDictionary<long, DateTime>();
         private readonly ConcurrentDictionary<long, DateTime> _failedSelectionLookups = new ConcurrentDictionary<long, DateTime>();
         private static readonly TimeSpan FailedLookupBackoff = TimeSpan.FromSeconds(30);
@@ -355,6 +356,20 @@ namespace Platform.CashOutStake.Servicev2.Repository
             }
         }
 
+        // Mongo lookups behind a virtual seam so tests can drive the failure and not-found paths
+        // without a live Mongo.
+        protected virtual CashOutMarketFilter FindMarket(long marketId)
+        {
+            var filter = Builders<Market>.Filter.Eq("MaId", marketId);
+            var projection = Builders<Market>.Projection.Include(c => c.Id).Include(c => c.MaId).Include(c => c.MaStId);
+            return marketCollection.Find(filter).Project<CashOutMarketFilter>(projection).FirstOrDefault();
+        }
+        protected virtual CashOutSelectionFilter FindSelection(long selectionId)
+        {
+            var filter = Builders<Selection>.Filter.Eq("SeId", selectionId);
+            var projection = Builders<Selection>.Projection.Include(c => c.Id).Include(c => c.SeId).Include(c => c.MaId).Include(c => c.MaStId).Include(c => c.IsAc).Include(c => c.Pr).Include(c => c.WoPr).Include(c => c.LoPr).Include(c => c.VoPr).Include(c => c.HaWoPr).Include(c => c.HaLoPr).Include(c => c.SeStId);
+            return selectionCollection.Find(filter).Project<CashOutSelectionFilter>(projection).FirstOrDefault();
+        }
         private void PreloadMarket(long marketId, OnExternalOddsChangeMessage message, bool isPartial = false)
         {
             var expiration = DateTime.UtcNow.AddHours(6);
@@ -368,20 +383,30 @@ namespace Platform.CashOutStake.Servicev2.Repository
                 if (_failedMarketLookups.TryGetValue(marketId, out var lastFailure) && DateTime.UtcNow - lastFailure < FailedLookupBackoff)
                     return;
 
+                CashOutMarketFilter result;
+
                 try
                 {
-                    var filter = Builders<Market>.Filter.Eq("MaId", marketId);
-                    var projection = Builders<Market>.Projection.Include(c => c.Id).Include(c => c.MaId).Include(c => c.MaStId);
-                    var result = marketCollection.Find(filter).Project<CashOutMarketFilter>(projection).FirstOrDefault();
-
-                    _memCache.AddOrUpdateCache(marketKey, result, expiration);
-                    _failedMarketLookups.TryRemove(marketId, out _);
+                    result = FindMarket(marketId);
                 }
                 catch (Exception ex)
                 {
                     _failedMarketLookups[marketId] = DateTime.UtcNow;
                     _logger.LogError(ex, "Failed to preload market {MarketId} from MongoDB", marketId);
+                    return;
                 }
+
+                // MemCache cannot store null (MemoryCache.Set throws), so a market Mongo doesn't
+                // have is backed off like a failure but logged as what it is.
+                if (result == null)
+                {
+                    _failedMarketLookups[marketId] = DateTime.UtcNow;
+                    _logger.LogWarning("Market {MarketId} not found in MongoDB", marketId);
+                    return;
+                }
+
+                _memCache.AddOrUpdateCache(marketKey, result, expiration);
+                _failedMarketLookups.TryRemove(marketId, out _);
             }
             else if (isPartial == false)
             {
@@ -423,20 +448,28 @@ namespace Platform.CashOutStake.Servicev2.Repository
                 if (_failedSelectionLookups.TryGetValue(selectionId, out var lastFailure) && DateTime.UtcNow - lastFailure < FailedLookupBackoff)
                     return;
 
+                CashOutSelectionFilter result;
+
                 try
                 {
-                    var filter = Builders<Selection>.Filter.Eq("SeId", selectionId);
-                    var projection = Builders<Selection>.Projection.Include(c => c.Id).Include(c => c.SeId).Include(c => c.MaId).Include(c => c.MaStId).Include(c => c.IsAc).Include(c => c.Pr).Include(c => c.WoPr).Include(c => c.LoPr).Include(c => c.VoPr).Include(c => c.HaWoPr).Include(c => c.HaLoPr).Include(c => c.SeStId);
-                    var result = selectionCollection.Find(filter).Project<CashOutSelectionFilter>(projection).FirstOrDefault();
-
-                    _memCache.AddOrUpdateCache(selectionKey, result, expiration);
-                    _failedSelectionLookups.TryRemove(selectionId, out _);
+                    result = FindSelection(selectionId);
                 }
                 catch (Exception ex)
                 {
                     _failedSelectionLookups[selectionId] = DateTime.UtcNow;
                     _logger.LogError(ex, "Failed to preload selection {SelectionId} from MongoDB", selectionId);
+                    return;
                 }
+
+                if (result == null)
+                {
+                    _failedSelectionLookups[selectionId] = DateTime.UtcNow;
+                    _logger.LogWarning("Selection {SelectionId} not found in MongoDB", selectionId);
+                    return;
+                }
+
+                _memCache.AddOrUpdateCache(selectionKey, result, expiration);
+                _failedSelectionLookups.TryRemove(selectionId, out _);
             }
             else if (isPartial == false)
             {

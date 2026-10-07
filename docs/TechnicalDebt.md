@@ -298,21 +298,28 @@
   record the failure per market/selection id in a `ConcurrentDictionary`, and skip retrying the
   same id for 30s - so a down Mongo degrades to "cashout unavailable" (via `GetCashOut`'s existing
   null-cache branch) instead of throwing, and `ProcessPartialCashOut`/`ProcessCashOut` always reach
-  their `messageBroker.Publish` call regardless of Mongo health. Covered by
-  `Platform.CashOutStake.Servicev2.Test/Repository/MongoLookupResilienceTests.cs` (constructor
-  fail-fast, offer still published after a failed lookup, second lookup skips Mongo during the
-  backoff window), driven against an address nothing listens on with a short
-  `serverSelectionTimeoutMS` so the suite stays fast.
+  their `messageBroker.Publish` call regardless of Mongo health.
+  A market/selection that Mongo doesn't have is not cached (`MemCache` cannot store null:
+  `MemoryCache.Set` throws `ArgumentNullException`), is logged at Warning as "not found" rather
+  than as a Mongo failure, and is backed off for 30s like a failure. The two Mongo queries sit
+  behind `protected virtual FindMarket`/`FindSelection` so tests can drive these paths.
+  Covered by `Platform.CashOutStake.Servicev2.Test/Repository/MongoLookupResilienceTests.cs`:
+  constructor fail-fast; offer still published after a failed lookup, on both the
+  partial-cashout and the odds-change path (one test runs against an address nothing listens on
+  with a short `serverSelectionTimeoutMS`); not-found logs a Warning, no Error, and publishes
+  Unavailable; a second call inside the backoff window does not query Mongo again, after a
+  failure and after a not-found (asserted by counting lookups, not by timing); a found
+  market/selection is cached and not queried again.
 - **Not in scope of the code fix:** `DEVOPS-404` (adding the Mongo key to the three argocd env
   files) was a separate, already-merged change - confirmed deployed by the absence of
   `TimeoutException`s in PRD Loki since 2026-10-06T13:24:41Z and by `Process Partial CashOut` log
   lines succeeding afterward. Rotating the two credentials that were committed in plaintext here is
-  a separate ops action, same as TD-01. The identical leaked preprod Mongo/`sa` credential is also
-  still committed in `Platform.Sportsbook.API/appsettings.json`, `Platform.QTech.API/appsettings.json`
-  and `Platform.CashOut.Service/appsettings.json` - out of scope for this ticket, tracked under the
-  broader TD-01.
-- **Confidence:** **[Verified]** (traced in code and prod Loki; build passing; local test execution
-  blocked by this machine's Smart App Control policy - see summary).
+  a separate ops action, same as TD-01, tracked in DEVOPS-407. The same leaked credentials are
+  still committed elsewhere: the preprod Atlas credential in `Platform.QTech.API/appsettings.json`,
+  and the `sa` credential for `23.100.93.193` in 18 `appsettings.json` files under `Platform/`.
+  Removing them is tracked in GM-926, under the broader TD-01.
+- **Confidence:** **[Verified]** (traced in code and prod Loki; CI Test job passed on PR #168; the
+  follow-up tests pass locally).
 
 ## Consolidated cross-views
 - **Duplicate implementations** → TD-07 (+ AntiPatterns AP-8): v1/v2 projects, duplicated MessageBroker.

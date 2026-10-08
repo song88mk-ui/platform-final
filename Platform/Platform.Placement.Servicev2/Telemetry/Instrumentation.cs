@@ -23,10 +23,12 @@ namespace Platform.Placement.Servicev2.Telemetry
             this.meter = new Meter(MeterName, version);
 
             this.BetPlacementCounter = this.meter.CreateCounter<long>("bet.placement.call", "count", "Number of bet placement calls");
+            this.BetReceivedCounter = this.meter.CreateCounter<long>("bet.placement.received", "count", "Number of bet placements received, tagged by client");
         }
 
         public ActivitySource ActivitySource { get; }
         public Counter<long> BetPlacementCounter { get; }
+        public Counter<long> BetReceivedCounter { get; }
 
         public void Dispose()
         {

@@ -35,6 +35,7 @@ namespace Platform.Placement.Servicev2
         private readonly ActivitySource _activitySource;
         private static readonly TextMapPropagator Propagator = Propagators.DefaultTextMapPropagator;
         private readonly Counter<long> _betPlacementCounter;
+        private readonly Counter<long> _betReceivedCounter;
 
         private Stack<int> _index = new Stack<int>();
 
@@ -254,6 +255,7 @@ namespace Platform.Placement.Servicev2
             _scopeFactory = scopeFactory;
             _activitySource = instrumentation.ActivitySource;
             _betPlacementCounter = instrumentation.BetPlacementCounter;
+            _betReceivedCounter = instrumentation.BetReceivedCounter;
         }
 
         public override Task StartAsync(CancellationToken cancellationToken)
@@ -853,6 +855,11 @@ namespace Platform.Placement.Servicev2
                     {
                         case "OnBetPlacement":
                             var onBetPlacement = JsonSerializer.Deserialize<OnBetPlacement>(payload);
+
+                            // Delayed acceptance messages are a second pass for a bet already counted
+                            if (_betReceivedCounter.Enabled && onBetPlacement.DelayedBetAcceptance == null)
+                                _betReceivedCounter.Add(1,
+                                    new KeyValuePair<string, object>("client_code", onBetPlacement.Bet?.ClientCode?.ToLower() ?? "unknown"));
 
                             var betProviderFactory =
                                 scope.ServiceProvider.GetRequiredService<IBetProviderFactory>();

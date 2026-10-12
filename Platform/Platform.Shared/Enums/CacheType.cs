@@ -10,5 +10,6 @@
         Client = 6,
         DynamicTranslation = 7,
         StaticTranslation = 8,
+        OddstableLeagueSortOrder = 9,
     }
 }

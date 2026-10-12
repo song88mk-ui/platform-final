@@ -51,6 +51,18 @@ namespace Platform.CacheSync.Service.Repository
             var publishMessage = await DeleteCachePreload_SportsbookApi(request);
         }
 
+        public async Task ProcessOddstableLeagueSortOrderChange(OnDeleteCacheMessage message)
+        {
+            var request = new CachePreloadRequestDTO
+            {
+                CacheType = CacheType.OddstableLeagueSortOrder,
+                // Purge only the client that changed. A message without a client id purges every client.
+                CacheKey = message.ClientId == Guid.Empty ? string.Empty : message.ClientId.ToString()
+            };
+
+            await DeleteCachePreload_SportsbookApi(request);
+        }
+
         public async Task ProcessUpdateUserFavorites(OnDeleteCacheMessage message)
         {
             var request = new CachePreloadRequestDTO

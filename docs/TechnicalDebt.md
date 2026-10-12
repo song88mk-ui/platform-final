@@ -321,6 +321,24 @@
 - **Confidence:** **[Verified]** (traced in code and prod Loki; CI Test job passed on PR #168; the
   follow-up tests pass locally).
 
+### TD-22 - `OnSportSortOrderChange` never evicts the per-client `leo-`/`seo-` rows caches (`SportsbookRepository.cs`) - **Open** (found during GM-851)
+- **Evidence:** `GetLeagueOrder` caches under `leo-{clientId}` and `GetSegmentOrder` under
+  `seo-{clientId}`, 24 h each. The `CacheType.SportSortOrder` branch of `DeleteCachePreload` calls
+  `_memCache.DeleteCache("leo")` and `DeleteCache("seo")`, and `MemCache.DeleteCache` is an exact-key
+  `MemoryCache.Default.Remove` (`Platform.Shared/Utility/MemCache.cs`), so neither matches a real key.
+  The same branch does purge the list responses by prefix, so after a Sport Tree league or segment
+  reorder the next request rebuilds the list from the old, still-cached rows until the 24 h TTL
+  runs out or the pod restarts.
+- **Files:** `Platform.Sportsbook.API/Repository/SportsbookRepository.cs` (`GetLeagueOrder`,
+  `GetSegmentOrder`, `DeleteCachePreload`).
+- **Why it matters for GM-851:** leagues missing from an Oddstable configuration fall back to the
+  Sport Tree order, so they inherit this staleness. The Oddstable's own rows are not affected: they
+  are cached as `oleo-{clientId}` and purged by exact key.
+- **Not fixed in GM-851:** it changes Sport Tree behaviour and is outside that ticket. The likely fix
+  is `DeleteCacheByPrefix("leo-")` and `("seo-")` in that branch.
+- **Confidence:** **[Verified]** in code (`DeleteCache("leo")` against `$"leo-{...}"` keys);
+  production impact **[Unknown]**, not observed.
+
 ## Consolidated cross-views
 - **Duplicate implementations** → TD-07 (+ AntiPatterns AP-8): v1/v2 projects, duplicated MessageBroker.
 - **Dead code** → TD-15: JwtParser, commented SQL blocks, superseded v1 services/WebSocket.API.

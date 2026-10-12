@@ -63,6 +63,10 @@ namespace Platform.CacheSync.Service
                         var sportSortOrderMessage = JsonSerializer.Deserialize<OnDeleteCacheMessage>(payload);
                         _cacheSyncRepository.ProcessSportSortOrderChange(sportSortOrderMessage).GetAwaiter().GetResult();
                         break;
+                    case "OnOddstableLeagueSortOrderChange":
+                        var oddstableLeagueSortOrderMessage = JsonSerializer.Deserialize<OnDeleteCacheMessage>(payload);
+                        _cacheSyncRepository.ProcessOddstableLeagueSortOrderChange(oddstableLeagueSortOrderMessage).GetAwaiter().GetResult();
+                        break;
                     case "OnUpdateUserFavorites":
                         var userFavorite = JsonSerializer.Deserialize<OnDeleteCacheMessage>(payload);
                         _cacheSyncRepository.ProcessUpdateUserFavorites(userFavorite).GetAwaiter().GetResult();

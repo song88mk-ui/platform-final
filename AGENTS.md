@@ -37,6 +37,11 @@ is the agent-oriented summary — read [CLAUDE.md](CLAUDE.md) first.
    unreachable the exception escaped before the `OperatorSettlementRetry` row was written. Guard
    the second call and treat its failure as "status unknown". See [CLAUDE.md](CLAUDE.md) rule 11
    and [docs/TechnicalDebt.md](docs/TechnicalDebt.md) TD-20.
+10. **`DeleteCache(key)` is an exact-key removal.** `DeleteCache("leo")` evicts nothing when the entry
+    is cached as `leo-{clientId}`; use `DeleteCacheByPrefix` or the full key (TD-22, found in
+    GM-851). The Early/Today/Live lists order leagues from `ClientOddstableLeagueOrder`
+    (`oleo-{clientId}`), purged per client by `OnOddstableLeagueSortOrderChange`. See
+    [CLAUDE.md](CLAUDE.md) rule 8 and [docs/CacheInvalidation.md](docs/CacheInvalidation.md).
 
 ## Mandatory workflow (Phase 12 — every task)
 Understand → **search repo** (`/find-*`) → **consult docs** → **trace end-to-end** (`/trace-*`) →

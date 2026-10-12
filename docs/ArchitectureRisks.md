@@ -99,7 +99,7 @@
 - **Suggested investigation:** quantify orphan/stale-reference frequency; review reconciliation paths.
 
 ## R-12 — Boundary violation: back-office writes platform SQL directly — **Risk: Medium**
-- **Evidence:** backoffice-final writes `ClientSportOrder`/`ClientSegmentOrder`/`ClientLeagueOrder` +
+- **Evidence:** backoffice-final writes `ClientSportOrder`/`ClientSegmentOrder`/`ClientLeagueOrder`/`ClientOddstableLeagueOrder` +
   market-template groups **directly** to the shared `Sportsbook` DB (bypassing platform-final's API),
   and reads platform DBs directly.
 - **Files:** sibling `backoffice-final/.../SportsbookRepository.cs`; platform `SportsbookContext`.

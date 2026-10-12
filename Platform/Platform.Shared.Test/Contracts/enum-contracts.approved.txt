@@ -27,6 +27,7 @@ CacheType : Int32
   Client = 6
   DynamicTranslation = 7
   StaticTranslation = 8
+  OddstableLeagueSortOrder = 9
 CashOutStatus : Int32
   Closed = -2
   Unavailable = -1

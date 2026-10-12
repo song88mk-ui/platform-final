@@ -93,6 +93,12 @@ on `--mutate` removed every mutant in our runs. No mutator removes an extension 
    (prod = AWS SSM). (TD-01)
 8. **Caches are per-pod** (`MemoryCache.Default`); invalidation is event-driven via `CacheSync.Service`
    — use the prefix convention so eviction works. ([docs/CacheInvalidation.md](docs/CacheInvalidation.md))
+   `DeleteCache(key)` removes one exact key, so `DeleteCache("leo")` evicts nothing when the entry
+   is stored as `leo-{clientId}`: use `DeleteCacheByPrefix` or the full key (TD-22, found in GM-851;
+   the Sport Tree purge still has this bug). GM-851: the Early/Today/Live lists order leagues from
+   `ClientOddstableLeagueOrder` (`oleo-{clientId}`), not `ClientLeagueOrder`, and
+   `OnOddstableLeagueSortOrderChange` purges only the changed client
+   (`Platform.Sportsbook.API/Utility/OddstableLeagueSortOrder.cs`).
 9. **Config key sections are not interchangeable.** `appsettings.json` defaults point at localhost,
    and deployed values come from env vars in `../argocd/apps/platform/<service>/{dev,stg,prd}.yaml`,
    where `A__B` maps to `A:B`. A wrong section fails silently back to the default. Example:

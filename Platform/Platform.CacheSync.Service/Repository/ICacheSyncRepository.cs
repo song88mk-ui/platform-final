@@ -7,6 +7,7 @@ namespace Platform.CacheSync.Service.Repository
     {
         Task ProcessMarketSortOrderChange(OnDeleteCacheMessage message);
         Task ProcessSportSortOrderChange(OnDeleteCacheMessage message);
+        Task ProcessOddstableLeagueSortOrderChange(OnDeleteCacheMessage message);
         Task ProcessUpdateUserFavorites(OnDeleteCacheMessage message);
         Task ProcessMaintenance(OnDeleteCacheMessage message);
         Task ProcessParlayBonusChange(OnDeleteCacheMessage message);

@@ -104,7 +104,8 @@ registry in [Contracts.md](Contracts.md).
   `topleagues(/copy)`, `announcements(/post|/delete)`, `parlaybonus`, `config/client`, plus
   `v1/bet/manualsettlement|resendsettlement|cancel|details`.
 - **Also writes some Sportsbook SQL tables directly** via its own `SportsbookContext`
-  (`ClientSportOrder`/`ClientSegmentOrder`/`ClientLeagueOrder`, market-template groups) — i.e. the
+  (`ClientSportOrder`/`ClientSegmentOrder`/`ClientLeagueOrder`/`ClientOddstableLeagueOrder`,
+  market-template groups), i.e. the
   per-client *ordering* tables are authored **directly in the DB**, bypassing platform-final's API.
   **Resolves Phase-3 U-20.** It then publishes cache-invalidation messages → `CacheSync.Service`.
 - Reads platform `Sportsbook` + `Trading` DBs directly; calls `TradingAPI` (odds-engine), `Auth`,

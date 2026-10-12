@@ -84,7 +84,10 @@ Documents use **abbreviated field names** (to keep the feed/payload small). Defi
 Defined in `Platform.Shared/Data/Sportsbook/SQLEntities/`. **[Verified]**. Two scopes:
 
 - **Per-client (`ClientId`):** `ClientTopFixture`, `ClientTopLeague`, `ClientSportOrder`,
-  `ClientSegmentOrder`, `ClientLeagueOrder`, `ClientMarketTemplateOrder`,
+  `ClientSegmentOrder`, `ClientLeagueOrder` (Sport Tree league order),
+  `ClientOddstableLeagueOrder` (Oddstable league order for the Early/Today/Live lists, GM-851;
+  written by backoffice-final, BO-107; a sport with no rows keeps using `ClientLeagueOrder`),
+  `ClientMarketTemplateOrder`,
   `ClientMarketTemplateGroup`, `ClientSelectorMarketTemplate` (`…2` table), `ClientAnnouncements`.
 - **Global:** `SportGroup` (`SportGroup2`), `SelectorMarketTemplate` (`…2`),
   `MarketTemplateGroup` (`…2`), `TierLeagueOrder`, `BetBuilderMarketTemplates`,

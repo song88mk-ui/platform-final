@@ -19,11 +19,36 @@ Back office writes config/curation (SQL) ─▶ publishes On*Change / OnDeleteCa
 ```
 
 ## `CacheSync.Service` — the invalidation worker `[Verified]`
-Consumes **7 message types** and evicts the corresponding cache entries (Phase 1):
-`OnMarketSortOrderChange`, `OnSportSortOrderChange`, `OnUpdateUserFavorites`, `OnMaintenance`,
-`OnParlayBonusChange`, `OnClientChange`, `OnDynamicTranslationChange`. It also handles
+Consumes **8 message types** and evicts the corresponding cache entries (Phase 1; the eighth added
+by GM-851):
+`OnMarketSortOrderChange`, `OnSportSortOrderChange`, `OnOddstableLeagueSortOrderChange`,
+`OnUpdateUserFavorites`, `OnMaintenance`, `OnParlayBonusChange`, `OnClientChange`,
+`OnDynamicTranslationChange`. It also handles
 `OnDeleteCacheMessage` (generic eviction by key / prefix / purge-all). Calls
 `ICacheSyncRepository`/`ISportsbookRepository` + `IMemCache`. **[Verified]**
+(`OnTranslationChange` and `OnStaticTranslationChange` are handled in `Worker.cs` too; this list
+predates them.)
+
+### Oddstable league order (GM-851) `[Verified]`
+The Early, Today and Live fixture lists order their leagues from `ClientOddstableLeagueOrder`
+(written by backoffice-final, BO-107), not from the Sport Tree's `ClientLeagueOrder`. A League
+Sorting save or copy publishes `OnDeleteCacheMessage` as message type
+`OnOddstableLeagueSortOrderChange` on routing key `r.oe.cachesync.onoddstableleaguesortorderchange`
+(`CacheType.OddstableLeagueSortOrder = 9`, `ClientId` set). `CacheSync.Service`
+(`ProcessOddstableLeagueSortOrderChange`) forwards it to every Sportsbook.API pod as
+`DeleteCachePreload` with `CacheKey` = the client id, and the pod runs
+`OddstableLeagueSortOrder.PurgeCache`:
+
+- the cached rows, `oleo-{clientId}` (24 h, exact key);
+- that client's list responses only: `nlf`, `nlfbl`, `ntf`, `ntfbl`, `nuf`, `nufbl`, `ndf`, `ndfbl`
+  keys of the form `<prefix>:{CLIENTID}:`. A message without a usable client id purges every
+  client instead. (`nuf:` is shared with the user-favourites cache, so that client's favourites
+  are dropped too; they reload on the next read.)
+
+Unlike `OnSportSortOrderChange`, which purges those prefixes for every client, one client's save
+leaves other clients' lists cached. If the rows cannot be read (for example the table is missing in
+an environment), `GetOddstableLeagueOrder` logs the error and falls back to the Sport Tree order for
+a minute instead of failing the lists; see also [TD-22](TechnicalDebt.md).
 
 ## Eviction primitives `[Verified]`
 - **`DeleteCache(key)`** — exact-key removal (e.g. `cc:{clientId}` on `OnClientChange`).

@@ -16,7 +16,8 @@ namespace Platform.CacheSync.Service.Test.Repository
 {
     // GM-851. Back Office publishes OnOddstableLeagueSortOrderChange after every League Sorting save or
     // copy (BO-107). Before this handler existed CacheSync ignored the message, so the Sportsbook API
-    // kept serving the old order from its 24 hour caches.
+    // kept serving the old order from its 24 hour caches. It also relays the change to the websocket
+    // service, which caches the order it stamps on pushed fixtures.
     //
     // "localhost" is used as the configured host so DeleteCachePreload_SportsbookApi's
     // Dns.GetHostAddressesAsync resolves without a network. It can yield both 127.0.0.1 and ::1, so
@@ -72,9 +73,39 @@ namespace Platform.CacheSync.Service.Test.Repository
             Assert.Equal(string.Empty, sportsbook.Requests[0].CacheKey);
         }
 
+        // The websocket service stamps the league order on every fixture it pushes and only reloads it
+        // when this relay arrives. The routing key suffix is how it finds the client.
         [Fact]
-        public async Task ProcessOddstableLeagueSortOrderChange_DoesNotRelayAnythingToTheOddsEngine()
+        public async Task ProcessOddstableLeagueSortOrderChange_RelaysToTheWebsocketServiceForThatClient()
         {
+            var broker = new FakeMessageBroker();
+
+            await CreateRepository(new FakeSportsbookRepository(), broker)
+                .ProcessOddstableLeagueSortOrderChange(new OnDeleteCacheMessage { ClientId = ClientId, ClientCode = "QTE-A" });
+
+            var relayed = Assert.Single(broker.Published);
+            Assert.Equal("OnOddstableLeagueSortOrderChange", relayed.MessageType);
+            Assert.Equal("r.oe.sb.engine.onoddstableleaguesortorderchange.qte-a", relayed.RoutingKey);
+            Assert.False(string.IsNullOrEmpty(relayed.CorrelationId));
+        }
+
+        [Fact]
+        public async Task ProcessOddstableLeagueSortOrderChange_WhenThePurgeFails_DoesNotRelay()
+        {
+            // A reload before the Sportsbook API has dropped its cache would read the old order again.
+            var broker = new FakeMessageBroker();
+            var sportsbook = new FakeSportsbookRepository { StatusToReturn = StatusCode.Error };
+
+            await CreateRepository(sportsbook, broker)
+                .ProcessOddstableLeagueSortOrderChange(new OnDeleteCacheMessage { ClientId = ClientId, ClientCode = "QTE-A" });
+
+            Assert.Empty(broker.Published);
+        }
+
+        [Fact]
+        public async Task ProcessOddstableLeagueSortOrderChange_WithoutAClientCode_DoesNotRelay()
+        {
+            // The routing key ends in the client code; without one there is nobody to address.
             var broker = new FakeMessageBroker();
 
             await CreateRepository(new FakeSportsbookRepository(), broker)

@@ -104,7 +104,11 @@ on `--mutate` removed every mutant in our runs. No mutator removes an extension 
    the Sport Tree purge still has this bug). GM-851: the Early/Today/Live lists order leagues from
    `ClientOddstableLeagueOrder` (`oleo-{clientId}`), not `ClientLeagueOrder`, and
    `OnOddstableLeagueSortOrderChange` purges only the changed client
-   (`Platform.Sportsbook.API/Utility/OddstableLeagueSortOrder.cs`).
+   (`Platform.Sportsbook.API/Utility/OddstableLeagueSortOrder.cs`). The same order is returned by
+   `GetClientFixtureSortOrder`, which odds-engine-2's websocket service stamps on pushed fixtures as
+   `SoOr` and caches per client. CacheSync relays `OnOddstableLeagueSortOrderChange` to it after the
+   purge so it reloads that client; it still does not reload on `OnSportSortOrderChange`
+   (docs/CacheInvalidation.md).
 9. **Config key sections are not interchangeable.** `appsettings.json` defaults point at localhost,
    and deployed values come from env vars in `../argocd/apps/platform/<service>/{dev,stg,prd}.yaml`,
    where `A__B` maps to `A:B`. A wrong section fails silently back to the default. Example:

@@ -8440,31 +8440,12 @@ namespace Platform.Sportsbook.API.Repository
                 };
             }
 
-            var clientLeagueOrder = GetLeagueOrder(request.ClientId);
-
-            var result = clientLeagueOrder == null ? new List<ClientFixtureSortOrderDTO>() : clientLeagueOrder.Where(c => c.ClientId == request.ClientId).Select(s => new ClientFixtureSortOrderDTO
-            {
-                SportId = s.SportId,
-                SegmentId = s.SegmentId,
-                LeagueId = s.LeagueId,
-                SortOrder = s.SortOrder
-            }).ToList();
-
-            var tierLeagueOrder = GetTierLeagueOrder();
-
-            if (tierLeagueOrder != null)
-            {
-                var tierResult = tierLeagueOrder.Where(t => !result.Any(r => r.SportId == t.SportId && r.SegmentId == t.SegmentId && r.LeagueId == t.LeagueId)).Select(s => new ClientFixtureSortOrderDTO
-                {
-                    SportId = s.SportId,
-                    SegmentId = s.SegmentId,
-                    LeagueId = s.LeagueId,
-                    SortOrder = s.SortOrder + 1000
-                }).ToList();
-
-                if (tierResult.Any())
-                    result.AddRange(tierResult);
-            }
+            // The websocket service stamps this order on every fixture it pushes, so it has to match the
+            // order the Early, Today and Live lists use, the Oddstable order (GM-851).
+            var result = OddstableLeagueSortOrder.BuildClientFixtureSortOrder(
+                GetLeagueOrder(request.ClientId),
+                GetTierLeagueOrder(),
+                GetOddstableLeagueOrder(request.ClientId));
 
             return new BaseResponseDTO<ClientFixtureSortOrderResponseDTO>
             {

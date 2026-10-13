@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Platform.Shared.Data.Sportsbook.SQLEntities;
+using Platform.Shared.Models;
 using Platform.Shared.Utility;
 
 namespace Platform.Sportsbook.API.Utility
@@ -73,14 +74,101 @@ namespace Platform.Sportsbook.API.Utility
             if (_configured.TryGetValue(key, out var configured))
                 return configured;
 
-            // Shift past every configured league, so the unconfigured ones sort after them whatever
-            // the two orders' numbering looks like.
-            return lastConfigured + Math.Max(SportTreeOrder(key), 1);
+            return ShiftPast(lastConfigured, SportTreeOrder(key));
+        }
+
+        // Same rule as Of, for a caller that already holds the league's Sport Tree order. A sport with
+        // no Oddstable rows gets that order back unchanged, so a client that has not configured the
+        // Oddstable sees no difference.
+        public int Apply(int sportId, int segmentId, int leagueId, int sportTreeOrder)
+        {
+            if (!_lastConfiguredBySport.TryGetValue(sportId, out var lastConfigured))
+                return sportTreeOrder;
+
+            if (_configured.TryGetValue((sportId, segmentId, leagueId), out var configured))
+                return configured;
+
+            return ShiftPast(lastConfigured, sportTreeOrder);
+        }
+
+        // Shift past every configured league, so the unconfigured ones sort after them whatever the
+        // two orders' numbering looks like. 0 means "not set" in ClientLeagueOrder.
+        private static int ShiftPast(int lastConfigured, int sportTreeOrder)
+        {
+            return lastConfigured + Math.Max(sportTreeOrder != 0 ? sportTreeOrder : DefaultOrder, 1);
         }
 
         private int SportTreeOrder((int SportId, int SegmentId, int LeagueId) key)
         {
             return _sportTree.TryGetValue(key, out var order) && order != 0 ? order : DefaultOrder;
+        }
+
+        // The per-client league order the odds engine's websocket service loads (it calls
+        // GetClientFixtureSortOrder at startup) and stamps on every fixture it pushes as SoOr. Platform
+        // Web places a league that first appears through a push by that number, so it has to be the
+        // same order the lists use. Before GM-851 it was the Sport Tree order only, which put a newly
+        // live league in the wrong place whenever the Oddstable order differed.
+        //
+        // The rows are the Sport Tree rows, then the global tier rows (plus 1000) for leagues the client
+        // has no row for, as before. Where a sport has Oddstable rows, every row is moved to its
+        // Oddstable position, and a configured league with no Sport Tree or tier row is added, because
+        // the websocket service falls back to 1000 for a league it has no row for.
+        public static List<ClientFixtureSortOrderDTO> BuildClientFixtureSortOrder(
+            IEnumerable<ClientLeagueOrder> sportTreeOrder,
+            IEnumerable<TierLeagueOrder> tierOrder,
+            IEnumerable<ClientOddstableLeagueOrder> oddstableOrder)
+        {
+            var sportTreeRows = (sportTreeOrder ?? Enumerable.Empty<ClientLeagueOrder>()).ToList();
+            var oddstableRows = (oddstableOrder ?? Enumerable.Empty<ClientOddstableLeagueOrder>()).ToList();
+
+            var result = sportTreeRows.Select(s => new ClientFixtureSortOrderDTO
+            {
+                SportId = s.SportId,
+                SegmentId = s.SegmentId,
+                LeagueId = s.LeagueId,
+                SortOrder = s.SortOrder
+            }).ToList();
+
+            var present = result.Select(r => (r.SportId, r.SegmentId, r.LeagueId)).ToHashSet();
+
+            if (tierOrder != null)
+            {
+                result.AddRange(tierOrder
+                    .Where(t => !present.Contains((t.SportId, t.SegmentId, t.LeagueId)))
+                    .Select(t => new ClientFixtureSortOrderDTO
+                    {
+                        SportId = t.SportId,
+                        SegmentId = t.SegmentId,
+                        LeagueId = t.LeagueId,
+                        SortOrder = t.SortOrder + 1000
+                    }).ToList());
+            }
+
+            if (oddstableRows.Count == 0)
+                return result;
+
+            var order = Build(sportTreeRows, oddstableRows);
+
+            foreach (var row in result)
+                row.SortOrder = order.Apply(row.SportId, row.SegmentId, row.LeagueId, row.SortOrder);
+
+            present = result.Select(r => (r.SportId, r.SegmentId, r.LeagueId)).ToHashSet();
+
+            foreach (var configured in oddstableRows.GroupBy(c => (c.SportId, c.SegmentId, c.LeagueId)).Select(g => g.First()))
+            {
+                if (present.Add((configured.SportId, configured.SegmentId, configured.LeagueId)))
+                {
+                    result.Add(new ClientFixtureSortOrderDTO
+                    {
+                        SportId = configured.SportId,
+                        SegmentId = configured.SegmentId,
+                        LeagueId = configured.LeagueId,
+                        SortOrder = configured.SortOrder
+                    });
+                }
+            }
+
+            return result;
         }
 
         public static string CacheKey(Guid clientId)

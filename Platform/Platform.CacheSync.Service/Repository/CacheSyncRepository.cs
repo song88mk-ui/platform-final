@@ -60,7 +60,15 @@ namespace Platform.CacheSync.Service.Repository
                 CacheKey = message.ClientId == Guid.Empty ? string.Empty : message.ClientId.ToString()
             };
 
-            await DeleteCachePreload_SportsbookApi(request);
+            var purged = await DeleteCachePreload_SportsbookApi(request);
+
+            // Tell the odds engine's websocket service to reload this client's league order, which it stamps
+            // on every pushed fixture. Only after the purge, so its reload reads the new order, and only for
+            // a message that names a client, since the routing key ends in the client code.
+            if (purged && !string.IsNullOrEmpty(message.ClientCode))
+            {
+                _messageBroker.Publish(true, "OnOddstableLeagueSortOrderChange", $"r.oe.sb.engine.onoddstableleaguesortorderchange.{message.ClientCode.ToLower()}", Guid.NewGuid().ToString().ToUpper());
+            }
         }
 
         public async Task ProcessUpdateUserFavorites(OnDeleteCacheMessage message)

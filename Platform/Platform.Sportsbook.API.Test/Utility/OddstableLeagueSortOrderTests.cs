@@ -165,6 +165,131 @@ namespace Platform.Sportsbook.API.Test.Utility
 
         #endregion
 
+        #region BuildClientFixtureSortOrder (the order pushed with every fixture)
+
+        private static TierLeagueOrder Tier(int sportId, int segmentId, int leagueId, int sortOrder) =>
+            new TierLeagueOrder { SportId = sportId, SegmentId = segmentId, LeagueId = leagueId, SortOrder = sortOrder };
+
+        private static int Pushed(IEnumerable<Platform.Shared.Models.ClientFixtureSortOrderDTO> rows, int sportId, int segmentId, int leagueId) =>
+            rows.Single(r => r.SportId == sportId && r.SegmentId == segmentId && r.LeagueId == leagueId).SortOrder;
+
+        [Fact]
+        public void BuildClientFixtureSortOrder_NoOddstableRows_IsTheSportTreeThenTierOrderAsBefore()
+        {
+            var rows = OddstableLeagueSortOrder.BuildClientFixtureSortOrder(
+                new[] { Tree(Football, 10, 100, 7), Tree(Football, 10, 101, 0) },
+                new[] { Tier(Football, 10, 100, 4), Tier(Football, 10, 102, 4) },
+                null);
+
+            Assert.Equal(3, rows.Count);
+            Assert.Equal(7, Pushed(rows, Football, 10, 100));
+            Assert.Equal(0, Pushed(rows, Football, 10, 101));
+            Assert.Equal(1004, Pushed(rows, Football, 10, 102));
+        }
+
+        [Fact]
+        public void BuildClientFixtureSortOrder_NullInputs_IsEmpty()
+        {
+            Assert.Empty(OddstableLeagueSortOrder.BuildClientFixtureSortOrder(null, null, null));
+        }
+
+        [Fact]
+        public void BuildClientFixtureSortOrder_ConfiguredLeague_IsPushedWithItsConfiguredOrder()
+        {
+            var rows = OddstableLeagueSortOrder.BuildClientFixtureSortOrder(
+                new[] { Tree(Football, 10, 100, 2), Tree(Football, 10, 101, 11) },
+                null,
+                new[] { Oddstable(Football, 10, 101, 3), Oddstable(Football, 10, 100, 4) });
+
+            Assert.Equal(3, Pushed(rows, Football, 10, 101));
+            Assert.Equal(4, Pushed(rows, Football, 10, 100));
+        }
+
+        [Fact]
+        public void BuildClientFixtureSortOrder_LeaguesTheConfigurationLeavesOut_FollowTheConfiguredOnesInSportTreeOrder()
+        {
+            var rows = OddstableLeagueSortOrder.BuildClientFixtureSortOrder(
+                new[] { Tree(Football, 10, 100, 5), Tree(Football, 10, 101, 2), Tree(Football, 10, 102, 9) },
+                null,
+                new[] { Oddstable(Football, 10, 200, 1), Oddstable(Football, 10, 201, 4) });
+
+            Assert.Equal(new[] { 101, 100, 102 }, new[] { 100, 101, 102 }.OrderBy(l => Pushed(rows, Football, 10, l)).ToArray());
+            Assert.All(new[] { 100, 101, 102 }, l => Assert.True(Pushed(rows, Football, 10, l) > 4));
+        }
+
+        [Fact]
+        public void BuildClientFixtureSortOrder_TierOnlyLeagueInAConfiguredSport_IsShiftedPastTheConfiguredOnes()
+        {
+            var rows = OddstableLeagueSortOrder.BuildClientFixtureSortOrder(
+                null,
+                new[] { Tier(Football, 10, 100, 3) },
+                new[] { Oddstable(Football, 10, 200, 6) });
+
+            Assert.Equal(6 + 1003, Pushed(rows, Football, 10, 100));
+        }
+
+        [Fact]
+        public void BuildClientFixtureSortOrder_ConfiguredLeagueWithNoOtherRow_IsAdded()
+        {
+            // The websocket service falls back to 1000 for a league it has no row for, which would put
+            // a configured league behind the unconfigured ones.
+            var rows = OddstableLeagueSortOrder.BuildClientFixtureSortOrder(
+                new[] { Tree(Football, 10, 100, 1) },
+                null,
+                new[] { Oddstable(Football, 10, 200, 2) });
+
+            Assert.Equal(2, Pushed(rows, Football, 10, 200));
+            Assert.Equal(2, rows.Count);
+        }
+
+        [Fact]
+        public void BuildClientFixtureSortOrder_ConfigurationForOneSport_LeavesAnotherSportAlone()
+        {
+            var rows = OddstableLeagueSortOrder.BuildClientFixtureSortOrder(
+                new[] { Tree(Football, 10, 100, 7), Tree(Tennis, 20, 300, 4) },
+                null,
+                new[] { Oddstable(Football, 10, 200, 1) });
+
+            Assert.Equal(4, Pushed(rows, Tennis, 20, 300));
+        }
+
+        [Fact]
+        public void BuildClientFixtureSortOrder_SportTreeOrderOfZero_InAConfiguredSport_IsTreatedAsNotSet()
+        {
+            var rows = OddstableLeagueSortOrder.BuildClientFixtureSortOrder(
+                new[] { Tree(Football, 10, 100, 0) },
+                null,
+                new[] { Oddstable(Football, 10, 200, 3) });
+
+            Assert.Equal(3 + OddstableLeagueSortOrder.DefaultOrder, Pushed(rows, Football, 10, 100));
+        }
+
+        // The point of GM-851's second half: a league that goes live after the page loaded is placed by
+        // the pushed number, the leagues already on the page by the list number. They must agree.
+        [Fact]
+        public void BuildClientFixtureSortOrder_AgreesWithTheListOrderForEveryLeagueThatHasASportTreeRow()
+        {
+            var tree = new[] { Tree(Football, 10, 100, 5), Tree(Football, 10, 101, 0), Tree(Football, 10, 102, 9), Tree(Football, 11, 103, 2) };
+            var oddstable = new[] { Oddstable(Football, 10, 100, 2), Oddstable(Football, 10, 200, 1) };
+
+            var rows = OddstableLeagueSortOrder.BuildClientFixtureSortOrder(tree, null, oddstable);
+            var list = OddstableLeagueSortOrder.Build(tree, oddstable);
+
+            foreach (var league in tree)
+                Assert.Equal(list.Of(league.SportId, league.SegmentId, league.LeagueId), Pushed(rows, league.SportId, league.SegmentId, league.LeagueId));
+        }
+
+        [Fact]
+        public void Apply_SportWithoutOddstableRows_ReturnsTheSportTreeOrderUnchanged()
+        {
+            var order = Build(null, new[] { Oddstable(Football, 10, 200, 1) });
+
+            Assert.Equal(0, order.Apply(Tennis, 20, 300, 0));
+            Assert.Equal(7, order.Apply(Tennis, 20, 300, 7));
+        }
+
+        #endregion
+
         #region PurgeCache
 
         private static readonly Guid ClientA = Guid.Parse("11111111-1111-1111-1111-111111111111");

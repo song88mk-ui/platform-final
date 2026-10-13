@@ -50,6 +50,34 @@ leaves other clients' lists cached. If the rows cannot be read (for example the 
 an environment), `GetOddstableLeagueOrder` logs the error and falls back to the Sport Tree order for
 a minute instead of failing the lists; see also [TD-22](TechnicalDebt.md).
 
+### Order stamped on pushed fixtures (GM-851) `[Verified]` / `[Verified-sibling]`
+A league that first appears through a SignalR push (it goes live after the page loaded) is placed by
+the fixture's `SoOr`, not by a list response. `OE.Websocket.Service` (odds-engine-2) sets `SoOr` per
+client from a league order it loads by calling Sportsbook.API `GetClientFixtureSortOrder` (through
+Platform.API `GET v1/sportsbook/fixturesortorder`) and caches under `{clientCode}:fso:{sport}:{segment}:{league}`
+for a year, defaulting to 1000 for a league it has no row for. That endpoint used to return only the
+Sport Tree order, so pushed leagues ignored the Oddstable order. It now returns the same order the lists
+use (`OddstableLeagueSortOrder.BuildClientFixtureSortOrder`): Sport Tree rows, then tier rows plus 1000,
+then, for a sport with Oddstable rows, every row moved to its Oddstable position and any configured
+league without another row added.
+
+Reload on a Back Office save: after the purge succeeds, `ProcessOddstableLeagueSortOrderChange`
+publishes `OnOddstableLeagueSortOrderChange` to routing key
+`r.oe.sb.engine.onoddstableleaguesortorderchange.<clientcode>` (payload `true`, as
+`OnMarketSortOrderChange` does). The websocket service reloads that client's `fso` entries when it
+receives it, which needs the routing key in its `MessageBroker__RoutingKey` (argocd,
+`apps/oddsengine/websocket-service/{dev,stg,prd}.yaml`). No relay is sent if a purge call failed, because the
+reload would read the old order again, or if the message carries no client code. CacheSync's own
+binding is `r.oe.cachesync.#`, so it does not consume its own relay.
+
+Limits: before the reload existed, and for any service version without the handler, the websocket
+service only loaded the order at startup and for clients it newly picks up (its 5 minute client
+refresh). It still does not handle `OnSportSortOrderChange`, so a Sport Tree order change reaches
+pushed `SoOr` values only after a restart. A league with no row anywhere gets 1000 in a push but
+`last configured + 1000` in a list. The websocket service reads `fixturesortorder` through Platform.API,
+so deploy this repo before the odds-engine-2 change is relied on, and restart the websocket service once
+after deploying it so the first load uses the new endpoint.
+
 ## Eviction primitives `[Verified]`
 - **`DeleteCache(key)`** — exact-key removal (e.g. `cc:{clientId}` on `OnClientChange`).
 - **`DeleteCacheByPrefix(prefix)`** — removes all keys starting with a prefix (e.g. all entries for a

@@ -7,6 +7,7 @@ On **every** prompt, before acting:
 3. **Follow the mandatory development workflow** (see [§ Permanent development workflow](#permanent-development-workflow-mandatory-every-task)): understand → search the repo → consult `docs/` → trace end-to-end **in the actual code and cite `file:line`** (never answer from memory) → identify reuse and risks → explain the plan and **wait for approval before any architectural change** → make the **smallest possible change** → validate → update docs.
 4. **Label every claim `verified` / `assumption` / `unknown` — never guess.**
 5. **Production is READ-ONLY:** do not run queries, deploy, change schema, or invalidate caches unless **explicitly instructed**.
+6. **Commit, push, or open a PR only when explicitly asked.** "Implement it" authorizes local edits only; see the [`jira-updates`](.claude/skills/jira-updates/SKILL.md) skill.
 
 > A `UserPromptSubmit` hook in [`.claude/settings.json`](.claude/settings.json) re-injects these rules on every prompt so they are never skipped.
 

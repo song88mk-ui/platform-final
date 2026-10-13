@@ -74,8 +74,7 @@ See [CLAUDE.md](CLAUDE.md) §Engineering principles.
 - **Use sub-agents** for breadth (sweeping many files); keep conclusions, not file dumps.
 
 ## Tooling notes
-- Windows host; PowerShell + Git Bash available. Build needs the private GitHub NuGet feed
-  (`NUGET_PASSWORD`). Tests: `Platform.Shared.Test`, `Platform.Sportsbook.API.Test`,
+- Build needs the private GitHub NuGet feed (`NUGET_PASSWORD`). Tests: `Platform.Shared.Test`, `Platform.Sportsbook.API.Test`,
   `Platform.Operator.API.Test`, `Platform.BetInfo.Service.Test`, `Platform.CacheSync.Service.Test`
   and `Platform.Operator.Servicev2.Test`.
 - Commit/PR only when asked; don't bypass hooks.

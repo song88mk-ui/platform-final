@@ -234,6 +234,7 @@ Follow these steps in order on every task:
 
 ## Assets in this repo
 - **`docs/`** — the 10-phase knowledge base (start at [docs/README.md](docs/README.md)).
+- **`.claude/`** — index of every command, skill and guide: [.claude/README.md](.claude/README.md).
 - **`.claude/commands/`** — trace, impact-analysis, find and review-feature commands.
 - **`.claude/skills/jira-updates`** — rules for Jira writes, git push/PR approval, and build + test before commit.
 - **`.claude/skills/`**, **`.claude/playbooks/`**, **`.claude/checklists/`**, **`.claude/templates/`**,

@@ -8,6 +8,6 @@
 5. **Correlate** with OTel trace id (through RabbitMQ headers) + `CorrelationId`; read Serilog JSON.
 6. **Cross-repo check:** is the fault upstream (odds-engine-2 catalogue/odds, Auth, WS feeder)? Don't
    assume — confirm in the sibling (read-only).
-7. **Regression?** `/compare-reference` + `git log -p` the suspect file.
+7. **Regression?** `git log -p -- <path>` the suspect file; `git log -S<symbol>` to date a change.
 8. **Conclude:** root cause + evidence (file:line, logs) + confidence; identify the fix *area* (don't
    refactor unless asked). Propose a verification.

@@ -1,6 +1,7 @@
 # Checklist: Regression Review
 
-- [ ] **Compared to `/Reference`** for the affected method(s) — behavior, not formatting.
+- [ ] **Compared to a known-good commit** for the affected method(s) (`git diff <good-commit>..origin/main -- <path>`)
+      — behavior, not formatting.
 - [ ] **Git history** reviewed for the file (esp. hotspots `SportsbookRepository.cs`,
       `BettingRepository.cs`); suspect commit identified.
 - [ ] **Status codes / branching** unchanged unless intended (`StatusCode` is a consumer contract).

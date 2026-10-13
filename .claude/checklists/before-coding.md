@@ -1,6 +1,6 @@
 # Checklist: Before Coding
 
-- [ ] **Right repo?** Backend → platform-final; UI → platform-web. Not editing a sibling or `/Reference`.
+- [ ] **Right repo?** Backend → platform-final; UI → platform-web. Not editing a sibling.
 - [ ] **Traced the existing implementation** (`/trace-*`) — not inferring.
 - [ ] **Found the pattern** to follow ([docs/ImplementationPatterns.md](../../docs/ImplementationPatterns.md),
       [docs/BestPractices.md](../../docs/BestPractices.md)) — no new framework where one exists.

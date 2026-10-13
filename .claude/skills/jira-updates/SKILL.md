@@ -3,6 +3,9 @@ name: jira-updates
 description: Rules for ANY interaction with Jira (song88.atlassian.net) via the Atlassian MCP tools, and for outward-facing git actions (git push, pull request creation). MUST be followed whenever creating, editing, commenting on, linking, or transitioning a Jira issue, when a task might touch Jira as a side effect, and before any git commit, git push or PR creation in any repository (every commit must be preceded by a rebuild and a test run).
 ---
 
+<!-- Synced from song88-claude/standing-rules/jira-updates/SKILL.md by sync_standing_rules.py.
+     Edit it there, not here; --check fails on any local edit. -->
+
 # Jira Updates - Approval Required
 
 Jira is a shared, team-visible system. Every write is immediately visible to the whole team under the user's own name. These rules are absolute.
@@ -34,7 +37,7 @@ Jira is a shared, team-visible system. Every write is immediately visible to the
 
 # Git Pushes and Pull Requests - Approval Required
 
-Pushing branches and opening pull requests are outward-facing, team-visible actions, exactly like Jira writes. These rules apply in every repository (platform-web, infrastructure, odds-engine-2, platform-final, and all other org repos).
+Pushing branches and opening pull requests are outward-facing, team-visible actions, exactly like Jira writes. These rules apply in every repository.
 
 ## Rules
 
@@ -47,12 +50,17 @@ Pushing branches and opening pull requests are outward-facing, team-visible acti
 
 3. **Do exactly the approved scope and nothing more.** "Push the branch" does not imply "open a PR"; "open a PR" does not imply merging, editing reviewers, or commenting on tickets.
 
-(Added after GM-784, 2026-09-01: "proceed with the fix, ticket: GM-784" was wrongly treated as permission to push and open a PR.)
+4. **Name only the PR's own ticket key** in the PR title, the PR body and every commit message.
+   Jira Automation links each ticket key it finds there to the PR, moves it to In Progress when the
+   PR opens and to Done when it merges. A sibling, parent or "not in this PR" key gets closed with
+   no work done. Refer to other work by description or PR number instead.
+
+(Rules 1-3 added after GM-784, 2026-09-01: "proceed with the fix, ticket: GM-784" was wrongly treated as permission to push and open a PR. Rule 4 added 2026-10-13, after PR bodies that named sibling tickets closed them on merge.)
 
 # Rebuild and Test Before Committing - Mandatory
 
 A commit is a checkpoint that claims the tree is good. Never create one until the change has been
-built and the relevant tests have been run. This applies in every repository, not just platform-web.
+built and the relevant tests have been run. This applies in every repository.
 
 ## Rules
 
@@ -70,11 +78,16 @@ built and the relevant tests have been run. This applies in every repository, no
 
 | Repo | Build | Test |
 | --- | --- | --- |
-| `platform-web` | `dotnet build Platform/Platform.Child.Web` | `dotnet test Platform/Platform.Test -c Release` (use `-c Release`: a Debug build triggers the wwwroot pnpm `PreBuild` target) |
+| `Auth` | `dotnet build Auth.sln` | `dotnet test Auth.Tests/Auth.Tests.csproj` |
+| `backoffice-final` | `dotnet build backoffice-final.sln` | `dotnet test Backoffice.API.Tests/Backoffice.API.Tests.csproj` and `dotnet test Backoffice.Web.Tests/Backoffice.Web.Tests.csproj` |
+| `bet-genius` | `dotnet build BetGenius.sln` | `dotnet test BetGenius.sln` |
+| `client-checklist` | `dotnet build client-checklist.api/Client.Checklist.API.sln`; UI: `pnpm run build` and `pnpm run check` in `client-checklist.ui/` | The API has no test project, so say so. UI: `pnpm run test` (vitest) and `pnpm run e2e` (playwright) in `client-checklist.ui/` |
 | `odds-engine-2` | `dotnet build src/OddsEngine/OddsEngine.sln` | `dotnet test src/OddsEngine/OddsEngine.sln`, or the single matching `*.Tests` project |
 | `platform-final` | `dotnet build Platform/Platform.sln` | `dotnet test Platform/Platform.sln`, or the single matching `*.Test` project (singular) |
-| `bet-genius` | `dotnet build BetGenius.sln` | `dotnet test BetGenius.sln` |
-| `backoffice-final` | `dotnet build` | `dotnet test` |
+| `platform-web` | `dotnet build Platform/Platform.Child.Web` | `dotnet test Platform/Platform.Test -c Release` (use `-c Release`: a Debug build triggers the wwwroot pnpm `PreBuild` target) |
+
+Paths are relative to the repo root. A docs-only change (Markdown, `.claude/` assets, no code or
+config) needs no build or test run, but the commit report must say it is docs-only.
 
 For any repo not listed, find the solution or test project first and say which command was run.
 

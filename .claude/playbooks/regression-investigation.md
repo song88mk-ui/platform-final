@@ -1,7 +1,8 @@
 # Playbook: Regression Investigation
 
 1. **Define the expected vs actual** behavior precisely (status code, value, timing, message shape).
-2. **Baseline diff:** `/compare-reference` against `/Reference` (read-only) for the affected method(s).
+2. **Baseline diff:** compare against git history for the affected method(s): `git diff <good-commit>..origin/main -- <path>`,
+   `git log -S<symbol>` to find when a symbol changed.
 3. **History:** `git log -p` the suspect file (hotspots `SportsbookRepository.cs`, `BettingRepository.cs`,
    `PlatformRepository.cs`, `IntegrationController.cs`); identify the introducing commit.
 4. **Contract drift:** if shapes changed, the cause may be a sibling (odds-engine-2/platform-web) —

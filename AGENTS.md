@@ -52,7 +52,7 @@ identify reusable components → **explain the proposed solution** → identify 
 (`/impact-analysis`) → **ask clarifying questions when unclear** → **wait for approval before
 architectural changes** → implement the **smallest possible change** → **validate** (build on .NET 10
 + behavior + checklist) → **update docs/CLAUDE.md/AGENTS.md/commands/skills** if architecture changed →
-**summarize changes, risks, validation**. Full text: [CLAUDE.md](CLAUDE.md) §Permanent development workflow.
+**summarize changes, risks, validation**. Full text: [CLAUDE.md](CLAUDE.md) §Development workflow.
 
 ## Mandatory principles
 - **Repo = source of truth**; preserve existing architecture; **no new pattern without approval**.

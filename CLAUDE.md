@@ -1,15 +1,25 @@
 # CLAUDE.md — platform-final
 
-## FIRST INSTRUCTION (every prompt, before anything else)
-On **every** prompt, before acting:
-1. **Consult `CLAUDE.md` and [`AGENTS.md`](AGENTS.md) first.**
-2. **Fetch latest before investigating.** Run `git fetch origin` and compare against `origin/main` for this repo and any sibling repo you read from, before citing file contents or repo/deployment state as fact — a local checkout can be stale by hundreds of commits.
-3. **Follow the mandatory development workflow** (see [§ Permanent development workflow](#permanent-development-workflow-mandatory-every-task)): understand → search the repo → consult `docs/` → trace end-to-end **in the actual code and cite `file:line`** (never answer from memory) → identify reuse and risks → explain the plan and **wait for approval before any architectural change** → make the **smallest possible change** → validate → update docs.
-4. **Label every claim `verified` / `assumption` / `unknown` — never guess.**
-5. **Production is READ-ONLY:** do not run queries, deploy, change schema, or invalidate caches unless **explicitly instructed**.
-6. **Commit, push, or open a PR only when explicitly asked.** "Implement it" authorizes local edits only; see the [`jira-updates`](.claude/skills/jira-updates/SKILL.md) skill.
+<!-- song88:standing-rules:begin -->
+## Standing rules (every prompt, before anything else)
 
-> A `UserPromptSubmit` hook in [`.claude/settings.json`](.claude/settings.json) re-injects these rules on every prompt so they are never skipped.
+Shared by every song88 repo. The canonical text is `../song88-claude/standing-rules/STANDING-RULES.md`:
+edit it there and run `../song88-claude/standing-rules/sync_standing_rules.py`, never edit this block by hand. A `UserPromptSubmit`
+hook in `.claude/settings.json` re-injects these rules on every prompt.
+
+1. **Read this repo's CLAUDE.md and AGENTS.md first.**
+2. **Fetch latest before investigating.** Run `git fetch origin` and compare with origin/main for this repo and every sibling repo you read, before citing file contents or repo or deployment state as fact. A local checkout can be hundreds of commits behind. When you cannot or should not pull, read files with `git show origin/main:<path>`, and say so explicitly if you did not check.
+3. **Trace in the code, never from memory.** Search the repo and its docs, trace the feature end to end, and cite `file:line`.
+4. **Label every claim verified, assumption or unknown.** Never guess.
+5. **Explain the plan and wait for approval before any code change.** Then make the smallest change that does the job.
+6. **Production is read-only.** Do not run queries, deploy, change schema or invalidate caches unless explicitly instructed.
+7. **Update docs and README in the same change** whenever the change affects what they describe.
+8. **Every SQL script must be idempotent.** Re-running it is a no-op with the same end state.
+9. **Do not modify a sibling repo as a side effect of work here.** Siblings are read-only references unless the user asks for a change in that repo.
+10. **Never print, log or commit a secret.** Mask it if it must appear in a log line.
+11. **A new project or service ships with tests** in the repo's existing test framework.
+12. **Commit, push or open a PR only when explicitly asked.** "Implement it" authorizes local edits only.
+<!-- song88:standing-rules:end -->
 
 Guidance for Claude Code working in **platform-final**, the core .NET sportsbook backend of the
 Song88 platform. Derived from the repository (see [`docs/`](docs/README.md), a 10-phase analysis).
@@ -68,7 +78,7 @@ on `--mutate` removed every mutant in our runs. No mutator removes an extension 
 - **Real-time:** SignalR hub `Websocket.API2` on the `platform` route, **fed by `OE.Websocket.Service`**
   (odds-engine-2), consumed by platform-web. See [docs/WebSocket.md](docs/WebSocket.md).
 
-## Critical rules (read before changing anything)
+## Critical rules
 1. **`Platform.Shared` is the shared kernel with platform-wide blast radius.** A change there rebuilds
    **every** image (CI builds all 26 matrix images on every push to main and every PR — there is no affected-files
    detection). Treat its MessageModels, Data entities and enums as **public API**. (R-1)
@@ -90,8 +100,7 @@ on `--mutate` removed every mutant in our runs. No mutator removes an extension 
    (odds-engine-2 owns the catalogue). ([docs/MongoDb.md](docs/MongoDb.md))
 6. **Money is stored-proc only** (`Wallet.API`, `decimal(26,12)`); **parameterize all `FromSqlRaw`**
    (AgentReports interpolates — TD-01b/AP-2, do not copy it).
-7. **Secrets:** never commit new secrets; never print secret values, including in log statements.
-   GM-880 (2026-09-30): `Platform.Operator.Servicev2/Repository/BettingRepository.cs` logged
+7. **Secrets in log lines: mask with `StringExtensions.Mask()`.** GM-880 (2026-09-30): `Platform.Operator.Servicev2/Repository/BettingRepository.cs` logged
    `_ogConfig.PrivateAPIKey` in plaintext across three `_logger.LogError` calls on every failed OG
    bet placement, visible to anyone with Grafana/Loki read access on PRD. Fixed by masking with
    `Platform.Shared.Extensions.StringExtensions.Mask()` (keeps the last 4 characters, masks the
@@ -134,7 +143,7 @@ on `--mutate` removed every mutant in our runs. No mutator removes an extension 
     and a failed wallet refresh no longer stops a pending retry row from being closed (TD-20). Do
     the same for any recovery path that talks to the system that just failed.
 
-## How this team writes code (match it — don't introduce new patterns)
+## How this team writes code
 - **Repository pattern**: `IXxxRepository`+`XxxRepository` in each project's Repository folder, async, return
   `Task<BaseResponseDTO<T>>` (business `StatusCode`). Controllers stay thin (open `Activity`, call repo,
   `switch` on `StatusCode`). Business logic lives **in repositories**, not services.
@@ -151,7 +160,7 @@ on `--mutate` removed every mutant in our runs. No mutator removes an extension 
   [docs/CodingStandards.md](docs/CodingStandards.md), [docs/BestPractices.md](docs/BestPractices.md),
   [docs/AntiPatterns.md](docs/AntiPatterns.md).
 
-## Where things live (hotspots)
+## Where things live
 | Need | File |
 |------|------|
 | Public API surface | `Platform/Platform.API/Controllers/IntegrationController.cs` and its InternalController |
@@ -164,8 +173,8 @@ on `--mutate` removed every mutant in our runs. No mutator removes an extension 
 | Providers | `Platform/Platform.Shared/Providers` (bet providers MTS, GTS; BetGenius only as the `BGLiveStream` `ILiveStreamProvider`) |
 See [docs/knowledge/FrequentlyModifiedAreas.md](docs/knowledge/FrequentlyModifiedAreas.md).
 
-## Permanent development workflow (MANDATORY — every task)
-Follow these steps in order on every task (Phase 12 standing rule):
+## Development workflow
+Follow these steps in order on every task (Phase 12):
 1. **Understand the requirement.**
 2. **Search the repo** for existing implementations (the find-service, find-repository and find-pattern commands).
 3. **Consult the docs** ([docs/README.md](docs/README.md) index).
@@ -174,21 +183,17 @@ Follow these steps in order on every task (Phase 12 standing rule):
 6. **Explain the proposed solution** before building.
 7. **Identify risks and assumptions** (the impact-analysis command, [docs/ArchitectureRisks.md](docs/ArchitectureRisks.md)).
 8. **Ask clarifying questions** when the requirement/evidence is unclear.
-9. **Wait for approval before architectural changes** (anything touching `Platform.Shared`, a cross-repo
-   contract, a new pattern, or a new project/service).
+9. **Wait for approval before any code change.** Say so explicitly when the change touches
+   `Platform.Shared`, a cross-repo contract, a new pattern, or a new project/service.
 10. **Implement the smallest possible change.**
 11. **Validate** compilation (.NET 10 / `net10.0`) and behavior (run the relevant checklist).
-12. **Update documentation for every change**, not only when architectural knowledge changed, a
-    bug fix, security fix, or resolved debt item belongs in `docs/` (TechnicalDebt.md or whichever
-    file already covers it) too (the update-docs command; keep CLAUDE.md/AGENTS.md/commands/skills/
-    playbooks in sync). **Also update `README.md` in the same change whenever the change
-    affects anything the README documents** (projects/frameworks, prerequisites, build/run/test
-    instructions, configuration, endpoints) — the README must never describe a repo state that no
-    longer exists.
+12. **Update `docs/` for every change.** A bug fix, security fix, or resolved debt item belongs in
+    `docs/` too (TechnicalDebt.md or whichever file already covers it; the update-docs command).
+    Keep CLAUDE.md/AGENTS.md/commands/skills/playbooks in sync, and `README.md` whenever it
+    documents what changed (projects/frameworks, prerequisites, build/run/test, configuration, endpoints).
 13. **Summarize** changes, risks, and validation results.
 
-## Engineering principles (MANDATORY)
-- **The repository is the source of truth.** Verify in code.
+## Engineering principles
 - **Preserve existing architecture; never introduce a new pattern without approval** (no AutoMapper/
   FluentValidation/MediatR/`IOptions<T>`/etc. where an established pattern exists — see
   [docs/ImplementationPatterns.md](docs/ImplementationPatterns.md)).
@@ -198,27 +203,19 @@ Follow these steps in order on every task (Phase 12 standing rule):
   these, search the shared project first and reuse it.** If it's genuinely missing, **add it to the
   shared library** (additive) — do not copy a local per-service version, even if an existing service
   already has its own copy (that copy is the bug to fix, not a pattern to follow).
-- **Never guess.** Distinguish **verified facts** vs **assumptions** vs **unknowns**; tag them and
-  record unknowns ([docs/Unknowns.md](docs/Unknowns.md)). Treat Likely and Unknown tags as verify-before-rely.
-- **A new project/service ships with tests — don't forget them.** When creating a new project or
-  service, add a matching test project (xUnit, mirroring `Platform.Shared.Test` / sibling conventions:
-  `xunit` + `Microsoft.NET.Test.Sdk`, Arrange/Act/Assert, no mocking framework unless one is already
-  used). Extract pure logic (key building, SQL/parameter shaping, parsing) out of EF/RabbitMQ glue so
-  it is unit-testable, and cover the core/safety-critical paths. Run the tests and report results.
-- **Production is READ-ONLY by default.** Never perform write operations, deployments, schema changes,
-  cache invalidations, or administrative actions unless **explicitly instructed**
-  ([.claude/playbooks/production-readonly.md](.claude/playbooks/production-readonly.md)).
-- **Every SQL script must be idempotent** (data fixes, seeds, DDL, hand-run/flyway migrations): guard
-  INSERTs with `NOT EXISTS`/`MERGE`, schema changes with `IF NOT EXISTS`/`OBJECT_ID` checks, so
-  re-running is a no-op with the same end state.
-- **External repos: identify dependencies, don't invent behavior.** Siblings (`../odds-engine-2`,
-  `../Auth`, `../backoffice-final`, `../bet-genius`, `../platform-web`, `../argocd`,
-  `../infrastructure`) are read-only references; **never modify files outside this repo**.
-- **Fetch latest before investigating.** `git fetch origin` and compare against `origin/main` for
-  this repo and any sibling repo, before citing file contents or repo/deployment state as fact.
-- **Keep docs + CLAUDE.md/AGENTS.md/commands/skills/playbooks synchronized** with architectural changes.
+- **Record unknowns** in [docs/Unknowns.md](docs/Unknowns.md). Treat the docs' Likely and Unknown tags
+  as verify-before-rely.
+- **Test project shape.** A new project's test project mirrors `Platform.Shared.Test` / sibling
+  conventions: `xunit` + `Microsoft.NET.Test.Sdk`, Arrange/Act/Assert, no mocking framework unless one
+  is already used. Extract pure logic (key building, SQL/parameter shaping, parsing) out of EF/RabbitMQ
+  glue so it is unit-testable, and cover the core/safety-critical paths. Run the tests and report results.
+- **Production investigations** follow [.claude/playbooks/production-readonly.md](.claude/playbooks/production-readonly.md).
+- **Idempotent SQL here means** (data fixes, seeds, DDL, hand-run/Flyway migrations): guard INSERTs with
+  `NOT EXISTS`/`MERGE` and schema changes with `IF NOT EXISTS`/`OBJECT_ID` checks.
+- **Siblings are integration references: identify dependencies, don't invent behavior** (`../odds-engine-2`,
+  `../Auth`, `../backoffice-final`, `../bet-genius`, `../platform-web`, `../argocd`, `../infrastructure`).
 
-## Scope & build reminders (repo-specific)
+## Scope & build reminders
 - Subject is **platform-final** (backend); UI work belongs to **platform-web**.
 - Code targets **.NET 10** (`net10.0`), except `Platform.Shared` + the 3 Mongo services (`Sportsbook.API`, `QTech.API`, `CashOutStake.Servicev2`) on **`net8.0`** (MongoDB.Driver 2.11.6, 2.13.1 in `CashOutStake.Servicev2`, breaks on net10 — ADR-14). Build SDK is 10.0; runtime images 10.0 (8.0 for the two net8 services with Dockerfiles).
 - **Confirm the live variant** before editing duplicated code (`*.Service` vs `*.Servicev2`,
@@ -227,6 +224,7 @@ Follow these steps in order on every task (Phase 12 standing rule):
 ## Assets in this repo
 - **`docs/`** — the 10-phase knowledge base (start at [docs/README.md](docs/README.md)).
 - **`.claude/commands/`** — trace, impact-analysis, find and review-feature commands.
+- **`.claude/skills/jira-updates`** — rules for Jira writes, git push/PR approval, and build + test before commit.
 - **`.claude/skills/`**, **`.claude/playbooks/`**, **`.claude/checklists/`**, **`.claude/templates/`**,
   **`.claude/prompts/`** — task guidance, derived from this repo.
 

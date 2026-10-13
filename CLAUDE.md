@@ -19,6 +19,8 @@ hook in `.claude/settings.json` re-injects these rules on every prompt.
 10. **Never print, log or commit a secret.** Mask it if it must appear in a log line.
 11. **A new project or service ships with tests** in the repo's existing test framework.
 12. **Commit, push or open a PR only when explicitly asked.** "Implement it" authorizes local edits only.
+13. **Report validation with every change:** build, unit tests, integration tests, manual checks and remaining risks. If something could not be validated, say what and why, name the tests to run before deployment, and mark the work Implementation Complete – Validation Pending, never Completed.
+14. **If a workflow step does not apply, say so** instead of skipping it silently.
 <!-- song88:standing-rules:end -->
 
 Guidance for Claude Code working in **platform-final**, the core .NET sportsbook backend of the
@@ -156,6 +158,15 @@ on `--mutate` removed every mutant in our runs. No mutator removes an extension 
   manual ack for loss-sensitive consumers; carry `CorrelationId`.
 - **Logging/telemetry**: Serilog console-JSON + OpenTelemetry `Instrumentation`; propagate trace context
   through RabbitMQ headers.
+- **Logging rules** (shared with odds-engine-2):
+  - Pass the exception as the first argument: `_logger.LogError(ex, "... {Payload}", payload)`.
+    Never put `ex.Message` or `ex.StackTrace` in the message text, and never pass the exception
+    as a template argument.
+  - Use PascalCase placeholders (`{Message}`, `{Payload}`).
+  - Keep operational log lines (start, connecting, connected, progress). Do not remove or merge
+    them to satisfy SonarQube S6664.
+  - Older code still interpolates exceptions into the message text, e.g.
+    `Platform/Platform.API/Repository/BettingRepository.cs:572`. Do not copy it.
 - Full detail: [docs/ImplementationPatterns.md](docs/ImplementationPatterns.md),
   [docs/CodingStandards.md](docs/CodingStandards.md), [docs/BestPractices.md](docs/BestPractices.md),
   [docs/AntiPatterns.md](docs/AntiPatterns.md).

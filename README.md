@@ -607,6 +607,26 @@ Needs Twingate access to the dev database NLB; the host and `sa` password are th
 used for ad-hoc `sqlcmd` access to the dev SQL Server (helmfile `sapassword` value - ask the
 team if you do not already have it). Seeds one bet, cleans it up afterward either way.
 
+### DEVOPS-408 - Betting.API integration tests (not part of the standard suite)
+
+`Platform.Betting.API.IntegrationTests` boots `Platform.Betting.API` in process with
+`WebApplicationFactory<Startup>` against a throwaway SQL Server 2022 container
+(`Testcontainers.MsSql`). The container gets the full schema from the dev Flyway migrations
+in the sibling `infrastructure` repo, so the tests run real SQL, constraints and stored
+procedures (`GetTopMarketBets`), which EF InMemory cannot. Every `API:*` URL points at a
+loopback stub and `Custom:IsProviderEnabled` is off, so no test reaches MTS, GTS or any other
+real service.
+
+Needs Docker, and `infrastructure` cloned next to `platform-final` (or
+`SONG88_FLYWAY_MIGRATIONS` set to its `flyway/migrations/dev` directory). It is not in
+`Platform.sln` yet, because CI does not check out `infrastructure` (DEVOPS-408):
+
+```
+dotnet test Platform/Platform.Betting.API.IntegrationTests -c Release
+```
+
+About 12 seconds once the `mcr.microsoft.com/mssql/server:2022-latest` image is pulled.
+
 ## Dependent services
 
 | Dependency | Used for | Where configured |
@@ -624,8 +644,12 @@ team if you do not already have it). Seeds one bet, cleans it up afterward eithe
 There are no EF Core migrations in this repository (no `Migrations/` folders). Schema is
 managed outside the codebase; hand-run SQL scripts live in `scripts/sql/` and must be
 idempotent (guarded `IF NOT EXISTS` / `COL_LENGTH` checks - see
-`scripts/sql/add-parentclientcode-client.sql` for the pattern). To get a working local
-database you need a schema/backup from the team or staging; the repo does not create it.
+`scripts/sql/add-parentclientcode-client.sql` for the pattern). The schema itself is the
+Flyway migrations in the sibling `infrastructure` repo (`flyway/migrations/{dev,stg,prd}`).
+The dev set applies to an empty SQL Server with QUOTED_IDENTIFIER ON: `V*.sql` in version
+order, then `R__*.sql` in name order. `Platform.Betting.API.IntegrationTests` does exactly
+that (`TestSupport/FlywayMigrations.cs`), so it is a working example. For real data you still
+need a backup from the team or staging.
 
 ## House rules (short version)
 

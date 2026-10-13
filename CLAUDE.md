@@ -33,6 +33,12 @@ Ten test projects, one per `Platform/*.Test` folder. Nine are in `Platform/Platf
 `Platform.CashOut.Service.Test` is not, so `dotnet test Platform/Platform.sln` skips it.
 CI runs them on pull requests only. Restore needs `NUGET_PASSWORD` for the private feed.
 
+`Platform.Betting.API.IntegrationTests` (DEVOPS-408) is also outside `Platform.sln`: it needs
+Docker and the sibling `infrastructure` clone, which CI does not check out yet. It boots
+Betting.API with `WebApplicationFactory<Startup>` against SQL Server in Testcontainers, built
+from the dev Flyway migrations, with every `API:*` URL on a loopback stub. Seeded `Bet` rows
+must set its ten NOT NULL columns, which EF InMemory never checks. See README "Running tests".
+
 `Platform.API.Test` tests `PlatformRepository` directly: seed `InMemoryPlatformContext`, pass
 hand-written fakes for the repositories the method reaches and `null!` for the rest (see
 `Platform/Platform.API.Test/Repository/CashoutBetWebPropsGuardrailTests.cs`). Pure logic shared across services still belongs

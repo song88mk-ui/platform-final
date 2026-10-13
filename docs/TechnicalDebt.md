@@ -100,7 +100,11 @@
   retry path and host registration, added GM-862, and OG bet placement key masking, added GM-880).
   All run by a PR-only CI test job. Settlement remains untested. Of placement, only the
   OG failure-path logging is covered (GM-880); of cashout, only the Operator.Servicev2 wallet
-  retry path.
+  retry path. None of these touches a real database. `Platform.Betting.API.IntegrationTests`
+  (8 tests, added DEVOPS-408) is the first to run against SQL Server, covering the GM-861
+  cashout ownership checks and the `GetTopMarketBets` recommendations path over HTTP. It is not
+  in `Platform.sln` or CI yet, because CI does not check out the `infrastructure` repo that
+  holds the schema.
 - **Files:** `Platform.Shared.Test/*`, `Platform.Sportsbook.API.Test/*`,
   `Platform.Operator.API.Test/*`, `Platform.BetInfo.Service.Test/*`,
   `Platform.CacheSync.Service.Test/*`, `Platform.Operator.Servicev2.Test/*`.

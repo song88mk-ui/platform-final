@@ -9,6 +9,7 @@ using System.Collections.Generic;
 using System.Net;
 using System.Net.Http;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 using JsonSerializer = System.Text.Json.JsonSerializer;
 
@@ -19,6 +20,9 @@ namespace Platform.API.Repository
         // shared instance: JsonSerializerOptions caches type metadata per instance; a fresh instance per call rebuilds it every request
         private static readonly JsonSerializerOptions _jsonOptions = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
         private static readonly JsonSerializerOptions _jsonOptionsCaseSensitive = new JsonSerializerOptions { PropertyNameCaseInsensitive = false };
+        // /v1/authentication: most operators send balance as a JSON number, OG-backed wallets send it as a string ("1000.00").
+        // Numbers and null are read exactly as with _jsonOptions; only numeric strings are additionally accepted (GM-649).
+        private static readonly JsonSerializerOptions _jsonOptionsAuthentication = new JsonSerializerOptions { PropertyNameCaseInsensitive = true, NumberHandling = JsonNumberHandling.AllowReadingFromString };
 
         private readonly HttpClient _httpClient;
         private readonly OrientalGamingConfigDTO _ogConfig;
@@ -408,7 +412,7 @@ namespace Platform.API.Repository
                 if (response.IsSuccessStatusCode)
                 {
                     responseString = await response.Content.ReadAsStringAsync();
-                    var result = JsonSerializer.Deserialize<AuthenticationResponseDTO>(responseString, _jsonOptions);
+                    var result = JsonSerializer.Deserialize<AuthenticationResponseDTO>(responseString, _jsonOptionsAuthentication);
 
                     return new BaseResponseDTO<AuthenticationResponseDTO>
                     {

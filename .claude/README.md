@@ -34,16 +34,17 @@ new-api-endpoint · new-repository-method · new-message-contract · new-backgro
 ## prompts/
 onboard-engineer · explain-architecture · estimate-impact · explain-data-flow
 
-## Mandatory workflow & principles (Phase 12)
-Every task follows the **Development workflow** + **Engineering principles** in
-[../CLAUDE.md](../CLAUDE.md): search→docs→trace→explain→assess risk→**ask if unclear**→**approval before any
-code change**→smallest change→validate→update docs→summarize. **Production is read-only by
-default.** Never guess (label verified/assumption/unknown). External repos: identify dependencies,
-don't invent behavior.
+## Workflow and principles
+Every task follows the **Development workflow** and **Engineering principles** in
+[../CLAUDE.md](../CLAUDE.md), under the standing rules at its top: understand → search the repo →
+consult docs → trace end to end → reuse → explain the plan → assess risks → ask if unclear →
+**wait for approval before any code change** → smallest change → validate → update docs →
+summarize. Production is read-only. Label every claim verified / assumption / unknown. Siblings
+are read-only references: identify dependencies, don't invent behavior.
 
-## The non-negotiables (encoded throughout)
+## Key rules (encoded throughout)
 1. `Platform.Shared` change = platform-wide rebuild (R-1).
 2. Cross-repo contracts are convention-only — verify against siblings (R-2).
 3. Auth = per-controller ActionFilters; no global fallback (R-6).
 4. No Mongo writes here; parameterize SQL; no committed/printed secrets; builds on .NET 10 (net10.0).
-5. Wait for approval before any code change; production is read-only by default (Phase 12).
+5. Wait for approval before any code change; production is read-only.

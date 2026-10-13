@@ -185,7 +185,7 @@ on `--mutate` removed every mutant in our runs. No mutator removes an extension 
 See [docs/knowledge/FrequentlyModifiedAreas.md](docs/knowledge/FrequentlyModifiedAreas.md).
 
 ## Development workflow
-Follow these steps in order on every task (Phase 12):
+Follow these steps in order on every task:
 1. **Understand the requirement.**
 2. **Search the repo** for existing implementations (the find-service, find-repository and find-pattern commands).
 3. **Consult the docs** ([docs/README.md](docs/README.md) index).

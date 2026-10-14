@@ -343,6 +343,24 @@
 - **Confidence:** **[Verified]** in code (`DeleteCache("leo")` against `$"leo-{...}"` keys);
   production impact **[Unknown]**, not observed.
 
+### TD-23 - `Job.ForexEUR` worker ignored the stopping token and retried with no delay (`Worker.cs`) - **Resolved** (2026-10-14, GM-890)
+- **Evidence:** `ExecuteAsync` looped on `while (true)` and its `catch (Exception e)` looped straight
+  back into `ProcessForex()`. The only `Task.Delay` sat inside the `try`, so on shutdown its
+  `TaskCanceledException` was swallowed and the next call failed on the disposed `HttpClient`, in a
+  tight loop until Kubernetes killed the pod (Loki: 198 errors in one PRD rollout burst, 44 on
+  staging, 40-130 per DEV pod). Any runtime failure of `ProcessForex()` (for example a network
+  error from openexchangerates.org) would also have retried with no backoff.
+- **Fix:** the loop runs while `!stoppingToken.IsCancellationRequested`, waits 1 h after a success
+  and 1 min after a failure, exits on `OperationCanceledException` once stopping, and logs the
+  exception object instead of `e.Message`. `ProcessForex()` itself and the 1 h schedule are unchanged.
+- **Files:** `Platform.Job.ForexEUR/Worker.cs`; tests in
+  `Platform.Job.ForexEUR.Test/WorkerTests.cs` (new project, in `Platform.sln`).
+- **Not fixed:** `ProcessForex()` takes no `CancellationToken`, so a shutdown during an in-flight
+  HTTP call or DB write still waits for that call to finish or fail. The other `Job.*` workers were
+  not reviewed for the same pattern.
+- **Confidence:** **[Verified]** in code and by unit tests; rollout behaviour after the fix not yet
+  observed in Loki.
+
 ## Consolidated cross-views
 - **Duplicate implementations** → TD-07 (+ AntiPatterns AP-8): v1/v2 projects, duplicated MessageBroker.
 - **Dead code** → TD-15: JwtParser, commented SQL blocks, superseded v1 services/WebSocket.API.

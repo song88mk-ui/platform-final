@@ -34,8 +34,9 @@
   `Worker.cs` not read in depth; consumed/produced message types are **[Likely]/Unknown**.
   (`Cancellation.Service` removed from this list 2026-08-20, GM-744: it is a bin/obj-only
   orphan dir, not a project.)
-- **U-05** `Job.ForexEUR` and `Job.Operator.Score` — loop interval and exact processing
-  **Unknown** (only the data sources are known).
+- **U-05** `Job.Operator.Score` — loop interval and exact processing
+  **Unknown** (only the data sources are known). (`Job.ForexEUR` removed 2026-10-14, GM-890: 1 h
+  interval, openexchangerates.org `latest.json` into `ForexEUR`.)
 
 ## Build / deploy
 - **U-06** Why several shipping projects (QTech, RedCat*, Oddin, AgentReports*, ESportOperator,

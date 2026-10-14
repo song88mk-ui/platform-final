@@ -58,8 +58,8 @@ Projects: all `*.Service` / `*.Servicev2`, `AgentReports.Service`, `Client.TopMa
 
 ### Job variant (timed loops)
 `Job.CCF`, `Job.ForexEUR`, `Job.Operator.Score`, `Job.Resettlement` run an infinite loop with
-`Task.Delay` between iterations (CCF: 300s; Resettlement: Fibonacci backoff). **[Verified]** for
-CCF/Resettlement.
+`Task.Delay` between iterations (CCF: 300s; ForexEUR: 1 h, 1 min after a failure; Resettlement: Fibonacci backoff). **[Verified]** for
+CCF/ForexEUR/Resettlement.
 
 ## C. Plain console (`Sdk`) — `static Main`
 

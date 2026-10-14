@@ -23,7 +23,7 @@ This README is a practical local run/test guide. The deep reference lives in
 | `Platform.Websocket.API2` | SignalR hub | Real-time hub at `/platform`, MessagePack; consumed by `platform-web` (fed by `odds-engine-2`) |
 | `Platform.*.Service`, `Platform.Job.*` | Workers | ~18 `BackgroundService` RabbitMQ consumers (settlement, cashout, cache sync, ...) |
 | `Platform.Shared` | Class library | Shared kernel: entities, `DbContext`s, message contracts, enums. Platform-wide blast radius - treat as public API. |
-| `Platform.Shared.Test`, `Platform.Sportsbook.API.Test`, `Platform.Operator.API.Test`, `Platform.BetInfo.Service.Test`, `Platform.CacheSync.Service.Test`, `Platform.Operator.Servicev2.Test`, `Platform.Betting.API.Test`, `Platform.API.Test`, `Platform.CashOutStake.Servicev2.Test` | xUnit tests | See "Running tests" |
+| `Platform.Shared.Test`, `Platform.Sportsbook.API.Test`, `Platform.Operator.API.Test`, `Platform.BetInfo.Service.Test`, `Platform.CacheSync.Service.Test`, `Platform.Operator.Servicev2.Test`, `Platform.Betting.API.Test`, `Platform.API.Test`, `Platform.CashOutStake.Servicev2.Test`, `Platform.Job.ForexEUR.Test` | xUnit tests | See "Running tests" |
 
 Note: some services exist in duplicated variants (`*.Service` vs `*.Servicev2`,
 `WebSocket.API` vs `Websocket.API2`). Confirm the live variant before working on one -
@@ -545,7 +545,7 @@ Plain REST endpoints on the same host (`Controllers/SportsbookController.cs`):
 
 ## Running tests
 
-Nine xUnit test projects exist; all target `net10.0` except `Platform.CashOutStake.Servicev2.Test` (`net8.0`, matching the service it covers):
+Ten xUnit test projects exist; all target `net10.0` except `Platform.CashOutStake.Servicev2.Test` (`net8.0`, matching the service it covers):
 
 ```
 # pure unit tests over the shared kernel
@@ -581,6 +581,10 @@ dotnet test Platform/Platform.API.Test
 # GM-864 preload regression (an excluded bet no longer stops the rest of the list from
 # loading) and partial-cashout audit history, against the EF in-memory provider
 dotnet test Platform/Platform.CashOutStake.Servicev2.Test
+
+# GM-890 ForexEUR worker loop: stops cleanly on shutdown and waits before retrying a failed
+# ProcessForex(), against a fake IPlatformRepository
+dotnet test Platform/Platform.Job.ForexEUR.Test
 ```
 
 No external services are required, including for the repository tests: they run against

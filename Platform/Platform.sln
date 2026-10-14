@@ -97,6 +97,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Platform.API.Test", "Platfo
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Platform.CashOutStake.Servicev2.Test", "Platform.CashOutStake.Servicev2.Test\Platform.CashOutStake.Servicev2.Test.csproj", "{543D9CE5-B306-480E-94E5-0308BD937083}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Platform.Job.ForexEUR.Test", "Platform.Job.ForexEUR.Test\Platform.Job.ForexEUR.Test.csproj", "{DDCC1BD0-8437-42F7-8159-85DF08DA678B}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -671,6 +673,18 @@ Global
 		{543D9CE5-B306-480E-94E5-0308BD937083}.Release|x64.Build.0 = Release|Any CPU
 		{543D9CE5-B306-480E-94E5-0308BD937083}.Release|x86.ActiveCfg = Release|Any CPU
 		{543D9CE5-B306-480E-94E5-0308BD937083}.Release|x86.Build.0 = Release|Any CPU
+		{DDCC1BD0-8437-42F7-8159-85DF08DA678B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{DDCC1BD0-8437-42F7-8159-85DF08DA678B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{DDCC1BD0-8437-42F7-8159-85DF08DA678B}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{DDCC1BD0-8437-42F7-8159-85DF08DA678B}.Debug|x64.Build.0 = Debug|Any CPU
+		{DDCC1BD0-8437-42F7-8159-85DF08DA678B}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{DDCC1BD0-8437-42F7-8159-85DF08DA678B}.Debug|x86.Build.0 = Debug|Any CPU
+		{DDCC1BD0-8437-42F7-8159-85DF08DA678B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{DDCC1BD0-8437-42F7-8159-85DF08DA678B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{DDCC1BD0-8437-42F7-8159-85DF08DA678B}.Release|x64.ActiveCfg = Release|Any CPU
+		{DDCC1BD0-8437-42F7-8159-85DF08DA678B}.Release|x64.Build.0 = Release|Any CPU
+		{DDCC1BD0-8437-42F7-8159-85DF08DA678B}.Release|x86.ActiveCfg = Release|Any CPU
+		{DDCC1BD0-8437-42F7-8159-85DF08DA678B}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

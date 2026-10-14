@@ -162,7 +162,7 @@ Legend: **DI styles** — `HttpClient` = typed `AddHttpClient<I,Impl>`; `Scoped`
 | Job | Trigger | Does | Data | Confidence |
 |-----|---------|------|------|-----------|
 | `Job.CCF` | every 300s loop | `PlatformRepository.ProcessCCF()` (Confidence Factor) | `PlatformContext`, MTSAuth HTTP | `[Verified]` |
-| `Job.ForexEUR` | loop (interval [Unknown]) | EUR forex rate update | `PlatformContext` | `[Likely]` |
+| `Job.ForexEUR` | every 1 h loop (1 min retry after a failure) | EUR forex rate update from openexchangerates.org | `PlatformContext` | `[Verified]` |
 | `Job.Operator.Score` | loop | fetch scores from Betradar + CricketScore HTTP APIs | `BettingContext`, MemCache | `[Likely]` |
 | `Job.Resettlement` | loop, Fibonacci backoff (`Custom:Fibonnaci`) | query `OperatorSettlementRetry` (IsRetry, RetryCount<8) → republish to MQ | `PlatformContext` (30-min cmd timeout) | `[Verified]` |
 

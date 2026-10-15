@@ -25,6 +25,9 @@ follows and the full operating manual. This file is the short version for agents
   rules, rule 7).
 - `DeleteCache(key)` removes one exact key; use `DeleteCacheByPrefix` or the full key (CLAUDE.md §
   Critical rules, rule 8).
+- A consumer-side mirror of an OE2 message needs `[JsonPropertyName]` on every property and a test
+  that deserializes an OE2-shaped payload; `System.Text.Json` silently drops names that do not match
+  (CLAUDE.md § Critical rules, rule 12).
 - `Platform.Shared` and the three Mongo services stay on `net8.0`; everything else is `net10.0`
   (CLAUDE.md § Scope & build reminders).
 

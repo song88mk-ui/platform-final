@@ -43,6 +43,14 @@ OE2 publishes (consumed by platform-final services / the WS feeder):
 | `r.oe.adapter.on*.*` | `OnFixtureChange`/`OnMarketChange`/`OnMarketSettlement`/`OnMarketCancellation` | consumed within OE2 (adapter→sportsbook); platform sees the derived `r.oe.sb.engine.*` |
 | `r.oe.uof.heartbeat` | `OnHeartbeatMessage` | health/keepalive |
 
+> **Wire names (GM-902):** `CashOutStake.Servicev2` reads `r.oe.sb.engine.onoddschange` into its
+> own mirror, `OnExternalOddsChangeMessage` in `Repository/BettingRepository.cs`, which maps OE2's
+> short names with `[JsonPropertyName]` (`FiId`, `FiStId`, `IsSu`, `Ma`/`MaId`/`MaStId`, `Se`/`SeId`/
+> `IsAc`/`Pr`/`WoPr`/`LoPr`/`VoPr`/`HaWoPr`/`HaLoPr`). Before GM-902 it used the OE v1 names, every
+> field deserialized to its default, and no cashout value was pushed from an odds change. It is pinned
+> by `CashOutStake.Servicev2.Test/Repository/OddsChangeContractTests.cs`. `r.oe.bet.settlement` is
+> not affected: OE2 publishes it with the long names. **[Verified]** + **[Verified-sibling]**.
+
 > Note the **two layers**: `OE.Adapter.Service` (`r.oe.adapter.*`, raw UOF-derived) feeds
 > `OE.Sportsbook.Service`, which emits the **`r.oe.sb.engine.*`** events platform-final's edge cares
 > about. **[Verified-sibling]**

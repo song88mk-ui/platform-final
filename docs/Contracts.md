@@ -39,6 +39,14 @@ request/response, `OnClientTopMarketBet*`, `OnUOFBetCancellation`/`OnUOFBetSettl
 > Note: platform-final and odds-engine-2 each define `OnDeleteCacheMessage`, `OnBetSettlement`, etc.
 > **separately** — same intent, different types. **[Verified]** + **[Verified-sibling]**.
 
+> **Odds change (GM-902):** OE2 serializes `OnInternalOddsChangeMessage` with short names (`FiId`,
+> `Ma`, `Se`, `Pr`, ...). `CashOutStake.Servicev2` mirrors it in `OnExternalOddsChangeMessage`
+> (`Repository/BettingRepository.cs`) and maps every property with `[JsonPropertyName]`, because
+> `System.Text.Json` is case-sensitive and ignores unknown properties: an unmapped mirror silently
+> reads `FixtureId` as 0 and `Markets` as empty. A consumer-side mirror of an OE2 message needs an
+> explicit wire name on every property and a test that deserializes an OE2-shaped payload
+> (`CashOutStake.Servicev2.Test/Repository/OddsChangeContractTests.cs`). **[Verified]**.
+
 ## 2. Routing-key registry (the real cross-repo contract) `[Verified]`/`[Verified-sibling]`
 | Namespace | Owner | Examples | Direction vs platform-final |
 |-----------|-------|----------|------------------------------|
@@ -86,7 +94,10 @@ directly). These are the highest-risk implicit contracts: schema drift breaks re
 ## 7. Compatibility & versioning posture `[Verified]`/`[Unknown]`
 - **REST:** path-versioned (`v1`/`v2`); no deprecation policy found (**[Unknown]**).
 - **Messages/WebSocket/Mongo:** **no version field, no schema registry, no shared package** — purely
-  convention. There is no automated contract test across repos (**[Unknown]** if any exists).
+  convention. There is no automated contract test across repos in this repo; the one in-repo
+  consumer-side test is `CashOutStake.Servicev2.Test/Repository/OddsChangeContractTests.cs` (GM-902).
+  Cross-repo checkers under DEVOPS-409 (qa-robot-automation) are reported in Jira and were not read
+  for this doc (**[Unknown]**).
 - **Recommendation register (not an action):** the absence of shared contract types + the
   abbreviated field names make cross-repo changes fragile; a shared contracts package or
   contract tests would de-risk it. Logged in [TechnicalDebt.md](TechnicalDebt.md).

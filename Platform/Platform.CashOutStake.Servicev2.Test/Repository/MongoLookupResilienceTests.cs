@@ -36,7 +36,7 @@ namespace Platform.CashOutStake.Servicev2.Test.Repository
             public void DeleteCacheByPrefix(string prefix) { }
         }
 
-        private sealed class RecordingMessageBroker : IMessageBroker
+        internal sealed class RecordingMessageBroker : IMessageBroker
         {
             public List<object> PublishedPayloads { get; } = new List<object>();
 
@@ -70,7 +70,7 @@ namespace Platform.CashOutStake.Servicev2.Test.Repository
         }
 
         // Replaces the two Mongo queries with delegates and counts how often each one runs.
-        private sealed class FakeLookupBettingRepository : BettingRepository
+        internal sealed class FakeLookupBettingRepository : BettingRepository
         {
             private readonly Func<long, CashOutMarketFilter?> _findMarket;
             private readonly Func<long, CashOutSelectionFilter?> _findSelection;

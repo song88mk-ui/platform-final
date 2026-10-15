@@ -17,6 +17,7 @@ using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 
 namespace Platform.CashOutStake.Servicev2.Repository
 {
@@ -684,18 +685,34 @@ namespace Platform.CashOutStake.Servicev2.Repository
         public DateTime CashoutDate { get; set; }
     }
 
+    // GM-902: this is the consumer-side mirror of odds-engine-2's OnInternalOddsChangeMessage
+    // (OE.Shared/Messages/OutgoingSportsbookMessages), which OE2 publishes on
+    // r.oe.sb.engine.onoddschange with short property names (SpId, FiId, Ma, Se, ...).
+    // System.Text.Json is case-sensitive and ignores unknown properties, so without the
+    // [JsonPropertyName] mapping below every field deserialized to its default: FixtureId 0 and
+    // an empty Markets list, ProcessOddsChange matched no bet, and no OnCashOutChange was ever
+    // published from an odds change. The C# property names are kept so the cashout code reads
+    // the same; only the wire names are the OE2 ones. Renaming a wire name here is a breaking
+    // cross-repo change, see docs/Contracts.md. Pinned by OddsChangeContractTests.
     public class OnExternalOddsChangeMessage
     {
         public OnExternalOddsChangeMessage()
         {
             Markets = new List<ExternalMarketMessage>();
         }
+        [JsonPropertyName("SpId")]
         public int SportId { get; set; }
+        [JsonPropertyName("FiId")]
         public long FixtureId { get; set; }
+        [JsonPropertyName("FiStDa")]
         public DateTime FixtureStartDate { get; set; }
+        [JsonPropertyName("FiStId")]
         public int FixtureStatusId { get; set; }
+        [JsonPropertyName("FiTyId")]
         public FixtureType FixtureType { get; set; }
+        [JsonPropertyName("IsSu")]
         public bool IsSuspended { get; set; }
+        [JsonPropertyName("Ma")]
         public List<ExternalMarketMessage> Markets { get; set; }
     }
 
@@ -705,22 +722,33 @@ namespace Platform.CashOutStake.Servicev2.Repository
         {
             Selections = new List<ExternalSelectionMessage>();
         }
+        [JsonPropertyName("MaId")]
         public long MarketId { get; set; }
+        [JsonPropertyName("MaStId")]
         public MarketStatus MarketStatus { get; set; }
+        [JsonPropertyName("Se")]
         public List<ExternalSelectionMessage> Selections { get; set; }
     }
 
     public class ExternalSelectionMessage
     {
+        [JsonPropertyName("SeId")]
         public long SelectionId { get; set; }
         //public long MarketId { get; set; }
         //public int MarketStatusId { get; set; }
+        [JsonPropertyName("IsAc")]
         public bool IsActive { get; set; }
+        [JsonPropertyName("Pr")]
         public double Probability { get; set; }
+        [JsonPropertyName("WoPr")]
         public double WonProbability { get; set; }
+        [JsonPropertyName("LoPr")]
         public double LostProbability { get; set; }
+        [JsonPropertyName("VoPr")]
         public double VoidProbability { get; set; }
+        [JsonPropertyName("HaWoPr")]
         public double HalfWonProbability { get; set; }
+        [JsonPropertyName("HaLoPr")]
         public double HalfLostProbability { get; set; }
     }
     public class OnExternalBetSettlementMessage

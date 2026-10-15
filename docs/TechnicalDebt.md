@@ -361,6 +361,44 @@
 - **Confidence:** **[Verified]** in code and by unit tests; rollout behaviour after the fix not yet
   observed in Loki.
 
+### TD-24 - CashOutStake read OE2 odds changes with the OE v1 field names, so no cashout value was pushed from an odds change (`BettingRepository.cs`) - **Resolved** (2026-10-15, GM-902)
+- **Evidence:** `Worker.MessageReceivedEvent` deserialized `OnOddsChange` into
+  `OnExternalOddsChangeMessage` (`FixtureId`, `Markets`, `MarketId`, `Selections`, `Probability`, ...),
+  but odds-engine-2 publishes `OnInternalOddsChangeMessage` on `r.oe.sb.engine.onoddschange` with short
+  names (`FiId`, `Ma`, `MaId`, `Se`, `Pr`, ...), serialized with default `System.Text.Json` options
+  (`OE.Shared/Utilities/MessageBroker.cs`). `System.Text.Json` is case-sensitive and ignores unknown
+  properties, so `FixtureId` was 0 and `Markets` was empty: `ProcessOddsChange` matched no bet and
+  returned without logging, no `OnCashOutChange` was published from an odds change, and the cashout
+  value in My Bets changed only when a new quote was fetched. Same root cause as BO-97 in the
+  backoffice WebSocket service, which that ticket fixed only there. The ticket's PRD Loki counts (not
+  re-queried here): 1,131 `Add Bet` and 1,101 `Remove Bet` actions but 0 `OddsChange` actions in the 7
+  days to 2026-10-06.
+- **Files:** `Platform.CashOutStake.Servicev2/Repository/BettingRepository.cs`
+  (`OnExternalOddsChangeMessage`, `ExternalMarketMessage`, `ExternalSelectionMessage`).
+- **Fix:** each property carries `[JsonPropertyName]` with the OE2 wire name (`SpId`, `FiId`, `FiStDa`,
+  `FiStId`, `FiTyId`, `IsSu`, `Ma`, `MaId`, `MaStId`, `Se`, `SeId`, `IsAc`, `Pr`, `WoPr`, `LoPr`, `VoPr`,
+  `HaWoPr`, `HaLoPr`); the C# names are unchanged, so the cashout code is untouched. `FiId` is the same
+  id space as the `FixtureId` stored on bet selections: the platform-web push path sets
+  `FixtureId = message.FiId` (`Pages/Base/BasePage.cs:643`) and Sportsbook.API maps `FixtureId = s.FiId`.
+  Covered by `Platform.CashOutStake.Servicev2.Test/Repository/OddsChangeContractTests.cs`: a payload
+  shaped like OE2's is read field by field (distinct probability values, so two swapped fields
+  fail); unknown properties and OE2's `FixtureType.Unknown = -1` do not break it; every public
+  property of the three classes must carry an explicit wire name; and an odds change for a fixture
+  with an open bet publishes the recalculated value (76.5 for a stake of 100 at odds 2.0), or
+  Unavailable when the fixture is suspended. 8 of the 10 new tests fail on the previous code.
+- **Effect once deployed:** every OE2 odds change for a fixture with an open bet now runs
+  `ProcessCashOut` per bet, which logs one `OddsChange` line with the full payload and publishes one
+  `OnCashOutChange`. Expect more log volume and publish traffic in PRD; the size is **[Unknown]**.
+  The GM-901 Mongo backoff (TD-21) is what keeps the cache-miss lookups from blocking the consumer.
+- **Not changed:** `Platform.Job.Operator.Score/Repository/BettingRepository.cs` has its own copy of
+  `OnExternalOddsChangeMessage` with the v1 names, but nothing in that project deserializes it. A
+  single OE2-shaped class in `Platform.Shared` was not used: it rebuilds every image and changes
+  `message-contracts.approved.txt` for a one-service bug. `r.oe.bet.settlement` is not affected: OE2
+  publishes it with the long names.
+- **Confidence:** **[Verified]** in code and by unit tests; PRD behaviour after the fix not yet
+  observed in Loki. The DEVOPS-409 cross-repo checker `CashOutStake_OnOddsChange_ReadsEveryField`
+  (qa-robot-automation, not read here) should report `NOW PASSES` after deploy **[Unknown]**.
+
 ## Consolidated cross-views
 - **Duplicate implementations** → TD-07 (+ AntiPatterns AP-8): v1/v2 projects, duplicated MessageBroker.
 - **Dead code** → TD-15: JwtParser, commented SQL blocks, superseded v1 services/WebSocket.API.

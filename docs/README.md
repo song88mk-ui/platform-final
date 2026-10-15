@@ -30,7 +30,7 @@ core .NET sportsbook platform within the larger Song88 betting workspace.
 | [Logging.md](Logging.md) | Serilog structured logging, OpenTelemetry traces/metrics, correlation |
 | **Phase 10 — Validation & Technical Debt** | |
 | [KnowledgeValidation.md](KnowledgeValidation.md) | Confidence-by-topic, explicit assumptions, validated negatives, knowledge gaps, readiness statement |
-| [TechnicalDebt.md](TechnicalDebt.md) | Consolidated debt register (TD-01…TD-21), each with Evidence·Files·Confidence·Suggested investigation |
+| [TechnicalDebt.md](TechnicalDebt.md) | Consolidated debt register (TD-01…TD-24), each with Evidence·Files·Confidence·Suggested investigation |
 | [ArchitectureRisks.md](ArchitectureRisks.md) | Systemic risks (R-1…R-16) + circular-dependency check + risk heat map |
 | [Unknowns.md](Unknowns.md) | Open-questions register (U-01…U-30) with resolved/open tally |
 | **Phase 9 — Repository Intelligence** (`knowledge/` quick-reference) | |

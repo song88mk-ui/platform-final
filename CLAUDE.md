@@ -87,7 +87,8 @@ on `--mutate` removed every mutant in our runs. No mutator removes an extension 
 2. **Cross-repo contracts are duplicated by convention, with no shared package and no contract test.**
    Renaming a message field, routing key, Mongo/SQL column, or SignalR method name is an **up-to-4-repo
    silent break** (platform-final ↔ odds-engine-2 ↔ platform-web, + oddsfeed/backoffice). (R-2,
-   [docs/Contracts.md](docs/Contracts.md))
+   [docs/Contracts.md](docs/Contracts.md)) The one exception is CashOutStake's odds-change mirror,
+   which has a consumer-side test (rule 12).
 3. **Auth is custom, not framework-based.** No `AddAuthentication`/JWT/`[Authorize]`; `UseAuthorization()`
    is inert. Access control = API-key **ActionFilters** applied per-controller via `[ServiceFilter]`.
    **A new controller without a filter attribute is completely open** (no global fallback). (R-6,
@@ -144,6 +145,16 @@ on `--mutate` removed every mutant in our runs. No mutator removes an extension 
     try/catch: a failed status lookup means "status unknown" and falls through to the retry row,
     and a failed wallet refresh no longer stops a pending retry row from being closed (TD-20). Do
     the same for any recovery path that talks to the system that just failed.
+12. **A consumer-side mirror of an OE2 message needs an explicit wire name on every property.**
+    GM-902 (2026-10-15): `CashOutStake.Servicev2` deserialized `OnOddsChange` into a class that used
+    the OE v1 names (`FixtureId`, `Markets`), but odds-engine-2 publishes short names (`FiId`, `Ma`,
+    ...). `System.Text.Json` is case-sensitive and ignores unknown properties, so `FixtureId` was 0
+    and `Markets` empty, `ProcessOddsChange` matched no bet, and no cashout value was ever pushed
+    from an odds change, with no log line or error (TD-24). Fixed with `[JsonPropertyName]` on
+    `OnExternalOddsChangeMessage`, `ExternalMarketMessage` and `ExternalSelectionMessage`, pinned by
+    `Platform.CashOutStake.Servicev2.Test/Repository/OddsChangeContractTests.cs` (which also fails
+    any public property added without a mapping). When you add or change a consumer of an `r.oe.*`
+    message, map the OE2 names and add a test that deserializes an OE2-shaped payload.
 
 ## How this team writes code
 - **Repository pattern**: `IXxxRepository`+`XxxRepository` in each project's Repository folder, async, return

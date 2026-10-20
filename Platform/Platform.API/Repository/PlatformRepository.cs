@@ -4819,7 +4819,7 @@ namespace Platform.API.Repository
         {
             try
             {
-                _logger.LogError($"GetBetStatus: Start");
+                _logger.LogDebug("GetBetStatus: Start");
                 var isGuid = Guid.TryParse(request.BetId, out Guid BetId);
 
                 if (!isGuid)
@@ -4849,7 +4849,7 @@ namespace Platform.API.Repository
                     BetId = BetId
                 };
 
-                _logger.LogError($"GetBetStatus: Send Payload {JsonSerializer.Serialize(payload)}");
+                _logger.LogInformation("GetBetStatus: Send Payload {BetId}", payload.BetId);
                 return await _bettingRepository.GetBetStatus(payload);
             }
             catch (Exception ex)

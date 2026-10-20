@@ -332,7 +332,7 @@ namespace Platform.Shared.Repositories
                         var initialResult = JsonSerializer.Deserialize<GTSAssessmentResponseDTO>(await response.Content.ReadAsStringAsync(), _jsonOptions);
 
                         if (initialResult.IsBetAllowed == false)
-                            _logger.LogError($"Assessment Result: {JsonSerializer.Serialize(initialResult)}");
+                            _logger.LogWarning($"Assessment Result: {JsonSerializer.Serialize(initialResult)}");
 
                         activity?.SetTag("gts.assessment.result", initialResult);
                         activity?.SetStatus(ActivityStatusCode.Ok);

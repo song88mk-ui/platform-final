@@ -366,6 +366,21 @@ namespace Platform.API.Controllers
             }
         }
 
+        [HttpPost("v1/bet/resendprovidercancellation")]
+        public async Task<IActionResult> ResendProviderCancellation([FromBody] ResendProviderCancellationRequestDTO request)
+        {
+            var result = await _platformRepository.ResendProviderCancellation(request);
+
+            switch (result.StatusCode)
+            {
+                case Shared.Enums.StatusCode.Success:
+                case Shared.Enums.StatusCode.Maintenance:
+                    return Ok(result);
+                default:
+                    return BadRequest(result);
+            }
+        }
+
         [HttpPost("v1/bet/resendsettlement/details")]
         public async Task<IActionResult> GetResendSettlementBetDetails([FromBody] ResendSettlementBetDetailRequestDTO request)
         {

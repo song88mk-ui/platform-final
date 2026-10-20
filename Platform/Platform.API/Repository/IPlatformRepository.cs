@@ -72,6 +72,7 @@ namespace Platform.API.Repository
         Task<BaseResponseDTO<ManualSettlementResponseDTO>> ManualSettlement(ManualBetSettlementRequest request);
         Task<BaseResponseDTO<ManualBetDetailsResponseDTO>> GetManualBetDetails(ManualBetDetailsRequest request);
         Task<BaseResponseDTO<ResendSettlementResponseDTO>> ResendSettlement(ResendSettlementRequestDTO request);
+        Task<BaseResponseDTO<ResendSettlementResponseDTO>> ResendProviderCancellation(ResendProviderCancellationRequestDTO request);
         Task<BaseResponseDTO<ResendSettlementBetDetailResponseDTO>> GetResendSettlementBetDetails(ResendSettlementBetDetailRequestDTO request);
         Task<BaseResponseDTO<ParlayBonusResponseDTO>> GetClientParlayBonus(GetParlayBonusRequestDTO request);
         Task<BaseResponseDTO<StatusCode>> AddOrUpdateParlayBonus(ParlayBonusRequestDTO request);

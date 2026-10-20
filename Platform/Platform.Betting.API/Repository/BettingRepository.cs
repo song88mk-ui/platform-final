@@ -3386,18 +3386,42 @@ namespace Platform.Betting.API.Repository
             };
         }
 
+        // BO-125: ResendSettlement used to publish only on r.bet.operator. A message may now ask for
+        // r.bet.cancellation (provider only) instead. Anything else is refused rather than published, so this
+        // endpoint cannot be pointed at an arbitrary routing key.
+        private static readonly string[] ResendSettlementRoutingKeys =
+        {
+            ResendSettlementMessageDTO.OperatorRoutingKey,
+            ResendSettlementMessageDTO.ProviderCancellationRoutingKey
+        };
+
         public async Task<BaseResponseDTO<ResendSettlementResponseDTO>> ResendSettlement(ResendSettlementMessageRequestDTO request)
         {
             var results = new List<ResendSettlementResponse>();
 
             foreach (var message in request.Messages)
             {
+                var routingKey = string.IsNullOrWhiteSpace(message.RoutingKey) ? ResendSettlementMessageDTO.OperatorRoutingKey : message.RoutingKey;
+
+                if (!ResendSettlementRoutingKeys.Contains(routingKey))
+                {
+                    _logger.LogError($"ResendSettlement - refused {message.MessageType} for BetId {message.BetId} (CorrelationId {message.CorrelationId}): routing key {routingKey} is not allowed");
+
+                    results.Add(new ResendSettlementResponse
+                    {
+                        BetId = message.BetId,
+                        StatusCode = StatusCode.Error,
+                        Message = "Routing key is not allowed"
+                    });
+                    continue;
+                }
+
                 var publishResult = _rabbitMQRepository.PublishViaHttp(new MessageRequestDTO
                 {
                     MessageType = message.MessageType,
                     Payload = message.Info,
                     CorrelationId = message.CorrelationId,
-                    RoutingKey = "r.bet.operator"
+                    RoutingKey = routingKey
                 });
 
                 if (publishResult == null || publishResult.StatusCode != StatusCode.Success)

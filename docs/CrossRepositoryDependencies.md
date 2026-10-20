@@ -102,7 +102,7 @@ registry in [Contracts.md](Contracts.md).
 ### backoffice-final — operator admin (authors curation) `[Verified-sibling]`
 - **Calls platform-final InternalController** (`x-api-key` = internal key): `v1/client/topfixtures`,
   `topleagues(/copy)`, `announcements(/post|/delete)`, `parlaybonus`, `config/client`, plus
-  `v1/bet/manualsettlement|resendsettlement|cancel|details`.
+  `v1/bet/manualsettlement|resendsettlement|resendprovidercancellation|cancel|details`.
 - **Also writes some Sportsbook SQL tables directly** via its own `SportsbookContext`
   (`ClientSportOrder`/`ClientSegmentOrder`/`ClientLeagueOrder`/`ClientOddstableLeagueOrder`,
   market-template groups), i.e. the

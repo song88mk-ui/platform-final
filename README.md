@@ -374,7 +374,9 @@ identified via `x-client-id` / `x-og-*` headers. Routes by area:
   `POST v1/client/topleagues`, `POST v1/client/topleagues/list`,
   `POST v1/client/topleagues/copy`
 - Bets: `POST v1/bet/cancel`, `POST v1/bet/manualsettlement`, `POST v1/bet/details`,
-  `POST v1/bet/resendsettlement`, `POST v1/bet/resendsettlement/details`
+  `POST v1/bet/resendsettlement`, `POST v1/bet/resendsettlement/details`,
+  `POST v1/bet/resendprovidercancellation` (BO-125: resend a Cancelled bet's status to the
+  provider, GTS)
 - Announcements: `POST v1/client/announcements`, `POST v1/client/announcements/post`,
   `POST v1/client/announcements/delete`
 - Cache / recovery: `DELETE v1/cache/client/{clientId}`, `POST v1/cachepreload`,
@@ -430,7 +432,7 @@ reads. Routes by area; see `/swagger` for schemas:
 | POST | `v1/bet/manualsettlement` | Manually settle a bet |
 | POST | `v1/bet/details` | Bet details (manual-settlement view) |
 | POST | `v1/bet/selections` | Selection details for bets |
-| POST | `v1/bet/resendsettlement` | Re-publish a settlement message |
+| POST | `v1/bet/resendsettlement` | Re-publish a settlement message on `r.bet.operator`, or on `r.bet.cancellation` (Provider.Service only) when the message sets `RoutingKey`; any other key is refused (BO-125) |
 | POST | `v1/bet/cashout` | Cash out a bet |
 | POST | `v1/bet/cashout/state` | Current cashout state/value |
 | POST | `v1/bet/status` | Bet status lookup |
@@ -571,11 +573,16 @@ dotnet test Platform/Platform.CacheSync.Service.Test
 dotnet test Platform/Platform.Operator.Servicev2.Test
 
 # GM-861 cashout ownership check: a UserId/ClientId mismatch is rejected before anything
-# else runs, against the EF in-memory provider
+# else runs, and BO-125 ResendSettlement routing keys (no key still publishes on r.bet.operator,
+# r.bet.cancellation is passed through, any other key is refused without publishing), against the
+# EF in-memory provider and a recording RabbitMQ repository
 dotnet test Platform/Platform.Betting.API.Test
 
 # BO-106 webprops cashout guardrail: the lookup key and each FullCashout/PartialCashout
-# combination, against the EF in-memory provider and a fake WebPropsRepository/HttpClient
+# combination, against the EF in-memory provider and a fake WebPropsRepository/HttpClient, and
+# BO-125 ResendProviderCancellation (only a Cancelled bet is published, as OnBetCancellation on
+# r.bet.cancellation with IsAudit set; other statuses, unknown or invalid ids are refused),
+# against a recording fake of the Betting API repository
 dotnet test Platform/Platform.API.Test
 
 # GM-864 preload regression (an excluded bet no longer stops the rest of the list from

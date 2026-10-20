@@ -26,7 +26,7 @@ Header set: `x-api-key`, `x-operator-token`, `x-client-id`, `x-language-code`, `
 **Curation:** `v1/client/topfixtures(/list|/copy|/sportstree)`, `v2/client/topfixtures`,
 `v1/client/topleagues(/list|/copy)`; `v1/client/{sports,allleagues,sportgroups,exchangerate(s)}`;
 `v2/client/allleagues`.
-**Settlement/cancel:** `v1/bet/{cancel,manualsettlement,details,resendsettlement,resendsettlement/details}`.
+**Settlement/cancel:** `v1/bet/{cancel,manualsettlement,details,resendsettlement,resendprovidercancellation,resendsettlement/details}`.
 **Parlay bonus:** `POST/GET v1/client/parlaybonus`. **Announcements:** `v1/client/announcements(/post|/delete)`.
 **Translation:** `v1/translation/recovery`.
 

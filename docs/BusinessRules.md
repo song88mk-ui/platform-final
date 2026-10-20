@@ -114,7 +114,14 @@ Encoded by `StatusCode` 104–117 and `BetConfig`. **[Verified]** (codes) / **[L
    exclusions (`ExcludeStakeSportTypes`, `ExcludeWinningsSportTypes`). **[Verified]** (config fields).
 5. **Resettlement** — settled bets can be re-graded (`IsResettled`) when upstream corrects a
    result; failed settlements are retried by `Job.Resettlement` (Fibonacci backoff, `RetryCount<8`)
-   and BO can `resendsettlement`. **[Verified]**.
+   and BO can `resendsettlement`. **[Verified]**. For a Cancelled bet `resendsettlement` replays the
+   cancellation to the operator only. To tell the provider (GTS) a bet is Cancelled again, BO calls
+   `v1/bet/resendprovidercancellation` (BO-125): it reads the bet from the betting database, refuses
+   anything that is not Cancelled, and publishes `OnBetCancellation` with an `OnBetSettlement`
+   payload (`IsAudit = true`) on `r.bet.cancellation`, the key only `Provider.Service` binds, so
+   the operator is not sent a second cancellation. `Provider.Service` then cancels the reservation
+   and syncs the Cancelled status with `SendBet`, as it does for a manual cancellation (GM-837).
+   **[Verified]** in code and unit tests; GTS accepting the update is **[Unknown]** until observed.
 6. **Audit** — every state change snapshots `BetAudit`/`BetSelectionAudit`. **[Verified]**.
 7. **GTS forwarding only on bet change** - `Settlement.Service` publishes `OnBetSettlement` with
    `IsAudit = true` only when the settlement pass changed the bet (new status, or new payout in

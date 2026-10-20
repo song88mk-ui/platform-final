@@ -15,7 +15,7 @@ over RabbitMQ (via `RabbitMQ.API`). Two controllers split the surface by audienc
 | Controller | Filter | Audience | Route count |
 |------------|--------|----------|------------:|
 | `IntegrationController` | `APIKeyFilter` (`x-api-key`) | public/player clients | ~62 |
-| `InternalController` | `InternalAPIKeyFilter` | back office / config / settlement ops | ~33 |
+| `InternalController` | `InternalAPIKeyFilter` | back office / config / settlement ops | ~34 |
 
 Class attributes: `[ApiController, EnableCors("AllowAllOrigins"), ServiceFilter(typeof(APIKeyFilter))]`.
 **[Verified]** `Platform.API/Controllers/IntegrationController.cs:19`.
@@ -108,19 +108,19 @@ Cited line numbers are in `Platform.API/Controllers/IntegrationController.cs`.
 ## InternalController — back-office/ops endpoints `[Verified]`
 Cited line numbers in `Platform.API/Controllers/InternalController.cs`. Behind `InternalAPIKeyFilter`.
 
-- **Client/config:** `POST v1/client` (37), `GET v1/client` (445), `GET v1/clients` (453),
+- **Client/config:** `POST v1/client` (37), `GET v1/client` (460), `GET v1/clients` (468),
   `POST v1/client/status` (52), `POST v1/config/client` (294), `DELETE v1/cache/client/{clientId}` (22),
-  `POST v1/cachepreload` (430).
+  `POST v1/cachepreload` (445).
 - **Top fixtures/leagues:** `…/topfixtures(/list|/copy|/sportstree)` (62/113/128/95),
   `GET v2/client/topfixtures` (77), `…/topleagues(/list|/copy)` (144/159/174/189).
 - **Catalogue (BO):** `GET v1/client/sports` (204), `v1/client/allleagues` (219),
-  `v2/client/allleagues` (241), `v1/client/sportgroups` (414),
+  `v2/client/allleagues` (241), `v1/client/sportgroups` (429),
   `v1/client/exchangerate(s)` (264/279).
 - **Settlement/cancel:** `POST v1/bet/cancel` (309), `v1/bet/manualsettlement` (324),
-  `v1/bet/details` (339), `v1/bet/resendsettlement` (354), `v1/bet/resendsettlement/details` (369).
-- **Parlay bonus:** `POST/GET v1/client/parlaybonus` (384/399).
-- **Announcements:** `POST v1/client/announcements(/post|/delete)` (470/485/500).
-- **Translation:** `POST v1/translation/recovery` (461).
+  `v1/bet/details` (339), `v1/bet/resendsettlement` (354), `v1/bet/resendprovidercancellation` (369), `v1/bet/resendsettlement/details` (384).
+- **Parlay bonus:** `POST/GET v1/client/parlaybonus` (399/414).
+- **Announcements:** `POST v1/client/announcements(/post|/delete)` (485/500/515).
+- **Translation:** `POST v1/translation/recovery` (476).
 
 ---
 

@@ -3570,6 +3570,112 @@ namespace Platform.API.Repository
             }
         }
 
+        // BO-125: shared by ResendSettlement and ResendProviderCancellation. The mapping is the one that used
+        // to be inline in ResendSettlement, moved unchanged.
+        private static OnBetSettlement BuildOnBetSettlement(ManualBetDetailsDTO betDetail)
+        {
+            return new OnBetSettlement
+            {
+                // Required for the retry/GTS pipeline: Operator.Servicev2 gates its OperatorLog RESPONSE
+                // write, wallet-change publish, and OperatorSettlementRetry success-marking on IsAudit
+                // (mirrors isInsertToBetAudit from the original live settlement), and GTSBetProvider's
+                // dedup guard also checks it before forwarding. Without this, the row would never be
+                // marked successful and Job.Resettlement would keep re-sending it indefinitely.
+                IsAudit = true,
+                Bet = new Platform.Shared.Data.Betting.Entities.Bet
+                {
+                    BetId = betDetail.BetId,
+                    UserId = betDetail.UserId,
+                    Stake = betDetail.Stake,
+                    TrueStake = betDetail.TrueStake,
+                    Odds = betDetail.Odds,
+                    OddsTypeId = betDetail.OddsTypeId,
+                    OddsTypeName = betDetail.OddsTypeName,
+                    Payout = betDetail.Payout,
+                    WinLoss = betDetail.WinLoss,
+                    BetStatusId = betDetail.BetStatusId,
+                    BetStatusName = betDetail.BetStatusName,
+                    Reason = betDetail.Reason,
+                    CurrencyCode = betDetail.CurrencyCode,
+                    LanguageCode = betDetail.LanguageCode,
+                    ExchangeRate = betDetail.ExchangeRate,
+                    IPAddress = betDetail.IPAddress,
+                    Channel = betDetail.Channel,
+                    ClientId = betDetail.ClientId,
+                    ClientIdRef = betDetail.ClientIdRef,
+                    ClientCode = betDetail.ClientCode,
+                    ClientName = betDetail.ClientName,
+                    LimitId = betDetail.LimitId,
+                    Endpoint = betDetail.Endpoint,
+                    OperatorToken = betDetail.OperatorToken,
+                    CompanyShare = betDetail.CompanyShare,
+                    IsResettled = betDetail.IsResettled,
+                    IsCashout = betDetail.IsCashout,
+                    BetDate = betDetail.BetDate,
+                    BetDateOffset = betDetail.BetDateOffset,
+                    SettlementDate = betDetail.SettlementDate,
+                    SettlementDateOffset = betDetail.SettlementDateOffset,
+                    StakeTax = betDetail.StakeTax,
+                    WinningsTax = betDetail.WinningsTax,
+                    TaxedStake = betDetail.TaxedStake,
+                    TaxedWinnings = betDetail.TaxedWinnings,
+                    ParlayBonus = betDetail.ParlayBonus,
+                    ParlayBonusWinnings = betDetail.ParlayBonusWinnings,
+                    StakeReal = betDetail.StakeReal,
+                    StakeBonus = betDetail.StakeBonus,
+                    StakeRealPayout = betDetail.StakeRealPayout,
+                    StakeBonusPayout = betDetail.StakeBonusPayout,
+                    IsFreeBet = betDetail.IsFreeBet,
+                    BetTypeId = betDetail.BetTypeId,
+                    BetTypeName = betDetail.BetTypeName
+                },
+                BetSelections = betDetail.Selections.Select(ss => new Platform.Shared.Data.Betting.Entities.BetSelection
+                {
+                    BetSelectionId = ss.BetSelectionId,
+                    BetId = ss.BetId,
+                    UserId = ss.UserId,
+                    SportId = ss.SportId,
+                    SportName = ss.SportName,
+                    SegmentId = ss.SegmentId,
+                    SegmentName = ss.SegmentName,
+                    LeagueId = ss.LeagueId,
+                    LeagueName = ss.LeagueName,
+                    FixtureId = long.Parse(ss.FixtureId),
+                    FixtureName = ss.FixtureName,
+                    FixtureTypeId = ss.FixtureTypeId,
+                    FixtureTypeName = ss.FixtureTypeName,
+                    MarketTemplateId = ss.MarketTemplateId,
+                    MarketId = long.Parse(ss.MarketId),
+                    MarketName = ss.MarketName,
+                    IsHandicap = ss.IsHandicap,
+                    SelectionTemplateId = ss.SelectionTemplateId,
+                    SelectionId = long.Parse(ss.SelectionId),
+                    SelectionName = ss.SelectionName,
+                    FixtureStatusId = ss.FixtureStatusId,
+                    FixtureStatusName = ss.FixtureStatusName,
+                    Line = ss.Line,
+                    Odds = ss.Odds,
+                    BetSelectionStatusId = ss.BetSelectionStatusId,
+                    BetSelectionStatusName = ss.BetSelectionStatusName,
+                    IsSettled = ss.IsSettled,
+                    IsResettled = ss.IsResettled,
+                    FixtureSpecifier = ss.FixtureSpecifier,
+                    SelectionSpecifier = ss.SelectionSpecifier,
+                    FixtureStartDate = ss.FixtureStartDate,
+                    BetScore = ss.BetScore,
+                    SettlementScore = ss.SettlementScore,
+                    Probability = ss.Probability,
+                    WonProbability = ss.WonProbability,
+                    LostProbability = ss.LostProbability,
+                    VoidProbability = ss.VoidProbability,
+                    HalfWonProbability = ss.HalfWonProbability,
+                    HalfLostProbability = ss.HalfLostProbability,
+                    CorrelationId = ss.CorrelationId,
+                    DeadHeatFactor = ss.DeadHeatFactor
+                }).ToList()
+            };
+        }
+
         public async Task<BaseResponseDTO<ResendSettlementResponseDTO>> ResendSettlement(ResendSettlementRequestDTO request)
         {
             var betIds = request.Bets.Select(s => Guid.Parse(s.BetId)).ToList();
@@ -3610,106 +3716,7 @@ namespace Platform.API.Repository
                         continue;
                     }
 
-                    var onBetSettlement = new OnBetSettlement
-                    {
-                        // Required for the retry/GTS pipeline: Operator.Servicev2 gates its OperatorLog RESPONSE
-                        // write, wallet-change publish, and OperatorSettlementRetry success-marking on IsAudit
-                        // (mirrors isInsertToBetAudit from the original live settlement), and GTSBetProvider's
-                        // dedup guard also checks it before forwarding. Without this, the row would never be
-                        // marked successful and Job.Resettlement would keep re-sending it indefinitely.
-                        IsAudit = true,
-                        Bet = new Platform.Shared.Data.Betting.Entities.Bet
-                        {
-                            BetId = betDetail.BetId,
-                            UserId = betDetail.UserId,
-                            Stake = betDetail.Stake,
-                            TrueStake = betDetail.TrueStake,
-                            Odds = betDetail.Odds,
-                            OddsTypeId = betDetail.OddsTypeId,
-                            OddsTypeName = betDetail.OddsTypeName,
-                            Payout = betDetail.Payout,
-                            WinLoss = betDetail.WinLoss,
-                            BetStatusId = betDetail.BetStatusId,
-                            BetStatusName = betDetail.BetStatusName,
-                            Reason = betDetail.Reason,
-                            CurrencyCode = betDetail.CurrencyCode,
-                            LanguageCode = betDetail.LanguageCode,
-                            ExchangeRate = betDetail.ExchangeRate,
-                            IPAddress = betDetail.IPAddress,
-                            Channel = betDetail.Channel,
-                            ClientId = betDetail.ClientId,
-                            ClientIdRef = betDetail.ClientIdRef,
-                            ClientCode = betDetail.ClientCode,
-                            ClientName = betDetail.ClientName,
-                            LimitId = betDetail.LimitId,
-                            Endpoint = betDetail.Endpoint,
-                            OperatorToken = betDetail.OperatorToken,
-                            CompanyShare = betDetail.CompanyShare,
-                            IsResettled = betDetail.IsResettled,
-                            IsCashout = betDetail.IsCashout,
-                            BetDate = betDetail.BetDate,
-                            BetDateOffset = betDetail.BetDateOffset,
-                            SettlementDate = betDetail.SettlementDate,
-                            SettlementDateOffset = betDetail.SettlementDateOffset,
-                            StakeTax = betDetail.StakeTax,
-                            WinningsTax = betDetail.WinningsTax,
-                            TaxedStake = betDetail.TaxedStake,
-                            TaxedWinnings = betDetail.TaxedWinnings,
-                            ParlayBonus = betDetail.ParlayBonus,
-                            ParlayBonusWinnings = betDetail.ParlayBonusWinnings,
-                            StakeReal = betDetail.StakeReal,
-                            StakeBonus = betDetail.StakeBonus,
-                            StakeRealPayout = betDetail.StakeRealPayout,
-                            StakeBonusPayout = betDetail.StakeBonusPayout,
-                            IsFreeBet = betDetail.IsFreeBet,
-                            BetTypeId = betDetail.BetTypeId,
-                            BetTypeName = betDetail.BetTypeName
-                        },
-                        BetSelections = betDetail.Selections.Select(ss => new Platform.Shared.Data.Betting.Entities.BetSelection
-                        {
-                            BetSelectionId = ss.BetSelectionId,
-                            BetId = ss.BetId,
-                            UserId = ss.UserId,
-                            SportId = ss.SportId,
-                            SportName = ss.SportName,
-                            SegmentId = ss.SegmentId,
-                            SegmentName = ss.SegmentName,
-                            LeagueId = ss.LeagueId,
-                            LeagueName = ss.LeagueName,
-                            FixtureId = long.Parse(ss.FixtureId),
-                            FixtureName = ss.FixtureName,
-                            FixtureTypeId = ss.FixtureTypeId,
-                            FixtureTypeName = ss.FixtureTypeName,
-                            MarketTemplateId = ss.MarketTemplateId,
-                            MarketId = long.Parse(ss.MarketId),
-                            MarketName = ss.MarketName,
-                            IsHandicap = ss.IsHandicap,
-                            SelectionTemplateId = ss.SelectionTemplateId,
-                            SelectionId = long.Parse(ss.SelectionId),
-                            SelectionName = ss.SelectionName,
-                            FixtureStatusId = ss.FixtureStatusId,
-                            FixtureStatusName = ss.FixtureStatusName,
-                            Line = ss.Line,
-                            Odds = ss.Odds,
-                            BetSelectionStatusId = ss.BetSelectionStatusId,
-                            BetSelectionStatusName = ss.BetSelectionStatusName,
-                            IsSettled = ss.IsSettled,
-                            IsResettled = ss.IsResettled,
-                            FixtureSpecifier = ss.FixtureSpecifier,
-                            SelectionSpecifier = ss.SelectionSpecifier,
-                            FixtureStartDate = ss.FixtureStartDate,
-                            BetScore = ss.BetScore,
-                            SettlementScore = ss.SettlementScore,
-                            Probability = ss.Probability,
-                            WonProbability = ss.WonProbability,
-                            LostProbability = ss.LostProbability,
-                            VoidProbability = ss.VoidProbability,
-                            HalfWonProbability = ss.HalfWonProbability,
-                            HalfLostProbability = ss.HalfLostProbability,
-                            CorrelationId = ss.CorrelationId,
-                            DeadHeatFactor = ss.DeadHeatFactor
-                        }).ToList()
-                    };
+                    var onBetSettlement = BuildOnBetSettlement(betDetail);
 
                     _platformContext.OperatorSettlementRetry.Add(new OperatorSettlementRetry
                     {
@@ -3872,6 +3879,118 @@ namespace Platform.API.Repository
                 return await _bettingRepository.ResendSettlement(messageRequest);
             }
 
+        }
+
+        // BO-125: sends the provider (GTS) a Cancelled update for bets that are Cancelled here but still
+        // Open there, which is what happens when the provider never received the cancellation (a bet
+        // cancelled at placement was reported to GTS as Open and never updated). ResendSettlement cannot
+        // do this: for a Cancelled bet it replays the cancellation to the operator only. The message is
+        // the same one Provider.Service already handles
+        // for a manual cancellation (OnBetCancellation carrying an OnBetSettlement: it cancels the
+        // reservation, then syncs the Cancelled status with SendBet). It goes out on r.bet.cancellation,
+        // which only Provider.Service binds, so the operator does not get a second cancellation.
+        public async Task<BaseResponseDTO<ResendSettlementResponseDTO>> ResendProviderCancellation(ResendProviderCancellationRequestDTO request)
+        {
+            try
+            {
+                var response = new ResendSettlementResponseDTO();
+                var messageRequest = new ResendSettlementMessageRequestDTO();
+
+                var betIds = new List<Guid>();
+                foreach (var rawBetId in request?.BetIds ?? new List<string>())
+                {
+                    if (!Guid.TryParse(rawBetId, out var parsedBetId))
+                    {
+                        response.Data.Add(new ResendSettlementResponse
+                        {
+                            StatusCode = StatusCode.Error,
+                            BetId = Guid.Empty,
+                            Message = $"Invalid bet id: {rawBetId}"
+                        });
+                        continue;
+                    }
+
+                    if (!betIds.Contains(parsedBetId))
+                        betIds.Add(parsedBetId);
+                }
+
+                foreach (var betId in betIds)
+                {
+                    var manualBetDetails = await _bettingRepository.GetManualBetDetails(new ManualBetDetailsRequest
+                    {
+                        BetIds = new List<string>() { betId.ToString() }
+                    });
+
+                    var betDetail = manualBetDetails.Result?.Bets?.FirstOrDefault();
+
+                    if (betDetail == null)
+                    {
+                        response.Data.Add(new ResendSettlementResponse
+                        {
+                            StatusCode = StatusCode.Bet_Not_Found,
+                            BetId = betId,
+                            Message = "Bet not found"
+                        });
+                        continue;
+                    }
+
+                    if (betDetail.BetStatusId != (int)BetStatus.Cancelled)
+                    {
+                        response.Data.Add(new ResendSettlementResponse
+                        {
+                            StatusCode = StatusCode.Error,
+                            BetId = betId,
+                            Message = $"Bet is not cancelled (current status: {betDetail.BetStatusName})"
+                        });
+                        continue;
+                    }
+
+                    messageRequest.Messages.Add(new ResendSettlementMessageDTO
+                    {
+                        BetId = betDetail.BetId,
+                        MessageType = "OnBetCancellation",
+                        Info = JsonSerializer.Serialize(BuildOnBetSettlement(betDetail)),
+                        CorrelationId = Guid.NewGuid().ToString(),
+                        RoutingKey = ResendSettlementMessageDTO.ProviderCancellationRoutingKey
+                    });
+                }
+
+                if (messageRequest.Messages.Any())
+                {
+                    var publishResponse = await _bettingRepository.ResendSettlement(messageRequest);
+
+                    if (publishResponse?.Result?.Data != null && publishResponse.Result.Data.Any())
+                        response.Data.AddRange(publishResponse.Result.Data);
+                    else
+                        response.Data.AddRange(messageRequest.Messages.Select(m => new ResendSettlementResponse
+                        {
+                            StatusCode = StatusCode.Error,
+                            BetId = m.BetId,
+                            Message = publishResponse?.Message ?? StatusCode.Error.ToString().Replace('_', ' ')
+                        }));
+                }
+
+                var isSuccess = response.Data.Any() && response.Data.All(d => d.StatusCode == StatusCode.Success);
+                var statusCode = isSuccess ? StatusCode.Success : StatusCode.Error;
+
+                return new BaseResponseDTO<ResendSettlementResponseDTO>
+                {
+                    StatusCode = statusCode,
+                    Message = statusCode.ToString().Replace('_', ' '),
+                    Result = response
+                };
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "ResendProviderCancellation: unexpected error");
+
+                return new BaseResponseDTO<ResendSettlementResponseDTO>
+                {
+                    StatusCode = StatusCode.Error,
+                    Message = StatusCode.Error.ToString().Replace('_', ' '),
+                    Result = new ResendSettlementResponseDTO()
+                };
+            }
         }
 
         public async Task<BaseResponseDTO<ResendSettlementBetDetailResponseDTO>> GetResendSettlementBetDetails(ResendSettlementBetDetailRequestDTO request)

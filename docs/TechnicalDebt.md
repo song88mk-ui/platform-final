@@ -250,7 +250,7 @@
     back. The `S-101` branch needed no edit: an exception there lands in the same `catch` block.
   - **Replay verified:** `AddOrUpdateOperatorSettlementRetry` never reads `RemainingRetries`, so
     the fallback row is stored with `RetryCount = 0`, `IsRetry = true`, `IsSuccess = false`.
-    `Platform.Job.Resettlement/Worker.cs:67-68` selects `IsRetry && RetryCount < MaxRetryCount`
+    `Platform.Job.Resettlement/Worker.cs:87-88` selects `IsRetry && RetryCount < MaxRetryCount`
     and republishes the stored `Info`, so the row is replayed.
   - **Tests (`Platform.Operator.Servicev2.Test`, 47 passing):** `OperatorStubServer` gained
     `PathResponses` so one test can answer the debit, transaction status and wallet balance paths
@@ -356,8 +356,8 @@
 - **Files:** `Platform.Job.ForexEUR/Worker.cs`; tests in
   `Platform.Job.ForexEUR.Test/WorkerTests.cs` (new project, in `Platform.sln`).
 - **Not fixed:** `ProcessForex()` takes no `CancellationToken`, so a shutdown during an in-flight
-  HTTP call or DB write still waits for that call to finish or fail. The other `Job.*` workers were
-  not reviewed for the same pattern.
+  HTTP call or DB write still waits for that call to finish or fail. `Job.Resettlement` and `Job.CCF`
+  had the same pattern and were fixed under GM-955; `Job.Operator.Score` does not.
 - **Confidence:** **[Verified]** in code and by unit tests; rollout behaviour after the fix not yet
   observed in Loki.
 

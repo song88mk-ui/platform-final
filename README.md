@@ -23,7 +23,7 @@ This README is a practical local run/test guide. The deep reference lives in
 | `Platform.Websocket.API2` | SignalR hub | Real-time hub at `/platform`, MessagePack; consumed by `platform-web` (fed by `odds-engine-2`) |
 | `Platform.*.Service`, `Platform.Job.*` | Workers | ~18 `BackgroundService` RabbitMQ consumers (settlement, cashout, cache sync, ...) |
 | `Platform.Shared` | Class library | Shared kernel: entities, `DbContext`s, message contracts, enums. Platform-wide blast radius - treat as public API. |
-| `Platform.Shared.Test`, `Platform.Sportsbook.API.Test`, `Platform.Operator.API.Test`, `Platform.BetInfo.Service.Test`, `Platform.CacheSync.Service.Test`, `Platform.Operator.Servicev2.Test`, `Platform.Betting.API.Test`, `Platform.API.Test`, `Platform.CashOutStake.Servicev2.Test`, `Platform.Job.ForexEUR.Test` | xUnit tests | See "Running tests" |
+| `Platform.Shared.Test`, `Platform.Sportsbook.API.Test`, `Platform.Operator.API.Test`, `Platform.BetInfo.Service.Test`, `Platform.CacheSync.Service.Test`, `Platform.Operator.Servicev2.Test`, `Platform.Betting.API.Test`, `Platform.API.Test`, `Platform.CashOutStake.Servicev2.Test`, `Platform.Job.ForexEUR.Test`, `Platform.Job.CCF.Test`, `Platform.Job.Resettlement.Test` | xUnit tests | See "Running tests" |
 
 Note: some services exist in duplicated variants (`*.Service` vs `*.Servicev2`,
 `WebSocket.API` vs `Websocket.API2`). Confirm the live variant before working on one -
@@ -547,7 +547,7 @@ Plain REST endpoints on the same host (`Controllers/SportsbookController.cs`):
 
 ## Running tests
 
-Ten xUnit test projects exist; all target `net10.0` except `Platform.CashOutStake.Servicev2.Test` (`net8.0`, matching the service it covers):
+Twelve xUnit test projects exist; all target `net10.0` except `Platform.CashOutStake.Servicev2.Test` (`net8.0`, matching the service it covers):
 
 ```
 # pure unit tests over the shared kernel
@@ -592,6 +592,15 @@ dotnet test Platform/Platform.CashOutStake.Servicev2.Test
 # GM-890 ForexEUR worker loop: stops cleanly on shutdown and waits before retrying a failed
 # ProcessForex(), against a fake IPlatformRepository
 dotnet test Platform/Platform.Job.ForexEUR.Test
+
+# GM-955 Resettlement and CCF worker loops: a failed iteration waits a retry delay instead of
+# retrying at once, and both stop cleanly on shutdown (an in-flight CCF report call or settlement
+# batch is cancelled, and the Resettlement broker is disposed only after the loop has stopped).
+# Resettlement also skips a retry row whose Info cannot be read instead of stopping the batch.
+# Against fakes: Resettlement seeds the EF in-memory provider, the CCF repository tests stub the
+# HTTP handler
+dotnet test Platform/Platform.Job.Resettlement.Test
+dotnet test Platform/Platform.Job.CCF.Test
 ```
 
 No external services are required, including for the repository tests: they run against

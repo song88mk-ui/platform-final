@@ -42,7 +42,7 @@ dotnet build Platform/Platform.sln
 dotnet test Platform/Platform.sln
 ```
 
-Eleven test projects, one per `Platform/*.Test` folder. Ten are in `Platform/Platform.sln`;
+Thirteen test projects, one per `Platform/*.Test` folder. Twelve are in `Platform/Platform.sln`;
 `Platform.CashOut.Service.Test` is not, so `dotnet test Platform/Platform.sln` skips it.
 CI runs them on pull requests only. Restore needs `NUGET_PASSWORD` for the private feed.
 

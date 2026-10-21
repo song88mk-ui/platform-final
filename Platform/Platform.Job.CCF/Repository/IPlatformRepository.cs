@@ -1,9 +1,10 @@
-﻿using System.Threading.Tasks;
+﻿using System.Threading;
+using System.Threading.Tasks;
 
 namespace Platform.Job.CCF.Repository
 {
     public interface IPlatformRepository
     {
-        Task ProcessCCF();
+        Task ProcessCCF(CancellationToken cancellationToken);
     }
 }

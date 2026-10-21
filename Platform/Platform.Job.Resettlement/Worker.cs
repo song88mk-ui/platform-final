@@ -18,11 +18,14 @@ namespace Platform.Job.Resettlement
     {
         const int MaxRetryCount = 8;
 
+        private static readonly TimeSpan DefaultRetryDelay = TimeSpan.FromMinutes(1);
+
         private readonly ILogger<Worker> _logger;
         private readonly IServiceProvider _provider;
         private readonly IMessageBroker _messageBroker;
         private readonly IPlatformRepository _platformRepository;
         private readonly IConfiguration _configuration;
+        private readonly TimeSpan _retryDelay;
         private Stack<int> _fibonnaci = new Stack<int>();
 
         public Worker(ILogger<Worker> logger,
@@ -30,12 +33,23 @@ namespace Platform.Job.Resettlement
                 IMessageBroker messageBroker,
                 IPlatformRepository platformRepository,
                 IConfiguration configuration)
+            : this(logger, provider, messageBroker, platformRepository, configuration, DefaultRetryDelay)
+        {
+        }
+
+        internal Worker(ILogger<Worker> logger,
+                IServiceProvider provider,
+                IMessageBroker messageBroker,
+                IPlatformRepository platformRepository,
+                IConfiguration configuration,
+                TimeSpan retryDelay)
         {
             _logger = logger;
             _provider = provider;
             _messageBroker = messageBroker;
             _platformRepository = platformRepository;
             _configuration = configuration;
+            _retryDelay = retryDelay;
         }
 
         public override Task StartAsync(CancellationToken cancellationToken)
@@ -43,11 +57,17 @@ namespace Platform.Job.Resettlement
             return base.StartAsync(cancellationToken);
         }
 
-        public override Task StopAsync(CancellationToken cancellationToken)
+        public override async Task StopAsync(CancellationToken cancellationToken)
         {
-            _messageBroker.Dispose();
-
-            return base.StopAsync(cancellationToken);
+            try
+            {
+                await base.StopAsync(cancellationToken);
+            }
+            finally
+            {
+                // after the loop has stopped, so an in-flight ProcessBets never publishes on a disposed broker
+                _messageBroker.Dispose();
+            }
         }
 
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
@@ -56,37 +76,48 @@ namespace Platform.Job.Resettlement
             _messageBroker.Connect();
             _logger.LogInformation("Connected. Running job loop");
 
-            while (true)
+            while (!stoppingToken.IsCancellationRequested)
             {
-
+                TimeSpan nextRun;
                 try
                 {
                     using var scope = _provider.CreateScope();
                     var context = scope.ServiceProvider.GetRequiredService<PlatformContext>();
 
-                    var bets = context.OperatorSettlementRetry
+                    var bets = await context.OperatorSettlementRetry
                         .Where(c => c.IsRetry == true && c.RetryCount < MaxRetryCount)
-                        .AsNoTracking().ToList();
+                        .AsNoTracking().ToListAsync(stoppingToken);
 
                     _logger.LogInformation("Retrieved {betCount} bets for resettlement", bets.Count);
 
                     if (bets.Count > 0)
                     {
-                        _platformRepository.ProcessBets(bets, _messageBroker);
+                        _platformRepository.ProcessBets(bets, _messageBroker, stoppingToken);
 
-                        var waitTime = GetNextRetry(false);
-                        await Task.Delay(waitTime * 1000 * 60);
+                        nextRun = TimeSpan.FromMinutes(GetNextRetry(false));
                     }
                     else
                     {
-                        var waitTime = GetNextRetry(true);
-                        await Task.Delay(waitTime * 1000 * 60);
+                        nextRun = TimeSpan.FromMinutes(GetNextRetry(true));
                     }
-
+                }
+                catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested)
+                {
+                    break;
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogError(ex, "error processing bets");
+                    _logger.LogError(ex, "error processing bets, retrying in {RetryDelay}", _retryDelay);
+                    nextRun = _retryDelay;
+                }
+
+                try
+                {
+                    await Task.Delay(nextRun, stoppingToken);
+                }
+                catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested)
+                {
+                    break;
                 }
             }
         }

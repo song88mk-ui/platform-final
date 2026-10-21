@@ -21,4 +21,7 @@
   <ItemGroup>
     <ProjectReference Include="..\Platform.Shared\Platform.Shared.csproj" />
   </ItemGroup>
+  <ItemGroup>
+    <InternalsVisibleTo Include="Platform.Job.Resettlement.Test" />
+  </ItemGroup>
 </Project>

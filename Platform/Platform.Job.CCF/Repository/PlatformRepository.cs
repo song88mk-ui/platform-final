@@ -9,6 +9,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
 using System.Text.Json;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace Platform.Job.CCF.Repository
@@ -34,7 +35,7 @@ namespace Platform.Job.CCF.Repository
                 return number.ToString();
         }
 
-        public async Task ProcessCCF()
+        public async Task ProcessCCF(CancellationToken cancellationToken)
         {
             var authToken = await _mtsAuthRepository.GetMTSAuthorizationToken();
 
@@ -50,11 +51,11 @@ namespace Platform.Job.CCF.Repository
 
             var startDate = $"{dayAfter.Year}{GetDoubleDigit(dayAfter.Month)}{GetDoubleDigit(dayAfter.Day)}000000";
             var endDate = $"{year}1231000000";
-            var response = await _httpClient.GetAsync($"edge/proxy/ReportingCcf/external/api/report/export/history/ccf/changes/client/api?startDatetime={startDate}&endDatetime={endDate}&bookmakerId={_configuration["Custom:MTSBookmakerId"]}");
+            var response = await _httpClient.GetAsync($"edge/proxy/ReportingCcf/external/api/report/export/history/ccf/changes/client/api?startDatetime={startDate}&endDatetime={endDate}&bookmakerId={_configuration["Custom:MTSBookmakerId"]}", cancellationToken);
 
             if (response.IsSuccessStatusCode)
             {
-                var initialResult = await response.Content.ReadAsStringAsync();
+                var initialResult = await response.Content.ReadAsStringAsync(cancellationToken);
                 var result = initialResult.Split("\n");
                 var length = result.Length;
 
@@ -89,6 +90,8 @@ namespace Platform.Job.CCF.Repository
 
                 foreach (var ccf in final)
                 {
+                    cancellationToken.ThrowIfCancellationRequested();
+
                     try
                     {
                         var optionsBuilder = new DbContextOptionsBuilder<PlatformContext>().UseSqlServer(_configuration["ConnectionStrings:Platform"]);

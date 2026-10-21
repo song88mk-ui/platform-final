@@ -1,7 +1,10 @@
+using Microsoft.Data.SqlClient;
+using Microsoft.EntityFrameworkCore;
 using Platform.Betting.API.IntegrationTests.TestSupport;
 using Platform.Shared.Data.Betting.Entities;
 using Platform.Shared.Enums;
 using Platform.Shared.Models;
+using System.Data;
 using System.Net;
 using System.Text.Json;
 
@@ -108,6 +111,48 @@ namespace Platform.Betting.API.IntegrationTests.Bet
             var markets = SentToSportsbookFor(clientId).Markets;
             Assert.Equal(50, markets.Count);
             Assert.DoesNotContain(markets, m => m.MarketId == 1);
+        }
+
+        // GM-928: the four numeric columns are NULL-able in the table but not in the entity, so the NULL row is
+        // inserted with raw SQL. A row without a fixture or market is dropped; a NULL status or count is harmless.
+        [Theory]
+        [InlineData("FixtureId", false)]
+        [InlineData("MarketId", false)]
+        [InlineData("MarketStatusId", true)]
+        [InlineData("BetCount", true)]
+        public async Task Recommendations_RowWithNullColumn_DoesNotFail(string nullColumn, bool rowIsSent)
+        {
+            // Arrange: one complete row (market 1) and one row with nullColumn set to NULL (market 2).
+            var clientId = Guid.NewGuid();
+            var clientKey = clientId.ToString().ToUpper();
+            await SeedAsync(TopMarket(clientId, "EUR", marketId: 1, betCount: 5));
+            SqlParameter Column(string column, SqlDbType type, object value) =>
+                new("@" + column, type) { Value = column == nullColumn ? DBNull.Value : value };
+            await _fixture.WithBettingContextAsync(context =>
+                context.Database.ExecuteSqlRawAsync(
+                    "INSERT INTO ClientTopMarket (ClientId, ClientCode, ClientName, CurrencyCode, FixtureId, MarketId, MarketStatusId, BetCount) " +
+                    "VALUES (@ClientId, 'IT', 'Integration Test', 'EUR', @FixtureId, @MarketId, @MarketStatusId, @BetCount)",
+                    new SqlParameter("@ClientId", clientKey),
+                    Column("FixtureId", SqlDbType.BigInt, 1002L),
+                    Column("MarketId", SqlDbType.BigInt, 2L),
+                    Column("MarketStatusId", SqlDbType.Int, 1),
+                    Column("BetCount", SqlDbType.Int, 50)));
+
+            // Act
+            var (http, body) = await ApiResponse.PostAsync(_client, "v1/bet/recommendations", new BetRecommendationRequestDTO
+            {
+                ClientId = clientId,
+                ClientCode = "IT",
+                CurrencyCode = "EUR"
+            });
+
+            // Assert
+            Assert.Equal(HttpStatusCode.OK, http.StatusCode);
+            Assert.Equal(StatusCode.Success, body.StatusCode);
+
+            var marketIds = SentToSportsbookFor(clientId).Markets.Select(m => m.MarketId).ToList();
+            Assert.Contains(1L, marketIds);
+            Assert.Equal(rowIsSent, marketIds.Contains(2L));
         }
     }
 }

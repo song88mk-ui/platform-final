@@ -772,7 +772,7 @@ namespace Platform.API.Repository
             {
                 var betHistory = await _bettingRepository.GetBetHistory(payload);
 
-                if (betHistory.Result.Bets.Count == 0)
+                if (betHistory.StatusCode != StatusCode.Success || betHistory.Result?.Bets == null || betHistory.Result.Bets.Count == 0)
                     return betHistory;
 
                 var betFixtureTranslation = new BetFixtureTranslationRequestDTO();

@@ -3794,12 +3794,17 @@ namespace Platform.Betting.API.Repository
             //                .ThenByDescending(o => o.BetCount)
             //                .Take(take);
 
-            var query = _bettingContext.ClientTopMarket.FromSqlRaw("GetTopMarketBets {0}, {1}, {2}", request.ClientId.ToString().ToUpper(), request.CurrencyCode.Substring(0, 3).ToUpper(), take).ToList();
+            // GM-928: ClientTopMarket allows NULL in FixtureId, MarketId, MarketStatusId and BetCount, but the shared entity
+            // declares them non-nullable, so one NULL row threw SqlNullValueException (HTTP 500). Read into nullable fields
+            // and drop rows without a fixture or market. Filtered after ToList: EF cannot compose LINQ over a procedure call.
+            var query = _bettingContext.Database.SqlQueryRaw<TopMarketBetRow>("GetTopMarketBets {0}, {1}, {2}", request.ClientId.ToString().ToUpper(), request.CurrencyCode.Substring(0, 3).ToUpper(), take).ToList()
+                .Where(s => s.FixtureId.HasValue && s.MarketId.HasValue)
+                .ToList();
 
             var markets = query.Select((s, i) => new BetRecommendationMarketDTO()
             {
-                FixtureId = s.FixtureId,
-                MarketId = s.MarketId,
+                FixtureId = s.FixtureId.Value,
+                MarketId = s.MarketId.Value,
                 SortOrder = i + 1
             }).ToList();
 
@@ -4059,6 +4064,13 @@ namespace Platform.Betting.API.Repository
             }
 
             return newOdds;
+        }
+
+        // GetTopMarketBets returns SELECT * from ClientTopMarket; only these columns are used and both are nullable in the table.
+        private class TopMarketBetRow
+        {
+            public long? FixtureId { get; set; }
+            public long? MarketId { get; set; }
         }
 
     }

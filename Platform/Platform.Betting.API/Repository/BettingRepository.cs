@@ -2451,7 +2451,7 @@ namespace Platform.Betting.API.Repository
                     }
                 };
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 throw;
             }
@@ -2781,7 +2781,7 @@ namespace Platform.Betting.API.Repository
                     Result = result
                 };
             }
-            catch (Exception ex)
+            catch (Exception)
             {
 
                 throw;

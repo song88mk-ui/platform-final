@@ -44,7 +44,7 @@ namespace Platform.Shared.Providers
         public bool IsSuccess { get; set; }
         public decimal MaxStake { get; set; }
         public int? StatusCode { get; set; }
-        public string? Message { get; set; }
+        public string Message { get; set; }
     }
 
     public enum BetAcceptance

@@ -81,7 +81,7 @@ namespace Platform.Job.Operator.Score.Repository
 
                 return settlementScore;
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 return string.Empty;
             }

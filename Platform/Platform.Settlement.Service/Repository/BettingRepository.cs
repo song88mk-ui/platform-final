@@ -62,7 +62,7 @@ namespace Platform.Settlement.Service.Repository
 
         public void ProcessBetSettlement(OnUOFBetSettlement message, IMessageBroker messageBroker, string correlationId)
         {
-            Stopwatch? duration = _betSettlementDurationHistogram.Enabled ? Stopwatch.StartNew() : null;
+            Stopwatch duration = _betSettlementDurationHistogram.Enabled ? Stopwatch.StartNew() : null;
 
             var betSelections = GetBetSelections(message.SelectionId);
 
@@ -148,7 +148,7 @@ namespace Platform.Settlement.Service.Repository
 
         public void ProcessBetSettlementForCancellation(OnUOFBetSettlement message, IMessageBroker messageBroker, string correlationId)
         {
-            Stopwatch? duration = _betCancellationDurationHistogram.Enabled ? Stopwatch.StartNew() : null;
+            Stopwatch duration = _betCancellationDurationHistogram.Enabled ? Stopwatch.StartNew() : null;
 
             var betSelections = GetBetSelectionsForCancellation(message.SelectionId);
 
@@ -286,7 +286,7 @@ namespace Platform.Settlement.Service.Repository
 
         public void ProcessBetCancellation(OnUOFBetCancellation message, IMessageBroker messageBroker, string correlationId)
         {
-            Stopwatch? duration = _betCancellationDurationHistogram.Enabled ? Stopwatch.StartNew() : null;
+            Stopwatch duration = _betCancellationDurationHistogram.Enabled ? Stopwatch.StartNew() : null;
 
             var betSelections = GetBetSelectionsByMarketId(message.MarketId);
 
@@ -313,7 +313,7 @@ namespace Platform.Settlement.Service.Repository
         public void ProcessBackOfficeBetCancellation(OnBOBetCancellaton message, IMessageBroker messageBroker, string correlationId)
         {
 
-            Stopwatch? duration = _betBoCancellationDurationHistogram.Enabled ? Stopwatch.StartNew() : null;
+            Stopwatch duration = _betBoCancellationDurationHistogram.Enabled ? Stopwatch.StartNew() : null;
 
             foreach (var betItem in message.Bets)
             {
@@ -519,7 +519,7 @@ namespace Platform.Settlement.Service.Repository
                             if (duration != null)
                                 _betBoCancellationDurationHistogram.Record(duration.Elapsed.TotalMilliseconds);
                         }
-                        catch (Exception ex)
+                        catch (Exception)
                         {
 
                         }
@@ -530,7 +530,7 @@ namespace Platform.Settlement.Service.Repository
 
         public void ProcessBackOfficeManualSettlement(OnBOBetManualSettlement message, IMessageBroker messageBroker, string correlationId)
         {
-            Stopwatch? duration = _betBoManualSettlementDurationHistogram.Enabled ? Stopwatch.StartNew() : null;
+            Stopwatch duration = _betBoManualSettlementDurationHistogram.Enabled ? Stopwatch.StartNew() : null;
             foreach (var betItem in message.Bets)
             {
                 var finalResult = new Tuple<bool, bool>(false, false);
@@ -729,7 +729,7 @@ namespace Platform.Settlement.Service.Repository
                             }, "OnBetBackOfficeCancellation", "r.of.bet.cancellation", correlationId);
 
                     }
-                    catch (Exception ex)
+                    catch (Exception)
                     {
 
                     }

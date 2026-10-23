@@ -16,7 +16,7 @@ namespace Platform.Operator.Servicev2.Telemetry
 
         public Instrumentation()
         {
-            string? version = "latest";
+            string version = "latest";
             this.ActivitySource = new ActivitySource(ActivitySourceName, version);
             this.meter = new Meter(MeterName, version);
         }

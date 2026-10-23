@@ -9167,7 +9167,7 @@ namespace Platform.Sportsbook.API.Repository
                     Message = StatusCode.Success.ToString()
                 };
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 return new BaseResponseDTO<ClientTopFixtureMessageResponseDTO>
                 {
@@ -9455,7 +9455,7 @@ namespace Platform.Sportsbook.API.Repository
                     Message = StatusCode.Success.ToString()
                 };
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 return new BaseResponseDTO<ClientTopLeaguesMessageResponseDTO>
                 {
@@ -10330,7 +10330,7 @@ namespace Platform.Sportsbook.API.Repository
                     }
                 };
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 return new BaseResponseDTO<ClientMarketTemplateGroupResponseDTO>
                 {

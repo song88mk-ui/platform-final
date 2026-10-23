@@ -46,7 +46,6 @@ namespace Platform.RedCatOperator.API.Repositories
             var path = $"v1/bet/vs/placement";
             var endpointUrl = $"{request.Endpoint}/{path}";
 
-            var action = "VSBetPlacement";
 
             var operatorRequest = new OperatorRedCatBetRequestDTO()
             {
@@ -191,7 +190,6 @@ namespace Platform.RedCatOperator.API.Repositories
             var path = $"v1/bet/vs/settlement";
             var endpointUrl = $"{request.Endpoint}/{path}";
 
-            var action = "VSBetSettlement";
 
             var operatorRequest = new OperatorRedCatBetSettlementRequestDTO()
             {
@@ -336,7 +334,6 @@ namespace Platform.RedCatOperator.API.Repositories
             var path = $"v1/bet/vs/settlement";
             var endpointUrl = $"{request.Endpoint}/{path}";
 
-            var action = "VSVoidPlacement";
 
             var operatorRequest = new OperatorRedCatBetSettlementRequestDTO()
             {
@@ -482,7 +479,6 @@ namespace Platform.RedCatOperator.API.Repositories
             var path = $"v1/bet/vs/settlement";
             var endpointUrl = $"{request.Endpoint}/{path}";
 
-            var action = "VSVoidSettlement";
 
             var operatorRequest = new OperatorRedCatBetSettlementRequestDTO()
             {

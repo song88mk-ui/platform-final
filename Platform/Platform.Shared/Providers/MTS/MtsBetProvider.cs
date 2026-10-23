@@ -32,7 +32,7 @@ namespace Platform.Shared.Providers.MTS
         private readonly IConfiguration _configuration;
         private readonly ILogger<MtsBetProvider> _logger;
 
-        private IMtsSdk? _mts;
+        private IMtsSdk _mts;
         private IBuilderFactory _factory;
 
         public MtsBetProvider(

@@ -88,7 +88,7 @@ namespace Platform.BetForwarder.Service
                         break;
                 }
             }
-            catch (Exception ex)
+            catch (Exception)
             {
 
             }

@@ -73,7 +73,7 @@ namespace Platform.Operator.API.Repository
                     StatusId = 1000
                 };
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 return new CashoutResultResponseDTO
                 {
@@ -263,7 +263,7 @@ namespace Platform.Operator.API.Repository
                     }
 
                 }
-                catch (Exception ex)
+                catch (Exception)
                 {
                     return new OperatorBetResponseDTO
                     {
@@ -341,7 +341,7 @@ namespace Platform.Operator.API.Repository
                         StakeBonus = 0m
                     };
                 }
-                catch (Exception ex)
+                catch (Exception)
                 {
                     return new OperatorBetResponseDTO
                     {
@@ -392,7 +392,7 @@ namespace Platform.Operator.API.Repository
                     };
 
                 }
-                catch (Exception ex)
+                catch (Exception)
                 {
                     return new OperatorBetResponseDTO
                     {
@@ -463,7 +463,7 @@ namespace Platform.Operator.API.Repository
                         Balance = result.Balance
                     };
                 }
-                catch (Exception ex)
+                catch (Exception)
                 {
                     return new OperatorBetResponseDTO
                     {
@@ -534,7 +534,7 @@ namespace Platform.Operator.API.Repository
                         Balance = result.Balance
                     };
                 }
-                catch (Exception ex)
+                catch (Exception)
                 {
                     return new OperatorBetResponseDTO
                     {
@@ -596,7 +596,7 @@ namespace Platform.Operator.API.Repository
                         Balance = result.Balance
                     };
                 }
-                catch (Exception ex)
+                catch (Exception)
                 {
                     return new OperatorBetResponseDTO
                     {
@@ -657,7 +657,7 @@ namespace Platform.Operator.API.Repository
                         Balance = result.Balance
                     };
                 }
-                catch (Exception ex)
+                catch (Exception)
                 {
                     return new OperatorBetResponseDTO
                     {
@@ -700,7 +700,7 @@ namespace Platform.Operator.API.Repository
                         Balance = result.Balance
                     };
                 }
-                catch (Exception ex)
+                catch (Exception)
                 {
                     return new OperatorBetResponseDTO
                     {
@@ -762,7 +762,7 @@ namespace Platform.Operator.API.Repository
                         Balance = result.Balance
                     };
                 }
-                catch (Exception ex)
+                catch (Exception)
                 {
                     return new OperatorBetResponseDTO
                     {
@@ -781,7 +781,7 @@ namespace Platform.Operator.API.Repository
                     StatusId = 1000
                 };
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 return new FixtureScoreResponseDTO
                 {
@@ -824,7 +824,7 @@ namespace Platform.Operator.API.Repository
 
                     scope.Complete();
                 }
-                catch (Exception ex)
+                catch (Exception)
                 {
                     scope.Dispose();
                     return new BaseResponseDTO<GenerateUserResponseDTO>
@@ -935,7 +935,7 @@ namespace Platform.Operator.API.Repository
                     }
 
                 }
-                catch (Exception ex)
+                catch (Exception)
                 {
                     return new BetPlacementResponseDTO
                     {
@@ -999,7 +999,7 @@ namespace Platform.Operator.API.Repository
                         Balance = result.Balance
                     };
                 }
-                catch (Exception ex)
+                catch (Exception)
                 {
                     return new BetSettlementResponseDTO
                     {
@@ -1107,7 +1107,7 @@ namespace Platform.Operator.API.Repository
                         };
                     }
                 }
-                catch (Exception ex)
+                catch (Exception)
                 {
                     return new BetPlacementResponseDTO
                     {
@@ -1169,7 +1169,7 @@ namespace Platform.Operator.API.Repository
                         Balance = result.Balance
                     };
                 }
-                catch (Exception ex)
+                catch (Exception)
                 {
                     return new BetSettlementResponseDTO
                     {

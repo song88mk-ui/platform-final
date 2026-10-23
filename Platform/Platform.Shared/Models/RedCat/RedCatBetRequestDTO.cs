@@ -16,7 +16,7 @@ namespace Platform.Shared.Models.RedCat
         public CurrencyCode CurrencyCode { get; set; }
         public LanguageCode LanguageCode { get; set; }
         public string MemberCode { get; set; }
-        public string? OperatorId { get; set; }
+        public string OperatorId { get; set; }
         public bool IsAgent { get; set; }
         public DateTime EventDate { get; set; }
         public DateTime BetDate { get; set; }

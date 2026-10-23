@@ -87,7 +87,7 @@ namespace Platform.Shared.Extensions
             return stringData.ToMD5Hash(privateKey).ToLower();
         }
 
-        private static string ConvertObjectToString(this object? obj)
+        private static string ConvertObjectToString(this object obj)
         {
             if (obj != null && (((JsonElement)obj).ValueKind == JsonValueKind.Object || ((JsonElement)obj).ValueKind == JsonValueKind.Array))
                 return obj.ToString().Replace("/", @"\/").Replace("\"\"", "null");

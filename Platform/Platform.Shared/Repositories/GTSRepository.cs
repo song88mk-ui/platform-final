@@ -25,7 +25,6 @@ namespace Platform.Shared.Repositories
 
         private readonly HttpClient _httpClient;
         private readonly IConfiguration _configuration;
-        private readonly IMemCache _memCache;
         private readonly ILogger<GTSRepository> _logger;
         private readonly ActivitySource _activitySource;
 
@@ -826,7 +825,7 @@ namespace Platform.Shared.Repositories
         public decimal MaxAllowedStake { get; set; }
 
         [JsonPropertyName("betDelay")]
-        public string? BetDelay { get; set; }
+        public string BetDelay { get; set; }
 
         [JsonPropertyName("betId")]
         public string BetId { get; set; }

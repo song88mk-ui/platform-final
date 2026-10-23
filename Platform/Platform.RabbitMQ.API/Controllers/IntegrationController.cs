@@ -34,7 +34,7 @@ namespace Platform.RabbitMQ.API.Controllers
                     }
                 });
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 return BadRequest(new BaseResponseDTO<MessageResponseDTO>
                 {

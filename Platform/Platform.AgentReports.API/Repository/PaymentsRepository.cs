@@ -127,16 +127,11 @@ namespace Platform.AgentReports.API.Repository
 
             foreach (var item in runningBalance)
             {
-                var minDateTime = DateTime.MinValue;
-
                 var lastFullTransferDate = _context.TransferHistory.AsNoTracking()
                     .Where(c => c.ParentUserId == request.ParentAgentId && c.UserId == item.UserId && fullTransactionTypes.Contains(c.TransactionTypeId))
                     .OrderByDescending(o => o.TransactionDateOffset)
                     .Select(s => s.TransactionDateOffset)
                     .FirstOrDefault();
-
-                if (lastFullTransferDate == null)
-                    lastFullTransferDate = minDateTime;
 
                 var partialTransfers = _context.TransferHistory.AsNoTracking()
                     .Where(c => c.ParentUserId == request.ParentAgentId && c.UserId == item.UserId && partialTransactionTypes.Contains(c.TransactionTypeId) && c.TransactionDateOffset > lastFullTransferDate)
@@ -252,16 +247,11 @@ namespace Platform.AgentReports.API.Repository
 
             foreach (var item in runningBalance)
             {
-                var minDateTime = DateTime.MinValue;
-
                 var lastFullTransferDate = _context.TransferHistory.AsNoTracking()
                     .Where(c => c.ParentUserId == request.ParentAgentId && c.UserId == item.UserId && fullTransactionTypes.Contains(c.TransactionTypeId))
                     .OrderByDescending(o => o.TransactionDateOffset)
                     .Select(s => s.TransactionDateOffset)
                     .FirstOrDefault();
-
-                if (lastFullTransferDate == null)
-                    lastFullTransferDate = minDateTime;
 
                 var partialTransfers = _context.TransferHistory.AsNoTracking()
                     .Where(c => c.ParentUserId == request.ParentAgentId && c.UserId == item.UserId && partialTransactionTypes.Contains(c.TransactionTypeId) && c.TransactionDateOffset > lastFullTransferDate)
@@ -746,7 +736,7 @@ namespace Platform.AgentReports.API.Repository
                     Result = new PaymentTransferResponse()
                 };
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 return new BaseResponseDTO<PaymentTransferResponse>
                 {
@@ -1233,7 +1223,7 @@ namespace Platform.AgentReports.API.Repository
                     Result = new PaymentTransferResponse()
                 };
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 return new BaseResponseDTO<PaymentTransferResponse>
                 {

@@ -573,7 +573,7 @@ namespace Platform.AgentReports.API.Repository
             var currentWinLossQuery = _context.WinLoss.AsNoTracking().Where(c => c.ParentUserId == request.AgentId && c.ProductId == (int)Product.Sportsbook && c.TransactionDateOffset >= startDate && c.TransactionDateOffset < endDate.AddDays(1));
             var currentLeaderboardQuery = _context.WinLoss.AsNoTracking().Where(c => c.ParentUserId == request.AgentId && c.UserTypeId == (int)UserType.Player && c.TransactionDateOffset >= startDate && c.TransactionDateOffset < endDate.AddDays(1));
 
-            if (request.CurrencyCode != null && request.CurrencyCode != CurrencyCode.ALL)
+            if (request.CurrencyCode != CurrencyCode.ALL)
             {
                 currentBetQuery = currentBetQuery.Where(c => c.CurrencyCode == request.CurrencyCode.ToString());
                 currentWinLossQuery = currentWinLossQuery.Where(c => c.CurrencyCode == request.CurrencyCode.ToString());
@@ -738,7 +738,7 @@ namespace Platform.AgentReports.API.Repository
 
             var productBetTotalQuery = _context.WinLoss.AsNoTracking().Where(c => c.ParentUserId == request.AgentId && c.DirectUserId == request.AgentId && c.ProductId > (int)Product.Sportsbook && c.IsParlay == false && c.TransactionDateOffset >= startDate && c.TransactionDateOffset < endDate.AddDays(1));
 
-            if (request.CurrencyCode != null && request.CurrencyCode != CurrencyCode.ALL)
+            if (request.CurrencyCode != CurrencyCode.ALL)
             {
                 productBetTotalQuery = productBetTotalQuery.Where(c => c.CurrencyCode == request.CurrencyCode.ToString());
             }
@@ -2454,7 +2454,7 @@ namespace Platform.AgentReports.API.Repository
         private string MarketLine(string lineStr, string marketTemplateIdStr, string selectionName)
         {
             var line = string.IsNullOrEmpty(lineStr) ? 0m : Convert.ToDecimal(lineStr);
-            var marketTemplateId = string.IsNullOrEmpty(marketTemplateIdStr) ? 0l : Convert.ToInt64(marketTemplateIdStr);
+            var marketTemplateId = string.IsNullOrEmpty(marketTemplateIdStr) ? 0L : Convert.ToInt64(marketTemplateIdStr);
 
             //long[] handicapMarkets = { 2, 9, 22, 25, 26 };
             long[] handicapMarkets = { 2, 9, 22, 25, 26, 29, 32, 33, 36, 39, 42, 44, 49, 52, 108, 153, 161, 163, 204 };

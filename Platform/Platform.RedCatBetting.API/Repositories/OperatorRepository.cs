@@ -46,7 +46,7 @@ namespace Platform.RedCatBetting.API.Repositories
                     }
                 }
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 return new BaseResponseDTO<RedCatBetTransactionResponseDTO>
                 {
@@ -78,7 +78,7 @@ namespace Platform.RedCatBetting.API.Repositories
                     }
                 }
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 return new BaseResponseDTO<RedCatBetTransactionResponseDTO>
                 {

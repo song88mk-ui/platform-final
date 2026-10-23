@@ -4,7 +4,7 @@
     {
         public string Currency { get; set; }
         public string MemberCode { get; set; }
-        public string? OperatorId { get; set; }
+        public string OperatorId { get; set; }
         public string EventDate { get; set; }
         public string BetMarketId { get; set; }
         public string TransactionAmt { get; set; }

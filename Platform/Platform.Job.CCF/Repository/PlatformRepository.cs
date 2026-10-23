@@ -83,7 +83,7 @@ namespace Platform.Job.CCF.Repository
                             AppliedTo = string.IsNullOrEmpty(split[9]) ? "Both" : split[9].ToLower() == "true" ? "Live" : "Prematch"
                         });
                     }
-                    catch (Exception ex)
+                    catch (Exception)
                     {
                     }
                 }

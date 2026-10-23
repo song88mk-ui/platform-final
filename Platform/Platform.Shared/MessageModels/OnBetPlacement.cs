@@ -21,7 +21,7 @@ namespace Platform.Shared.MessageModels
         public bool WillRecordTopMarket { get; set; }
         public int ChannelTypeId { get; set; }
         public BetAcceptance? DelayedBetAcceptance { get; set; }
-        public string? DelayedMessage { get; set; }
+        public string DelayedMessage { get; set; }
         public OddsChangeType OddsChangeType { get; set; }
         public List<BetSelectionMessageExtenstion> BetSelections { get; set; }
     }

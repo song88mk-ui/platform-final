@@ -881,7 +881,7 @@ namespace Platform.QTech.API.Repository
                     }
                 };
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 throw;
             }

@@ -14,7 +14,6 @@ namespace Platform.API.ActionFilters
     public class APIKeyFilter : ActionFilterAttribute
     {
         private readonly IConfiguration _configuration;
-        private readonly OrientalGamingConfigDTO _ogConfig;
 
         public APIKeyFilter(IConfiguration configuration)
         {

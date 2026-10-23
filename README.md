@@ -38,6 +38,10 @@ the CI matrix in `.github/workflows/ci.yml` lists what is actually built and dep
   runtime image (see any `Platform/*/Dockerfile`).
 - To build and run everything locally you therefore need:
   - The .NET SDK 10.0.x (builds all TFMs; running the net8 Mongo services locally also needs the ASP.NET Core 8.0 runtime).
+    With Nix (flakes enabled) and direnv hooked into your shell (`eval "$(direnv hook bash)"`),
+    run `direnv allow` once and `.envrc` loads the shared `dotnet` shell from the
+    `FlyingCockatoo/nix-flakes` repo on `cd`. Without direnv:
+    `nix develop git+ssh://git@github.com/FlyingCockatoo/nix-flakes#dotnet`. The shell provides only the .NET 10 SDK, not the ASP.NET Core 8.0 runtime.
 - Docker (optional) if you prefer container builds, plus local SQL Server / RabbitMQ /
   MongoDB containers (see "Dependent services").
 - Private NuGet feed: the Dockerfiles register the GitHub Packages feed

@@ -47,3 +47,4 @@ Platform/Platform.Sportsbook.API/.config/dotnet-tools.json
 StrykerOutput/
 .sonarqube/
 TestResults/
+.direnv/

@@ -22,8 +22,8 @@ namespace Platform.CashOutStake.Servicev2.Test.Repository
     // "OnOddsChange" message type: default options, no naming policy.
     public class OddsChangeContractTests
     {
-        private static long _nextId = DateTime.UtcNow.Ticks;
-        private static long NewId() => Interlocked.Increment(ref _nextId);
+        // Shares MongoLookupResilienceTests' id counter, since both classes use the real MemCache.
+        private static long NewId() => MongoLookupResilienceTests.NewId();
 
         // Every field OE2 puts on the wire for the fixture, its market and its selection,
         // including the ones CashOutStake does not read, so a green test also proves the unknown

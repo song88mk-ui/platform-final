@@ -112,9 +112,11 @@ namespace Platform.CashOutStake.Servicev2.Test.Repository
                 new NoOpMemCache(), NullLogger<BettingRepository>.Instance);
 
         // The real MemCache wraps the process-wide MemoryCache.Default, so tests that use it take
-        // fresh ids to stay independent of each other.
+        // fresh ids to stay independent of each other. Every test class that uses the real MemCache
+        // must take ids from this one counter: two counters seeded from the clock at the same tick
+        // hand out the same ids, and tests running in parallel then share cache entries.
         private static long _nextId = DateTime.UtcNow.Ticks;
-        private static long NewId() => Interlocked.Increment(ref _nextId);
+        internal static long NewId() => Interlocked.Increment(ref _nextId);
 
         private static BetMemory ARunningBet(long fixtureId, long marketId, long selectionId)
         {

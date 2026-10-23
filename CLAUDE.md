@@ -45,6 +45,10 @@ dotnet test Platform/Platform.sln
 Thirteen test projects, one per `Platform/*.Test` folder. Twelve are in `Platform/Platform.sln`;
 `Platform.CashOut.Service.Test` is not, so `dotnet test Platform/Platform.sln` skips it.
 CI runs them on pull requests only. Restore needs `NUGET_PASSWORD` for the private feed.
+Before the tests, the CI job builds `Platform.sln` with `-warnaserror`, so any new compiler warning
+fails the PR; only the NuGet vulnerability audit warnings (NU1900-NU1905) stay warnings. Check
+locally with `dotnet build Platform/Platform.sln -c Release -warnaserror
+-warnnotaserror:NU1900,NU1901,NU1902,NU1903,NU1904,NU1905`.
 
 `Platform.Betting.API.IntegrationTests` (DEVOPS-408) is also outside `Platform.sln`: it needs
 Docker and the sibling `infrastructure` clone, which CI does not check out yet. It boots

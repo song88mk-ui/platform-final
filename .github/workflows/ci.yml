@@ -35,8 +35,15 @@ jobs:
             --store-password-in-clear-text \
             --name github "https://nuget.pkg.github.com/FlyingCockatoo/index.json"
 
+      - name: Build (warnings as errors, except NuGet vulnerability audit)
+        run: >
+          dotnet build Platform/Platform.sln
+          --configuration Release
+          -warnaserror
+          -warnnotaserror:NU1900,NU1901,NU1902,NU1903,NU1904,NU1905
+
       - name: Test
-        run: dotnet test Platform/Platform.sln --configuration Release
+        run: dotnet test Platform/Platform.sln --configuration Release --no-build
 
       - name: Format
         run: dotnet format Platform/Platform.sln --verify-no-changes

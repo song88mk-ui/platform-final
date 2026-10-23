@@ -610,7 +610,9 @@ dotnet test Platform/Platform.Job.CCF.Test
 No external services are required, including for the repository tests: they run against
 `Microsoft.EntityFrameworkCore.InMemory`, not a database. CI runs the whole solution in a
 PR-only test job (`dotnet test Platform/Platform.sln`, `.github/workflows/ci.yml`), so a new
-test project is picked up as soon as it is added to `Platform.sln`. Still run them locally
+test project is picked up as soon as it is added to `Platform.sln`. The tests run after a
+solution build that fails on any warning except NuGet vulnerability warnings (NU1900-NU1905).
+Still run them locally
 before pushing. New services are expected to ship with a matching xUnit test project (see
 `CLAUDE.md`).
 

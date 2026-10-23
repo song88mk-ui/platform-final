@@ -34,6 +34,12 @@
   Microsoft.Extensions.* at 10.0.11, Swashbuckle at 10.2.3. Wire-format-sensitive packages
   (RabbitMQ.Client 5.2.0, MongoDB.Driver 2.11.6/2.13.1, Newtonsoft.Json 12.0.3,
   Sportradar.MTS.SDKCore 2.4.1.2) deliberately unchanged for cross-repo safety.
+  Later, for NuGet vulnerability advisories: Newtonsoft.Json moved to 13.0.4 (pinned in
+  `Platform.Shared`, GHSA-5crp-9r3c-p9vr; its only behavior change is a default `MaxDepth` of 64),
+  System.Net.Http 4.3.4 and System.Text.RegularExpressions 4.3.1 are pinned in `Platform.Shared`,
+  SignalR client/MessagePack packages moved to 10.0.13, MessagePack to 2.5.307 and
+  Microsoft.Azure.SignalR to 1.23.0 in WebSocket.API. MongoDB.Driver (GHSA-7j9m-j397-g4wx, fixed in
+  2.19.0) and its SharpCompress 0.23.0 are still open: the upgrade switches the LINQ provider to LINQ3.
 
 ### TD-03 — Hardcoded credentials/endpoints (`BetPlacement.Console`)
 - **Evidence:** staging gateway URL + `x-client-id`/`x-operator-token`/`x-api-key`/IP hardcoded.

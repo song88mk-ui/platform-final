@@ -100,7 +100,7 @@ Producers/consumers of the key `On*` contracts (from `Platform.Shared/MessageMod
 | `Microsoft.Extensions.*` | 10.0.11 | shared + per-project |
 | `RabbitMQ.Client` | 5.2.0 (deliberately unchanged — wire-format safety) | Shared + services |
 | `MongoDB.Driver` / `MongoDB.Bson` | 2.11.6 (some 2.13.1) (deliberately unchanged) | Sportsbook, Casino, CashOutStake |
-| `Newtonsoft.Json` | 12.0.3 (deliberately unchanged) | nearly all |
+| `Newtonsoft.Json` | 13.0.4, pinned in Shared over Sportradar's 12.0.3 (GHSA-5crp-9r3c-p9vr) | nearly all |
 | `Sportradar.MTS.SDKCore` | 2.4.1.2 (deliberately unchanged) | Shared |
 | `Serilog` / `Serilog.AspNetCore` | 4.3.0 / 10.0.0 (unchanged) | nearly all |
 | `Swashbuckle.AspNetCore.*` | 10.2.3 (unified, GM-744) | APIs |

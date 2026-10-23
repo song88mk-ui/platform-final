@@ -123,7 +123,8 @@
   assets); wire-format-sensitive packages deliberately left
   unchanged for cross-repo safety (RabbitMQ.Client 5.2.0, MongoDB.Driver 2.11.6/2.13.1,
   Newtonsoft.Json 12.0.3, Sportradar.MTS.SDKCore 2.4.1.2, Serilog stack,
-  Infra.Extensions.Telemetry 0.1.0-3). Committed `appsettings*.json` SQL connection
+  Infra.Extensions.Telemetry 0.1.0-3; Newtonsoft.Json later moved to 13.0.4 for
+  GHSA-5crp-9r3c-p9vr, see TD-02). Committed `appsettings*.json` SQL connection
   strings gained `TrustServerCertificate=True` (Microsoft.Data.SqlClient 4+ defaults
   `Encrypt=true`).
 - **Deployment prerequisites (must happen before the first stg/prd release from this

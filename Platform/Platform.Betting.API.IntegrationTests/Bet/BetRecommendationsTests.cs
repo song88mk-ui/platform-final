@@ -113,14 +113,12 @@ namespace Platform.Betting.API.IntegrationTests.Bet
             Assert.DoesNotContain(markets, m => m.MarketId == 1);
         }
 
-        // GM-928: the four numeric columns are NULL-able in the table but not in the entity, so the NULL row is
-        // inserted with raw SQL. A row without a fixture or market is dropped; a NULL status or count is harmless.
+        // GM-928: MarketStatusId and BetCount are NULL-able in the table but not in the entity, so the NULL row is
+        // inserted with raw SQL. A NULL status or count is harmless. FixtureId and MarketId are NOT NULL since GM-929.
         [Theory]
-        [InlineData("FixtureId", false)]
-        [InlineData("MarketId", false)]
-        [InlineData("MarketStatusId", true)]
-        [InlineData("BetCount", true)]
-        public async Task Recommendations_RowWithNullColumn_DoesNotFail(string nullColumn, bool rowIsSent)
+        [InlineData("MarketStatusId")]
+        [InlineData("BetCount")]
+        public async Task Recommendations_RowWithNullColumn_DoesNotFail(string nullColumn)
         {
             // Arrange: one complete row (market 1) and one row with nullColumn set to NULL (market 2).
             var clientId = Guid.NewGuid();
@@ -152,7 +150,47 @@ namespace Platform.Betting.API.IntegrationTests.Bet
 
             var marketIds = SentToSportsbookFor(clientId).Markets.Select(m => m.MarketId).ToList();
             Assert.Contains(1L, marketIds);
-            Assert.Equal(rowIsSent, marketIds.Contains(2L));
+            Assert.Contains(2L, marketIds);
+        }
+
+        private Task InsertRawAsync(string clientKey, object fixtureId, object marketId) =>
+            _fixture.WithBettingContextAsync(context =>
+                context.Database.ExecuteSqlRawAsync(
+                    "INSERT INTO ClientTopMarket (ClientId, ClientCode, ClientName, CurrencyCode, FixtureId, MarketId, MarketStatusId, BetCount) " +
+                    "VALUES (@ClientId, 'IT', 'Integration Test', 'EUR', @FixtureId, @MarketId, 1, 50)",
+                    new SqlParameter("@ClientId", clientKey),
+                    new SqlParameter("@FixtureId", SqlDbType.BigInt) { Value = fixtureId },
+                    new SqlParameter("@MarketId", SqlDbType.BigInt) { Value = marketId }));
+
+        // GM-929: the table had no key, so a second row with the same (FixtureId, MarketId, ClientId, CurrencyCode)
+        // was accepted and v1/bet/recommendations sent that market twice. The primary key now rejects it.
+        [Fact]
+        public async Task ClientTopMarket_RejectsDuplicateKey()
+        {
+            // Arrange: currency in another case, as the key compares case-insensitively.
+            var clientId = Guid.NewGuid();
+            await SeedAsync(TopMarket(clientId, "eur", marketId: 1, betCount: 5));
+
+            // Act
+            var ex = await Assert.ThrowsAsync<SqlException>(() => InsertRawAsync(clientId.ToString().ToUpper(), 1001L, 1L));
+
+            // Assert: 2627 is a PRIMARY KEY violation.
+            Assert.Equal(2627, ex.Number);
+        }
+
+        [Theory]
+        [InlineData(true)]
+        [InlineData(false)]
+        public async Task ClientTopMarket_RejectsNullFixtureOrMarket(bool nullFixture)
+        {
+            // Act
+            var ex = await Assert.ThrowsAsync<SqlException>(() => InsertRawAsync(
+                Guid.NewGuid().ToString().ToUpper(),
+                nullFixture ? DBNull.Value : 1001L,
+                nullFixture ? 1L : DBNull.Value));
+
+            // Assert: 515 is "cannot insert the value NULL".
+            Assert.Equal(515, ex.Number);
         }
     }
 }

@@ -33,6 +33,12 @@ abbreviated field names — see [DomainModel.md](DomainModel.md) §2.
 - **Projection-first:** queries use `.Find(filter).Project<TProjection>(projection)` to return slim
   projection types (e.g. `ActiveFixtureProjection`, `CashOutMarketFilter`, `CashOutSelectionFilter`)
   rather than whole documents — minimizing payload and deserialization. **[Verified]**
+  `GetTopLeagues` (`POST v1/sportsbook/topleagues`) projects back into `Fixture` with
+  `Utility/TopLeaguesFixtureProjection.cs`: only `SpId, SegId, SegNa, LeId, LeNa, FiStId, ClCo`, plus
+  `SegNaTr`/`LeNaTr` cut to the requested language with `$elemMatch` for non-EN requests. The
+  `$elemMatch` compares `LaCo` case-sensitively, as the market and selection reads already do. Its
+  effect shows on the `mongo_fetch` phase of the top leagues metrics ([Logging.md](Logging.md)).
+  **[Verified]**
 - **Single-document reads** via `.Find(filter).FirstOrDefault[Async]` (e.g. `BettingStatus`,
   `Maintenance`, cashout market/selection lookups). **[Verified]**
 - Status/maintenance flags (`BettingStatus`, `Maintenance`) are read to gate betting before serving

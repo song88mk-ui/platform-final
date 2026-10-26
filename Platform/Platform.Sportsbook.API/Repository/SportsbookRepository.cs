@@ -403,7 +403,7 @@ namespace Platform.Sportsbook.API.Repository
             using var miss = _topLeaguesMetrics.StartMiss(mKey, request.SportId, request.LanguageCode, activity);
 
             var fixtureFilter = Builders<Fixture>.Filter.Where(c => c.FiStId < 2 && c.FiTyId == (int)FixtureType.Match && c.SpId == request.SportId);
-            var fixtures = await fixtureCollection.Find(fixtureFilter).ToListAsync();
+            var fixtures = await fixtureCollection.Find(fixtureFilter).Project<Fixture>(TopLeaguesFixtureProjection.For(request.LanguageCode)).ToListAsync();
             if (IsOEEnable(request.ClientCode))
                 fixtures = fixtures.Where(f => f.ClCo.Contains(request.ClientCode, StringComparison.OrdinalIgnoreCase) || f.SpId.IsVirtualSportId()).ToList();
 

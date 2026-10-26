@@ -42,6 +42,7 @@ namespace Platform.Sportsbook.API.Repository
         private readonly IConfiguration _configuration;
         private readonly ILogger<SportsbookRepository> _logger;
         private readonly ActivitySource _activitySource;
+        private readonly TopLeaguesMetrics _topLeaguesMetrics;
 
         private static IMongoCollection<Fixture> fixtureCollection;
         private static IMongoCollection<Market> marketCollection;
@@ -86,6 +87,7 @@ namespace Platform.Sportsbook.API.Repository
             _memCache = memCache;
             _logger = logger;
             _activitySource = instrumentation.ActivitySource;
+            _topLeaguesMetrics = instrumentation.TopLeagues;
 
             _rabbitMQRepository = rabbitMQRepository;
             _betBuilderRepository = betBuilderRepository;
@@ -375,6 +377,8 @@ namespace Platform.Sportsbook.API.Repository
 
         public async Task<BaseResponseDTO<TopLeaguesResponseDTO>> GetTopLeagues(TopLeaguesRequestDTO request)
         {
+            using var activity = _activitySource.StartActivity("GetTopLeagues");
+
             var maintenance = GetMaintenance();
 
             if (maintenance.isMa)
@@ -391,15 +395,24 @@ namespace Platform.Sportsbook.API.Repository
             var mCache = _memCache.GetCache<BaseResponseDTO<TopLeaguesResponseDTO>>(mKey);
 
             if (mCache != null)
+            {
+                _topLeaguesMetrics.RecordHit(request.SportId, request.LanguageCode, activity);
                 return mCache;
+            }
+
+            using var miss = _topLeaguesMetrics.StartMiss(mKey, request.SportId, request.LanguageCode, activity);
 
             var fixtureFilter = Builders<Fixture>.Filter.Where(c => c.FiStId < 2 && c.FiTyId == (int)FixtureType.Match && c.SpId == request.SportId);
             var fixtures = await fixtureCollection.Find(fixtureFilter).ToListAsync();
             if (IsOEEnable(request.ClientCode))
                 fixtures = fixtures.Where(f => f.ClCo.Contains(request.ClientCode, StringComparison.OrdinalIgnoreCase) || f.SpId.IsVirtualSportId()).ToList();
 
+            miss.EndPhase(TopLeaguesMetrics.PhaseMongoFetch);
+            miss.RecordFixtures(fixtures.Count);
+
             if (fixtures.Count == 0)
             {
+                miss.Complete(0);
                 return new BaseResponseDTO<TopLeaguesResponseDTO>
                 {
                     StatusCode = StatusCode.Success,
@@ -411,6 +424,8 @@ namespace Platform.Sportsbook.API.Repository
             var translations = new Dictionary<string, string>();
             if (fixtures != null && fixtures.Count > 0)
                 translations = await LoadTranslations(fixtures, request.LanguageCode);
+
+            miss.EndPhase(TopLeaguesMetrics.PhaseTranslations);
 
             var result = new List<TempTopLeague>();
 
@@ -431,6 +446,8 @@ namespace Platform.Sportsbook.API.Repository
                 clientTopLeagues = await _sportsbookContext.ClientTopLeague.Where(c => c.ClientId == request.ClientId).ToListAsync();
                 _memCache.AddOrUpdateCache(key, clientTopLeagues, DateTimeOffset.UtcNow.AddMinutes(5));
             }
+
+            miss.EndPhase(TopLeaguesMetrics.PhaseLeagueConfig);
 
             if (clientTopLeagues.Count == 0)
             {
@@ -506,6 +523,9 @@ namespace Platform.Sportsbook.API.Repository
                     TopLeagues = finalResult
                 }
             };
+
+            miss.EndPhase(TopLeaguesMetrics.PhaseRanking);
+            miss.Complete(finalResult.Count);
 
             if (finalResult.Count > 0)
                 _memCache.AddOrUpdateCache(mKey, returnResult, DateTimeOffset.UtcNow.AddSeconds(5));

@@ -16,9 +16,12 @@ namespace Platform.Sportsbook.API.Telemetry
             var version = "latest";
             this.ActivitySource = new ActivitySource(ActivitySourceName, version);
             this.meter = new Meter(MeterName, version);
+            this.TopLeagues = new TopLeaguesMetrics(this.meter);
         }
 
         public ActivitySource ActivitySource { get; }
+
+        public TopLeaguesMetrics TopLeagues { get; }
 
         public void Dispose()
         {

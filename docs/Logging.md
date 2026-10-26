@@ -87,6 +87,41 @@
   throughput (e.g. bet-placement counters in `Placement.Servicev2`). **[Verified]**
 - Coverage is **not uniform**: `Client.TopMarket` and the non-Serilog client APIs lack OTel
   instrumentation. **[Verified]** (TD-08).
+- `Infra.Extensions.Telemetry` 0.1.1-5 also registers ASP.NET Core, HttpClient, runtime and process
+  instrumentation, so every route already has `http.server.request.duration` tagged with
+  `http.route`. It has **no MongoDB driver instrumentation**: Mongo time appears in a trace only
+  where the code times it itself. **[Verified]** (package assembly references)
+
+### Top leagues latency breakdown (`Sportsbook.API`, 2026-10-26)
+`SportsbookRepository.GetTopLeagues` (`POST v1/sportsbook/topleagues`) records, through
+`Telemetry/TopLeaguesMetrics.cs` on the service `Meter`, where a cache miss spends its time and how
+often the response cache misses, finds nothing, or repeats a miss already in flight:
+
+| Instrument | Type, unit | Tags | Answers |
+|---|---|---|---|
+| `sportsbook.topleagues.requests` | counter | `cache` (hit/miss), `outcome` (results/empty/error, misses only), `concurrent_miss` (true when another miss for the same response cache key was already in flight on the pod), `sport.id`, `language` (en/other) | hit ratio, empty-result misses, duplicate Mongo reads |
+| `sportsbook.topleagues.phase.duration` | histogram, ms | `phase` (`mongo_fetch`, `translations`, `league_config`, `ranking`, `total`), `sport.id`, `language` | time per phase on a miss |
+| `sportsbook.topleagues.fixtures` | histogram, count | `sport.id`, `language` | fixtures read per miss |
+
+The same values are set as `topleagues.*` tags on the `GetTopLeagues` span. `league_config`
+includes the SQL reads of `ClientLeagueOrder` and `ClientTopLeague` when their caches are cold.
+The histograms use the default OTel buckets (0, 5, 10, 25 … 10000 ms), so sub-5 ms CPU phases
+need the mean (`_sum / _count`) or the span tags rather than a percentile. Tags are
+deliberately low-cardinality: never add the client id or cache key.
+
+Example PromQL. **[Assumption]** The names follow the collector's usual OTLP→Prometheus translation
+(dots to underscores, unit suffix); check them in Grafana Explore first.
+```
+# p95 per phase, football, last 15m
+histogram_quantile(0.95, sum by (le, phase) (rate(sportsbook_topleagues_phase_duration_milliseconds_bucket{sport_id="1"}[15m])))
+# mean per phase (use for the sub-5 ms phases)
+sum by (phase) (rate(sportsbook_topleagues_phase_duration_milliseconds_sum[15m])) / sum by (phase) (rate(sportsbook_topleagues_phase_duration_milliseconds_count[15m]))
+# share of misses that duplicated an in-flight miss, and empty-result misses
+sum(rate(sportsbook_topleagues_requests_total{cache="miss",concurrent_miss="true"}[15m])) / sum(rate(sportsbook_topleagues_requests_total{cache="miss"}[15m]))
+sum by (outcome) (rate(sportsbook_topleagues_requests_total{cache="miss"}[15m]))
+# end-to-end, hits included
+histogram_quantile(0.95, sum by (le) (rate(http_server_request_duration_seconds_bucket{http_route="v1/sportsbook/topleagues"}[15m])))
+```
 
 ## What is absent `[Verified]`
 - No request-logging middleware (`UseSerilogRequestLogging` is **not** called) — per-request HTTP

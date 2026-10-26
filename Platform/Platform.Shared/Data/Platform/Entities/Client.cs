@@ -16,5 +16,7 @@ namespace Platform.Shared.Data.Platform.Entities
         public decimal NextCompanyShare { get; set; }
         public int ClientIdRef { get; set; }
         public bool IsAgent { get; set; }
+        // Set once when the client is inserted; never changed by later updates.
+        public DateTime? CreatedDate { get; set; }
     }
 }

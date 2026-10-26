@@ -2880,9 +2880,8 @@ namespace Platform.API.Repository
                         limitId = string.IsNullOrEmpty(request.LimitId) ? currentClient.LimitId : request.LimitId;
                     }
 
-                    var clientEntity = _platformContext.Client.Update(new Client
+                    var client = new Client
                     {
-                        ClientId = currentClient != null ? currentClient.ClientId : Guid.Empty,
                         ClientCode = request.ClientCode,
                         ClientName = request.ClientName,
                         ClientIdRef = request.ClientIdRef,
@@ -2894,7 +2893,32 @@ namespace Platform.API.Repository
                         EffectiveDate = effectiveDate,
                         NextCompanyShare = nextCompanyShare,
                         IsAgent = request.IsAgent
-                    }).Entity;
+                    };
+
+                    Client clientEntity;
+                    if (currentClient != null)
+                    {
+                        // Existing client (matched by ClientIdRef): its ClientId and CreatedDate never change.
+                        client.ClientId = currentClient.ClientId;
+                        client.CreatedDate = currentClient.CreatedDate;
+                        clientEntity = _platformContext.Client.Update(client).Entity;
+                    }
+                    else
+                    {
+                        // New client: use the caller's ClientId when given (Guid.Empty = let EF generate one).
+                        if (request.ClientId != Guid.Empty && await _platformContext.Client.AsNoTracking().AnyAsync(c => c.ClientId == request.ClientId))
+                        {
+                            return new BaseResponseDTO<ClientResponseDTO>
+                            {
+                                StatusCode = StatusCode.Error,
+                                Message = $"Client ID {request.ClientId} already exists."
+                            };
+                        }
+
+                        client.ClientId = request.ClientId;
+                        client.CreatedDate = DateTime.UtcNow;
+                        clientEntity = _platformContext.Client.Add(client).Entity;
+                    }
 
                     clientId = clientEntity.ClientId;
 

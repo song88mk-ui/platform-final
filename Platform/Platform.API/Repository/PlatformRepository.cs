@@ -2936,6 +2936,13 @@ namespace Platform.API.Repository
                     };
                 }
             }
+
+            // Drop this pod's cached copies of the client (it is cached by its GUID and by its ClientIdRef)
+            // and the full client list, so the next read sees the saved row instead of waiting up to 24h.
+            _memCache.DeleteCache($"cc:{clientId.ToString().ToUpper()}");
+            _memCache.DeleteCache($"cc:{request.ClientIdRef}");
+            _memCache.DeleteCache("ccs");
+
             return new BaseResponseDTO<ClientResponseDTO>
             {
                 StatusCode = StatusCode.Success,
@@ -5010,7 +5017,12 @@ namespace Platform.API.Repository
                 if (request.PurgeAll)
                     _memCache.DeleteCacheByPrefix("cc");
                 else
+                {
                     _memCache.DeleteCache(request.CacheKey);
+                    // The full client list ("ccs") contains this client too; without this a new or edited
+                    // client is missing or stale in every client dropdown for up to 24h.
+                    _memCache.DeleteCache("ccs");
+                }
 
                 _logger.LogInformation($"DeleteCachePreload Finished: {JsonSerializer.Serialize(request)}");
             }

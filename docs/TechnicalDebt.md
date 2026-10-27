@@ -437,6 +437,44 @@
 - **Confidence:** **[Verified]** in code and by unit tests (the Mongo-reading `GetBetFixtures2` itself has no
   unit test: it needs a live Mongo); behaviour on DEV after deploy **[Unknown]**.
 
+### TD-26 - Genius Sports rejected every boosted bet: its calls were sent the boosted price (`GTSRepository.cs`) - **Resolved** (2026-10-27, BO-10)
+- **Evidence:** once TD-25 let a boosted bet through the odds check, DEV rejected it with "Current price 1.50
+  differs from original 1.64" (the bet's rejection reason; the betting-api log showed the call to the GTS UAT
+  `/assessment` endpoint answering 422 at 13:22:10 UTC). `GTSRepository.Assessment` sent `price = s.BetSelection.Odds`,
+  which for a boosted bet is the boosted price the player is paid, with the player's `priceChangeRule` (`AcceptNone`
+  for no auto-accept option). A normal bet at 1.50 on the same selection was accepted. There was no boost handling
+  for GTS at all, unlike `MtsBetProvider.cs:381-422`, which sends the original odds (`OddsRef`) as the leg odds, the
+  boosted price with `SetBoostedOdds` and the difference as an "OddsBooster" bonus. `GetSelectionPayout` computes an
+  `isBoosted` flag it never uses.
+- **Three calls carry a leg price, and all three sent the boosted one** (`GTSRepository.cs`): `GetMaxStake`
+  (`price = s.DecimalOdds`, rule `AcceptNone`, posted to the same `/assessment` URL, asked first by
+  `BettingRepository.PlaceBet`), `Assessment` (`price = BetSelection.Odds`) and `SendBet` (`price = s.Odds`, the
+  bet feed). `GetMaxStake` answers a non-success response with a max stake of 0 and no log line, and
+  `GetMaxStakeForSingleBetWithMTS` reads a provider max stake of 0 as "no provider limit", so its refusal was
+  silent: that is why the betting-api log had no "Assessment" or error line. The refusal text came from the
+  assessment of the placement (a different service from betting-api). For a boosted bet the stake limit is the
+  price boost config anyway (`BettingRepository` takes `priceboostConfig.MaxStake` last).
+- **Files:** `Platform.Shared/Repositories/GTSRepository.cs` (`GetMaxStake`, `Assessment`, `SendBet`, new
+  `GetProviderPrice`).
+- **Fix:** for a boosted bet (`BetRequestDTO.IsBoosted` for the max stake, `OnBetPlacement.IsBoosted` or
+  `Bet.BetTypeId == PriceBoost` for the assessment, `Bet.BetTypeId == PriceBoost` for `SendBet`) the leg carries
+  the original odds (`OddsRef`, which TD-25 keeps on the selection); a bet with no reference price falls back to its
+  odds. What the bet pays does not change: `payoutPrice` of a settled leg is still computed from the boosted odds.
+  `priceChangeRule` and the cashout assessment (`AcceptAny`, quote-time price) are unchanged. Covered by
+  `Platform.Shared.Test/Repositories/GTSRepositoryAssessmentPriceTests.cs`.
+- **Flag, original odds vs client odds:** `OddsRef` is the original odds only while Sportsbook.API prices clients
+  with the original odds (`IsOEEnable` off). Under client odds it holds the client's price, so what Genius Sports is
+  shown for a boosted bet has to be decided again. The tripwire in `BoostedOddsPricingTests` names this.
+- **Open / unknown:** the Genius Sports API specification is not in our repos and its Confluence pages are behind a
+  partner login, so these are assumptions to confirm with Genius Sports: that the bet feed wants the placement
+  `price` (the original one) with the boosted payout in `payoutPrice` for a settled leg, and how the liability
+  of a boosted bet is computed (their risk view sees the original price, not what the bet pays). A
+  "1026 - Failed sending Bet to GTS" on the next DEV boosted bet would show a wrong assumption. The Max Bet button
+  (`PlatformRepository.GetMaxStake`) builds its selections without `OddsRef`, so it still sends the boosted price
+  and gets the silent 0 described above; the stake limit of a boosted bet is the price boost config, so nothing is
+  lost today **[Verified]** in code, not observed.
+- **Confidence:** **[Verified]** in code and by unit tests; behaviour on DEV after deploy **[Unknown]**.
+
 ## Consolidated cross-views
 - **Duplicate implementations** → TD-07 (+ AntiPatterns AP-8): v1/v2 projects, duplicated MessageBroker.
 - **Dead code** → TD-15: JwtParser, commented SQL blocks, superseded v1 services/WebSocket.API.

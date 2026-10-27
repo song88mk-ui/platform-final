@@ -76,6 +76,15 @@ Encoded by `StatusCode` 104–117 and `BetConfig`. **[Verified]** (codes) / **[L
    original odds). If clients are priced with CLIENT odds (`IsOEEnable` true, margin from `ClCoMa`) a boost
    has to be defined again against them. `BoostedOddsPricingTests.ClientOddsTripwire_...` fails the day
    `IsOEEnable` can return true. See TD-25. **[Verified]**.
+7. **The provider sees the ORIGINAL price of a boosted bet** (BO-10). Genius Sports' bet assessment compares each
+   leg's price with its own current price and, under `AcceptNone`, refuses a difference ("Current price 1.50
+   differs from original 1.64"). `GTSRepository` therefore sends `OddsRef` (the original odds) as the leg price
+   of a boosted bet in all three calls that carry one (`GetMaxStake`, `Assessment`, `SendBet`), as
+   `MtsBetProvider` does (original odds to the provider, the boost on its own). What the bet pays is unchanged:
+   the settled leg's `payoutPrice` is computed from the boosted odds. Under client odds (`IsOEEnable` on)
+   `OddsRef` would hold the client's price: see rule 6 and TD-26. **[Verified]** (code, unit tests, and the
+   rejection text seen on DEV); whether Genius Sports expects exactly this in its bet feed and how it computes
+   the liability of a boosted bet **[Unknown]** until a boosted bet is placed on DEV and confirmed with them.
 
 ## F. Bet Builder rules
 1. **2–10 selections** → `154 Bet_Builder_Must_Have_2_Or_More_Selections`,

@@ -14,7 +14,8 @@ namespace Platform.Sportsbook.API.Utility
     // are priced with the original odds and no margin is applied. The day clients are priced with CLIENT
     // odds (IsOEEnable true, margin from the market's ClCoMa), the boosted price has to be defined again
     // against them: the boosted odds Backoffice sets, the cap OE.Job.BoostedOddsCap compares them with, and
-    // the stale-odds check of a boosted bet were all built on the original odds. The tripwire in
+    // the stale-odds check of a boosted bet and the price shown to Genius Sports (the original odds,
+    // GTSRepository.GetProviderPrice) were all built on the original odds. The tripwire in
     // BoostedOddsPricingTests fails the day IsOEEnable can return true, so that this is looked at then.
     public static class BoostedOddsPricing
     {

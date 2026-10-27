@@ -204,7 +204,9 @@ namespace Platform.Sportsbook.API.Test.Utility
                 $"BOOSTED ODDS TRIPWIRE: client {clientCode} is now priced with CLIENT odds (IsOEEnable returns true) instead of the "
                 + "ORIGINAL odds. Boosted prices replace the original odds today (BoostedOddsPricing.Apply in GetBetFixtures2). "
                 + "Before this ships, decide what a boost means against a client price and re-check: the boosted odds set in Backoffice, "
-                + "the OE.Job.BoostedOddsCap comparison (it recomputes client odds from ClCoMa), and the stale-odds check of a boosted bet. "
+                + "the OE.Job.BoostedOddsCap comparison (it recomputes client odds from ClCoMa), the stale-odds check of a boosted bet, "
+                + "and the price Genius Sports is shown for a boosted bet (GTSRepository.GetProviderPrice sends OddsRef in the max stake, "
+                + "assessment and bet feed calls: the ORIGINAL odds today, but the client's odds once IsOEEnable is on). "
                 + "Then update this test.");
         }
     }

@@ -200,7 +200,7 @@ namespace Platform.Shared.Repositories
                         {
                             selectionId = s.SelectionSpecifier,
                             gameState = GetGameState((int)s.FixtureId),
-                            price = s.DecimalOdds
+                            price = GetProviderPrice(s.DecimalOdds, s.OddsRef, request.IsBoosted)
                         }).ToList(),
                         priceChangeRule = "AcceptNone"
                     };
@@ -306,6 +306,8 @@ namespace Platform.Shared.Repositories
 
                     var totalStake = ConvertToEur(request.Bet.TrueStake, request.Bet.ExchangeRate);
 
+                    var isBoosted = request.IsBoosted || request.Bet.BetTypeId == (int)BetType.PriceBoost;
+
                     var payload = new
                     {
                         betId = $"{testPrefix}{request.Bet.BetId.ToString().ToUpper()}",
@@ -316,7 +318,7 @@ namespace Platform.Shared.Repositories
                         {
                             selectionId = s.BetSelection.SelectionSpecifier.Split(':').LastOrDefault(),
                             gameState = GetGameState(s.BetSelection.FixtureStatusId),
-                            price = s.BetSelection.Odds
+                            price = GetProviderPrice(s.BetSelection.Odds, s.BetSelection.OddsRef, isBoosted)
                         }).ToList(),
                         priceChangeRule = GetPriceChangeRule(request.OddsChangeType)
                     };
@@ -535,11 +537,13 @@ namespace Platform.Shared.Repositories
                     var totalStake = ConvertToEur(request.Bet.TrueStake, request.Bet.ExchangeRate);
                     var updateDate = isSettled ? DateTime.UtcNow : request.Bet.BetDate;
 
+                    var isBoosted = request.Bet.BetTypeId == (int)BetType.PriceBoost;
+
                     var legs = request.BetSelections.Select(s => new
                     {
                         status = GetGtsSelectionStatus(s.BetSelectionStatusId),
                         gameState = GetGameState((int)s.FixtureStatusId),
-                        price = s.Odds,
+                        price = GetProviderPrice(s.Odds, s.OddsRef, isBoosted),
                         payoutPrice = isSettled ? GetSelectionPayout(s.BetSelectionStatusId, s.Odds, request.Bet, request.BetSelections.Count == 1) : null,
                         betGeniusContent = new
                         {
@@ -762,6 +766,21 @@ namespace Platform.Shared.Repositories
             var probability = probabilities?.FirstOrDefault(p => p.BetSelectionId == selection.BetSelectionId);
 
             return probability?.Price > 0 ? probability.Price.Value : selection.Odds;
+        }
+
+        // The price a leg is shown to Genius Sports at (max stake, assessment and bet feed). For a boosted bet it is the
+        // ORIGINAL price of the selection (OddsRef), not the boosted price the player is paid (odds): under AcceptNone the
+        // assessment refuses a price that differs from its own ("Current price 1.50 differs from original 1.64"), which
+        // rejected every boosted bet (BO-10). Same convention as MtsBetProvider: the provider is shown the original odds
+        // and the boost is carried on its own. What the bet pays stays the boosted odds (payoutPrice of a settled leg).
+        // A bet with no reference price falls back to its odds.
+        //
+        // ORIGINAL ODDS vs CLIENT ODDS: OddsRef is the original odds only while clients are priced with the original
+        // odds (Sportsbook.API IsOEEnable is off). With client odds (margin) it holds the client's price, so what
+        // Genius Sports has to be shown must be decided again. See BoostedOddsPricing and its tripwire test.
+        private static decimal GetProviderPrice(decimal odds, decimal oddsRef, bool isBoosted)
+        {
+            return isBoosted && oddsRef > 0m ? oddsRef : odds;
         }
 
         private string GetPriceChangeRule(OddsChangeType oddsChangeType)

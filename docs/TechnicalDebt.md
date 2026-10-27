@@ -405,6 +405,38 @@
   observed in Loki. The DEVOPS-409 cross-repo checker `CashOutStake_OnOddsChange_ReadsEveryField`
   (qa-robot-automation, not read here) should report `NOW PASSES` after deploy **[Unknown]**.
 
+### TD-25 - A boosted bet was refused with "approve any odds change": the boost was only applied behind `IsOEEnable` (`SportsbookRepository.cs`) - **Resolved** (2026-10-27, BO-10)
+- **Evidence:** the site sends a boosted bet with `Odds = BoostedOdds` and `IsBoosted = true`;
+  `PlatformRepository.PlaceBet` forces `OddsChangeType.None` for it and asks Sportsbook.API `GetBetFixture`.
+  `GetBetFixtures2` priced each selection at its original odds, because the only code that swaps in the boosted
+  price (`GetClientBoostedOdds`) sat inside `if (IsOEEnable(clientCode))` and `IsOEEnable` is hardcoded
+  `return false` ("disable Margin since we are now using bet genius"). `GetBetSelectionStatus` then compared the
+  boosted request price with the original odds, answered `Odds_Or_Lines_Have_Changed` with the original odds,
+  and the slip fell back to them and asked to "approve any odds change". Seen on DEV on 2026-10-27 (1.64 sent,
+  1.5 returned) once odds-engine-2 started stamping `ClBoOd`. The bet would also have been stored at the
+  original odds: `PlatformRepository.PlaceBet` takes `DecimalOdds` from the same `GetBetFixture` result.
+- **Files:** `Platform.Sportsbook.API/Repository/SportsbookRepository.cs` (`GetBetFixtures2`,
+  `GetClientBoostedOdds`), new `Platform.Sportsbook.API/Utility/BoostedOddsPricing.cs`.
+- **Fix:** when `IsOEEnable` is false and the request is boosted, `GetBetFixtures2` prices the selections at the
+  client's boosted odds (`BoostedOddsPricing.Apply`; `OddsRef` keeps the original). `GetClientBoostedOdds` now
+  delegates to the same class: the client is matched on its whole code (it was `Contains`, so a client whose code
+  is part of another's read that client's boost), a malformed entry is no boost instead of an exception, and
+  the odds are parsed with the invariant culture. The three in-memory `ClBoOd.Contains(clientCode)` filters of
+  `GetBoostedMarkets` use the same match. Covered by `Platform.Sportsbook.API.Test/Utility/BoostedOddsPricingTests.cs`.
+- **Flag for later, original odds vs client odds:** a boost replaces the ORIGINAL odds. If clients are ever priced
+  with CLIENT odds (`IsOEEnable` can return true, margin from `ClCoMa`), the branch that already boosts over
+  client odds runs instead and what a boost means against a client price has to be decided again: the boosted
+  odds set in Backoffice, the `OE.Job.BoostedOddsCap` comparison (odds-engine-2 recomputes client odds from
+  `ClCoMa`) and the stale-odds check of a boosted bet. `BoostedOddsPricingTests.ClientOddsTripwire_...` fails
+  in CI the day `IsOEEnable` can return true, or is renamed or removed.
+- **Not changed (still open):** the `Fixture.ClBo` / `Market.ClBo` filters of `GetBoostedFixtures` are
+  Mongo-side `Contains(clientCode)` and still match by a part of a code; `GetMaxStake` still takes the odds from
+  the request (`PlatformRepository.cs`, `DecimalOdds = request.IsBoosted == true ? s.Odds : ...`), so a client
+  can still choose the price the max stake is computed on (the bet itself is now priced by the server);
+  live `OnBetslipOddsChange` pushes to a slip holding a boosted selection were not traced.
+- **Confidence:** **[Verified]** in code and by unit tests (the Mongo-reading `GetBetFixtures2` itself has no
+  unit test: it needs a live Mongo); behaviour on DEV after deploy **[Unknown]**.
+
 ## Consolidated cross-views
 - **Duplicate implementations** → TD-07 (+ AntiPatterns AP-8): v1/v2 projects, duplicated MessageBroker.
 - **Dead code** → TD-15: JwtParser, commented SQL blocks, superseded v1 services/WebSocket.API.

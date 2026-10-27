@@ -64,6 +64,18 @@ Encoded by `StatusCode` 104–117 and `BetConfig`. **[Verified]** (codes) / **[L
 2. **Boost cannot be parlayed** → `148 Boosted_Odds_Cannot_Be_Parlayed`. **[Verified]**.
 3. **Boost expires at kickoff** — boosted odds not allowed once a fixture goes live → `149`. **[Verified]**.
 4. **Boost ∉ BetBuilder** → `156 Boosted_Odds_Cannot_Be_Combined_With_Bet_Builder`. **[Verified]**.
+5. **A boosted bet is priced at the client's boosted odds** (BO-10). The slip sends the boosted price and
+   `GetBetFixtures2` now prices the selection at the client's entry in `Selection.ClBoOd`
+   (`CODE:odds|CODE:odds`, written by odds-engine-2 `OnPriceBoost`), so the stale-odds check
+   (`OddsChangeType.None` for a boosted bet) passes and the bet is stored at that price. A selection the
+   client no longer has a boost on keeps its original odds, so the bet is refused as an odds change.
+   The client is matched on its whole code. **[Verified]** (code, unit tests); DEV end to end **[Unknown]**
+   until deployed.
+6. **Original odds vs client odds.** The boosted price replaces the ORIGINAL odds of the selection. That
+   holds while `SportsbookRepository.IsOEEnable` is hardcoded off (no margin: clients are priced with the
+   original odds). If clients are priced with CLIENT odds (`IsOEEnable` true, margin from `ClCoMa`) a boost
+   has to be defined again against them. `BoostedOddsPricingTests.ClientOddsTripwire_...` fails the day
+   `IsOEEnable` can return true. See TD-25. **[Verified]**.
 
 ## F. Bet Builder rules
 1. **2–10 selections** → `154 Bet_Builder_Must_Have_2_Or_More_Selections`,

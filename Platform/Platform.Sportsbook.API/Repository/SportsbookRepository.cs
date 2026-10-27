@@ -1455,6 +1455,20 @@ namespace Platform.Sportsbook.API.Repository
                 if (finalSelections.Count > 0)
                     newSelectionExtension = finalSelections;
             }
+            else if (request.IsBoosted)
+            {
+                // The price of a boosted bet is the client's boosted odds on the selection (BO-10). Without this the
+                // selection kept its original odds here, so the boosted price the slip sends never matched them: the
+                // stale-odds check (OddsChangeType.None for a boosted bet) refused every boosted bet and handed back
+                // the original odds, and the bet would have been stored at them.
+                //
+                // ORIGINAL ODDS vs CLIENT ODDS: this branch runs while IsOEEnable is false, i.e. clients are priced
+                // with the ORIGINAL odds, so the boost replaces them. When clients are priced with CLIENT odds
+                // (IsOEEnable true) the branch above runs instead, and it already boosts over the client's odds, so
+                // what a boost means against a client price must be decided again. See BoostedOddsPricing and its
+                // tripwire test, which fails the day IsOEEnable can return true.
+                BoostedOddsPricing.Apply(newSelectionExtension, request.ClientCode);
+            }
 
             return new Tuple<List<Fixture>, List<Market>, List<SelectionExtension>, BettingStatus, List<Selection>>(newFixtures, newMarkets, newSelectionExtension, newBettingStatus, newAllSelections);
         }
@@ -6348,7 +6362,7 @@ namespace Platform.Sportsbook.API.Repository
                     foreach (var market in filteredMarkets)
                     {
                         ctr++;
-                        var filteredSelections = selections.Where(c => c.MaId == market.MaId && !string.IsNullOrEmpty(c.ClBoOd) && c.ClBoOd.Contains(clientCode)).ToList();
+                        var filteredSelections = selections.Where(c => c.MaId == market.MaId && !string.IsNullOrEmpty(c.ClBoOd) && BoostedOddsPricing.TryGetClientBoostedOdds(c.ClBoOd, clientCode, out _)).ToList();
                         var isBinary = filteredSelections.Count > 2 ? false : true;
 
                         result.Add(new BoostedMarketDTO
@@ -6426,7 +6440,7 @@ namespace Platform.Sportsbook.API.Repository
                             MarketStatusName = market.ClCo.Contains(clientCode) ? market.MaStNa : MarketStatus.Inactive.ToString(),
                             IsBoosted = market.IsBo,
                             SortOrder = marketTemplateIds.Any(c => c == market.MaTeId) ? marketTemplateIds.FindIndex(c => c == market.MaTeId) + 1 : 1000 + ctr,
-                            Selections = selections.Where(c => c.MaId == market.MaId && !string.IsNullOrEmpty(c.ClBoOd) && c.ClBoOd.Contains(clientCode)).Select(s => new BoostedSelectionDTO
+                            Selections = selections.Where(c => c.MaId == market.MaId && !string.IsNullOrEmpty(c.ClBoOd) && BoostedOddsPricing.TryGetClientBoostedOdds(c.ClBoOd, clientCode, out _)).Select(s => new BoostedSelectionDTO
                             {
                                 SelectionTemplateId = s.SeTeId,
                                 SelectionId = s.SeId.ToString(),
@@ -6464,7 +6478,7 @@ namespace Platform.Sportsbook.API.Repository
                 foreach (var market in filteredMarkets)
                 {
                     ctr++;
-                    var filteredSelections = selections.Where(c => c.MaId == market.MaId && !string.IsNullOrEmpty(c.ClBoOd) && c.ClBoOd.Contains(clientCode)).ToList();
+                    var filteredSelections = selections.Where(c => c.MaId == market.MaId && !string.IsNullOrEmpty(c.ClBoOd) && BoostedOddsPricing.TryGetClientBoostedOdds(c.ClBoOd, clientCode, out _)).ToList();
                     var isBinary = filteredSelections.Count > 2 ? false : true;
 
                     result.Add(new BoostedMarketDTO
@@ -11910,30 +11924,11 @@ namespace Platform.Sportsbook.API.Repository
         //    return result.Where(f => f.SelectionTemplateId == currentSelection.SeTeId).FirstOrDefault().Odds;
         //}
 
+        // The client is matched on its whole code, not on a part of it (it used to be `Contains`, so a client whose
+        // code is part of another's read that client's boost), and a malformed entry no longer throws (BO-10).
         private static string GetClientBoostedOdds(string clientBoostedOdds, string clientCode, bool isBoosted, string odds)
         {
-            var boostedOdds = string.Empty;
-
-            if (isBoosted)
-            {
-                if (string.IsNullOrEmpty(clientBoostedOdds))
-                    return odds;
-
-                var split = clientBoostedOdds.Split("|").ToList();
-                boostedOdds = split.Where(s => s.Contains(clientCode)).FirstOrDefault();
-
-                if (string.IsNullOrEmpty(boostedOdds))
-                    return odds;
-
-                boostedOdds = boostedOdds.Split(":")[1];
-                var cBoostedOdds = Convert.ToDecimal(boostedOdds);
-
-                return cBoostedOdds.ToString("0.00");
-            }
-            else
-            {
-                return odds;
-            }
+            return BoostedOddsPricing.GetClientBoostedOdds(clientBoostedOdds, clientCode, isBoosted, odds);
         }
 
         private static List<ClientOdds> GetClientOdds(int sportId, int activeSelectionCount, decimal margin, List<SelectionFilter> selections, string clientMarketConfig, string clientCode, string marketTemplateId, List<MarketTemplatePlayerProps> marketTemplateGroups)

@@ -27,6 +27,12 @@ Each repo owns its copy; they interoperate by field-name + routing-key conventio
 request/response, `OnClientTopMarketBet*`, `OnUOFBetCancellation`/`OnUOFBetSettlement`,
 `OnOddsFeedBetCancellationMessage`, `OnMarketDeactivationMesssage` (sic), `OnDeleteCacheMessage`.
 
+> **Back-office cancellation (GM-893):** the class `OnBetBackofficeCancellation` travels as message
+> type `"OnBetBackOfficeCancellation"` (capital `O`) on `r.bet.cancellation`. Operator.Servicev2
+> publishes it with only `BetId`, and Provider.Service consumes it (`Worker.cs:189`). The type is a
+> string literal at each `Publish` call, not the class name, and must match the consumer `switch`
+> exactly; a mismatch is dropped with no log (TechnicalDebt TD-27).
+
 ### Contracts platform-final consumes from siblings (by convention) `[Verified-sibling]`
 | Inbound contract | Producer (sibling class) | Routing key |
 |------------------|--------------------------|-------------|

@@ -156,7 +156,9 @@
 ### TD-11 — Misspelled identifiers baked into contracts
 - **Evidence:** procs `InserOrUpdateClientMarketSortOrder`/`…TemplateGroup`; `Custom:Fibonnaci`;
   `ProcesssBetPlacement`; `OnBOBetCancellaton`; `OnMarketDeactivationMesssage`; `ParlayBonusService .cs`
-  (trailing space).
+  (trailing space). The class `OnBetBackofficeCancellation` keeps its lowercase `o`, but its wire
+  message type is `"OnBetBackOfficeCancellation"`: the type is a literal passed to `Publish`, not the
+  class name, and the 8 publishes that used the class spelling were dropped by the consumer (TD-27).
 - **Files:** as named (schema + `Platform.Shared`).
 - **Confidence:** **[Verified]**.
 - **Suggested investigation:** these are real schema/contract identifiers — confirm blast radius before any rename.
@@ -271,11 +273,11 @@
   - **Unknown:** PRD frequency. A search of PRD operator-service logs (2026-09-09 to 2026-10-07)
     found no occurrence, but the `OperatorLog` table is not in Loki, so absence there is not
     conclusive.
-  - **GM-893:** the three failure branches and the `catch` block publish
-    `"OnBetBackofficeCancellation"` with a lowercase `o`, in both `ProcesssBetCancellationOG` and
-    the non-OG `ProcesssBetCancellation` (8 sites). `Platform.Settlement.Service/Worker.cs:115` and
-    `Platform.Provider.Service/Worker.cs:189` switch on `"OnBetBackOfficeCancellation"`, so those
-    messages match no case. The success paths spell it correctly.
+  - **GM-893 (Resolved 2026-10-20, see TD-27):** the three failure branches and the `catch` block
+    published `"OnBetBackofficeCancellation"` with a lowercase `o`, in both
+    `ProcesssBetCancellationOG` and the non-OG `ProcesssBetCancellation` (8 sites), so
+    `Platform.Provider.Service/Worker.cs:189` matched no case. All 8 now use
+    `"OnBetBackOfficeCancellation"`.
 - **Not in scope of the code fix:** confirming the settlement state of the two example PRD bet IDs
   from the ticket (`3703da0a-dd8b-4a8d-f33d-08df196c1dc0`, `4fa9363a-2745-4db1-f33e-08df196c1dc0`)
   on our side and OG's side, requested on the ticket but not checked here (production is read-only
@@ -474,6 +476,46 @@
   and gets the silent 0 described above; the stake limit of a boosted bet is the price boost config, so nothing is
   lost today **[Verified]** in code, not observed.
 - **Confidence:** **[Verified]** in code and by unit tests; behaviour on DEV after deploy **[Unknown]**.
+
+### TD-27 - Operator cancellation failure paths published a misspelled `OnBetBackofficeCancellation` message type (`BettingRepository.cs`) - **Resolved** (2026-10-20, GM-893)
+- **Evidence:** `Platform.Operator.Servicev2/Repository/BettingRepository.cs` publishes
+  `new OnBetBackofficeCancellation { BetId }` on `r.bet.cancellation` once before the operator call
+  (type `"OnBetBackOfficeCancellation"`) and again on every failure branch: the three response
+  branches and the `catch` block of `ProcesssBetCancellation` and of `ProcesssBetCancellationOG`
+  (8 sites). Those 8 passed the type `"OnBetBackofficeCancellation"` (lowercase `o`, the class
+  spelling). `MessageBroker` copies the type into `BasicProperties.Type`
+  (`Platform.Shared/Utility/MessageBroker.cs:399`), and the only consumer, Provider.Service
+  (bound to `r.bet.cancellation|r.bet.operator`, `appsettings.json:33`), switches on
+  `"OnBetBackOfficeCancellation"` (`Worker.cs:189`), so the 8 messages matched no case and were
+  dropped with no log. Settlement.Service also has that case (`Worker.cs:115`) but does not bind
+  `r.bet.cancellation`. The misspelling dates from the initial implementation.
+- **Files:** `Platform.Operator.Servicev2/Repository/BettingRepository.cs`.
+- **Fix:** the type argument of the 8 failure-path publishes is now `"OnBetBackOfficeCancellation"`.
+  The class name, routing key and `{ BetId }` payload are unchanged, so
+  `message-contracts.approved.txt` is untouched.
+- **Tests (`Platform.Operator.Servicev2.Test`, 52 passing):** `BettingRepositoryCancellationTests`
+  (new) drives non-OG `ProcesssBetCancellation` through an operator error code on 200 and on 400, a
+  500 and an unreadable 200 body (catch block), and asserts two `OnBetBackOfficeCancellation`
+  publishes for the bet plus a stored `OnBetCancellation` retry; the success case asserts one.
+  `BettingRepositoryOGCancellationTests` now asserts the type on the rejected-rollback branches and
+  counts only correctly typed messages in `BackOfficeCancellations`. 12 of these fail on the
+  previous code.
+- **Payload decision (not filled):** Provider.Service reads `ChannelTypeId`, `LimitId` and
+  `ClientCode`, but the operator service sets only `BetId`. `ChannelTypeId` defaults to `BG`, so
+  `BetProviderFactory` resolves `GTSBetProvider`, which calls GTS with an empty client code and
+  limit id and only logs the failure **[assumption: GTS rejects the empty path segments]**. So the
+  fix adds, per failed attempt (including each Job.Resettlement replay), one duplicate of the no-op
+  GTS call the pre-call publish already makes on every cancellation; no bet, wallet or provider state
+  changes. Filling the fields was rejected: it would turn these into real GTS reservation
+  cancellations (or MTS ticket cancels for SR bets), duplicating the real provider notification,
+  `OnBetCancellation` on `r.bet.operator` from Settlement.Service
+  (`Platform.Settlement.Service/Repository/BettingRepository.cs:113`), which carries the full bet.
+- **Open follow-up:** decide whether the operator service's `r.bet.cancellation` publishes (pre-call
+  and failure-path) should be removed, or filled and made real provider cancellations. Either is a
+  behaviour change outside this fix.
+- **Confidence:** **[Verified]** in code and by unit tests; the GTS response to the empty path is
+  **[Unknown]** until checked in stg provider-service logs.
+
 
 ## Consolidated cross-views
 - **Duplicate implementations** → TD-07 (+ AntiPatterns AP-8): v1/v2 projects, duplicated MessageBroker.

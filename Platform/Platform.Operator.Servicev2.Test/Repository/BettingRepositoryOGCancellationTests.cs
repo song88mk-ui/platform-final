@@ -220,7 +220,7 @@ namespace Platform.Operator.Servicev2.Test.Repository
 
             Cancel(message);
 
-            // Settlement.Service and Provider.Service switch on "OnBetBackOfficeCancellation".
+            // Provider.Service is the r.bet.cancellation consumer and switches on "OnBetBackOfficeCancellation".
             var published = Assert.Single(_broker.Published, p => p.MessageType == "OnBetBackOfficeCancellation");
             Assert.Equal("r.bet.cancellation", published.RoutingKey);
             Assert.Equal(message.Bet.BetId, Assert.IsType<OnBetBackofficeCancellation>(published.Payload).BetId);
@@ -317,11 +317,11 @@ namespace Platform.Operator.Servicev2.Test.Repository
             // ask OG for the transaction status.
             Assert.Single(og.Requests);
 
-            // Every failure branch publishes a second back-office cancellation for the same bet.
-            // Its MessageType is not asserted: these branches spell it "OnBetBackofficeCancellation",
-            // which no consumer switches on, a separate defect tracked as GM-893.
+            // Every failure branch publishes a second back-office cancellation for the same bet,
+            // with the type Provider.Service switches on.
             var backOffice = _broker.Published.Where(p => p.RoutingKey == "r.bet.cancellation").ToList();
             Assert.Equal(2, backOffice.Count);
+            Assert.All(backOffice, p => Assert.Equal("OnBetBackOfficeCancellation", p.MessageType));
             Assert.All(backOffice, p => Assert.Equal(message.Bet.BetId, Assert.IsType<OnBetBackofficeCancellation>(p.Payload).BetId));
 
             using var context = _factory.CreateDbContext();
@@ -366,10 +366,12 @@ namespace Platform.Operator.Servicev2.Test.Repository
         private static int RequestsTo(OperatorStubServer og, string path) => og.Requests.Count(r => r.Path == path);
 
         // The method publishes one back-office cancellation before it calls OG. Every failure
-        // fallback publishes a second one, so 2 means the fallback ran and 1 means it did not. The
-        // message type is not used because the two spellings differ (GM-893).
+        // fallback publishes a second one, so 2 means the fallback ran and 1 means it did not. Only
+        // messages Provider.Service would handle are counted: the right type on the right route.
         private int BackOfficeCancellations(OnBetSettlement message) =>
-            _broker.Published.Count(p => p.Payload is OnBetBackofficeCancellation c && c.BetId == message.Bet.BetId);
+            _broker.Published.Count(p => p.MessageType == "OnBetBackOfficeCancellation"
+                && p.RoutingKey == "r.bet.cancellation"
+                && p.Payload is OnBetBackofficeCancellation c && c.BetId == message.Bet.BetId);
 
         private void SeedPendingRetry(OnBetSettlement message, string correlationId = "corr-1")
         {

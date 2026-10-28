@@ -92,7 +92,9 @@ on `--mutate` removed every mutant in our runs. No mutator removes an extension 
    Renaming a message field, routing key, Mongo/SQL column, or SignalR method name is an **up-to-4-repo
    silent break** (platform-final ↔ odds-engine-2 ↔ platform-web, + oddsfeed/backoffice). (R-2,
    [docs/Contracts.md](docs/Contracts.md)) The one exception is CashOutStake's odds-change mirror,
-   which has a consumer-side test (rule 12).
+   which has a consumer-side test (rule 12). A message type is a string literal passed to `Publish`,
+   may differ from the class name, and must match the consumer's `switch` case exactly: GM-893 found
+   8 operator publishes typed `OnBetBackofficeCancellation` that Provider.Service silently dropped.
 3. **Auth is custom, not framework-based.** No `AddAuthentication`/JWT/`[Authorize]`; `UseAuthorization()`
    is inert. Access control = API-key **ActionFilters** applied per-controller via `[ServiceFilter]`.
    **A new controller without a filter attribute is completely open** (no global fallback). (R-6,

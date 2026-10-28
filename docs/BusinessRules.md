@@ -17,6 +17,15 @@
 4. **Operator token** for user-scoped actions is validated **downstream** (Operator/Wallet); a
    missing/invalid token yields `103` / `Operator_Error 1001`. **[Likely]** (not enforced in
    platform-final filters).
+   **Operator endpoint must be configured.** Before calling the operator, `OperatorRepository`
+   (`Platform/Platform.API/Repository/OperatorRepository.cs`, `AuthenticatePlayer` and
+   `AuthenticateOGPlayer`) checks that the client's `Endpoint` is an absolute URI. Empty, null,
+   whitespace or relative values return `Operator_Error 1001` "Operator endpoint is not configured
+   for this client" (HTTP 400 from balance, bet history, favourites and the other `Authenticate`
+   callers), log one warning with the client id, and never reach the operator. Before GM-966 an
+   empty `Endpoint` threw `UriFormatException` and returned a bare 500. The client row is cached
+   per pod for 24h under `cc:{CLIENTID}`, so purge it (`DELETE v1/cache/client/{clientId}`) or
+   restart after fixing the data. **[Verified]**
 5. **IPv4 required** in some bet paths: non-IPv4 → `122 IPAddress_Must_Be_IPv4`. **[Verified]** (code exists).
 
 ## B. Bet placement — stake & odds rules

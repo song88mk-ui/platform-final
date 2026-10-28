@@ -248,6 +248,9 @@ namespace Platform.API.Repository
                 };
             }
 
+            if (!IsValidOperatorEndpoint(endpoint))
+                return MissingOperatorEndpoint(null);
+
             var key = _ogConfig.PublicAPIKey;
             var vendorName = _ogConfig.VendorName;
 
@@ -377,6 +380,9 @@ namespace Platform.API.Repository
                 };
             }
 
+            if (!IsValidOperatorEndpoint(endpoint))
+                return MissingOperatorEndpoint(clientId);
+
             _httpClient.BaseAddress = new Uri(endpoint);
 
             if (_httpClient.DefaultRequestHeaders.Contains("x-is-agent"))
@@ -476,6 +482,21 @@ namespace Platform.API.Repository
                     Message = $"{StatusCode.Operator_Error.ToString().Replace('_', ' ')} ({ex.Message})",
                 };
             }
+        }
+
+        // Same acceptance as new Uri(endpoint): an empty, whitespace or relative Client.Endpoint would
+        // otherwise throw before the try blocks and surface as a bare 500.
+        private static bool IsValidOperatorEndpoint(string endpoint) => Uri.TryCreate(endpoint, UriKind.Absolute, out _);
+
+        private BaseResponseDTO<AuthenticationResponseDTO> MissingOperatorEndpoint(string clientId)
+        {
+            _logger.LogWarning("Operator endpoint is not configured for client {ClientId}", clientId);
+
+            return new BaseResponseDTO<AuthenticationResponseDTO>
+            {
+                StatusCode = StatusCode.Operator_Error,
+                Message = $"{StatusCode.Operator_Error.ToString().Replace('_', ' ')} (Operator endpoint is not configured for this client)",
+            };
         }
     }
 }

@@ -1,5 +1,7 @@
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
+using Platform.API.Models;
 using Platform.API.Repository;
 using Platform.Shared.Enums;
 using Platform.Shared.Models;
@@ -20,17 +22,33 @@ namespace Platform.API.Test.Repository
             private readonly HttpStatusCode _statusCode;
             private readonly string _content;
 
+            public int Calls { get; private set; }
+
             public StubHandler(HttpStatusCode statusCode, string content)
             {
                 _statusCode = statusCode;
                 _content = content;
             }
 
-            protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken) =>
-                Task.FromResult(new HttpResponseMessage(_statusCode)
+            protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
+            {
+                Calls++;
+                return Task.FromResult(new HttpResponseMessage(_statusCode)
                 {
                     Content = new StringContent(_content)
                 });
+            }
+        }
+
+        private sealed class CapturingLogger : ILogger<OperatorRepository>
+        {
+            public List<(LogLevel Level, string Message)> Entries { get; } = new();
+
+            public IDisposable? BeginScope<TState>(TState state) where TState : notnull => null;
+            public bool IsEnabled(LogLevel logLevel) => true;
+
+            public void Log<TState>(LogLevel logLevel, EventId eventId, TState state, Exception? exception, Func<TState, Exception?, string> formatter) =>
+                Entries.Add((logLevel, formatter(state, exception)));
         }
 
         private static Task<BaseResponseDTO<AuthenticationResponseDTO>> Authenticate(string responseBody)
@@ -41,6 +59,16 @@ namespace Platform.API.Test.Repository
                 NullLogger<OperatorRepository>.Instance);
 
             return repository.Authenticate("client-1", "operator-token", "http://operator.test", false, null!);
+        }
+
+        private static async Task<(BaseResponseDTO<AuthenticationResponseDTO> Response, StubHandler Handler, CapturingLogger Logger)> AuthenticateWithEndpoint(string? endpoint, OGClientRequest? request)
+        {
+            var handler = new StubHandler(HttpStatusCode.OK, "{\"statusId\":1000,\"balance\":1}");
+            var logger = new CapturingLogger();
+            var repository = new OperatorRepository(new HttpClient(handler), new ConfigurationBuilder().Build(), logger);
+
+            var response = await repository.Authenticate("client-1", "operator-token", endpoint!, false, request!);
+            return (response, handler, logger);
         }
 
         [Fact]
@@ -84,6 +112,43 @@ namespace Platform.API.Test.Repository
 
             Assert.Equal(StatusCode.Operator_Error, response.StatusCode);
             Assert.Null(response.Result);
+        }
+
+        // An active client with an empty Client.Endpoint (STG client BLA) made new Uri(endpoint) throw
+        // UriFormatException before AuthenticatePlayer's try block, so platform-api returned a bare 500.
+        // A missing or unusable endpoint must come back as Operator_Error (mapped to 400 by the
+        // controllers) without calling the operator.
+        [Theory]
+        [InlineData("")]
+        [InlineData("   ")]
+        [InlineData(null)]
+        [InlineData("not-a-url")]
+        public async Task Authenticate_EmptyOrInvalidEndpoint_ReturnsOperatorErrorWithoutCallingOperator(string? endpoint)
+        {
+            var (response, handler, logger) = await AuthenticateWithEndpoint(endpoint, null);
+
+            Assert.Equal(StatusCode.Operator_Error, response.StatusCode);
+            Assert.Equal("Operator Error (Operator endpoint is not configured for this client)", response.Message);
+            Assert.Null(response.Result);
+            Assert.Equal(0, handler.Calls);
+
+            var entry = Assert.Single(logger.Entries);
+            Assert.Equal(LogLevel.Warning, entry.Level);
+            Assert.Contains("client-1", entry.Message);
+            Assert.DoesNotContain("operator-token", entry.Message);
+        }
+
+        [Fact]
+        public async Task Authenticate_OGPath_EmptyEndpoint_ReturnsOperatorErrorWithoutCallingOperator()
+        {
+            // No Custom:OrientalGaming section, so the guard must run before _ogConfig is read.
+            var (response, handler, logger) = await AuthenticateWithEndpoint("", new OGClientRequest { PlayerCode = "p1" });
+
+            Assert.Equal(StatusCode.Operator_Error, response.StatusCode);
+            Assert.Equal("Operator Error (Operator endpoint is not configured for this client)", response.Message);
+            Assert.Null(response.Result);
+            Assert.Equal(0, handler.Calls);
+            Assert.Equal(LogLevel.Warning, Assert.Single(logger.Entries).Level);
         }
     }
 }

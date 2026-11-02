@@ -919,24 +919,7 @@ namespace Platform.Sportsbook.API.Repository
                 fixtureFilter = Builders<Fixture>.Filter.Where(c => c.FiStId < 2 && c.FiTyId < 2 && selectedSportIds.Contains(c.SpId));
             }
 
-            var fixtureProjection = Builders<Fixture>.Projection
-                .Include(c => c.Id)
-                .Include(c => c.FiId)
-                .Include(c => c.ClCo)
-                .Include(c => c.SpId)
-                .Include(c => c.SpNa)
-                .Include(c => c.SpNaTr)
-                .Include(c => c.SegId)
-                .Include(c => c.SegNa)
-                .Include(c => c.SegNaTr)
-                .Include(c => c.LeId)
-                .Include(c => c.LeNa)
-                .Include(c => c.LeNaTr)
-                .Include(c => c.FiStDa)
-                .Include(c => c.FiStId)
-                .Include(c => c.FiTyId)
-                .Include(c => c.HoNaTr)
-                .Include(c => c.AwNaTr);
+            var fixtureProjection = SportsTreeProjection.For(request.LanguageCode);
 
             var fixtures = await fixtureCollection.Find(fixtureFilter).Project<SportsTreeFixtureProjection>(fixtureProjection).ToListAsync();
 
@@ -957,7 +940,8 @@ namespace Platform.Sportsbook.API.Repository
             using (var fixtureIdsWithMarkets = await primaryMarketCollection.DistinctAsync(c => c.FiId, marketFilter))
                 fixtureIds = await fixtureIdsWithMarkets.ToListAsync();
 
-            fixtures = fixtures.Where(c => fixtureIds.Contains(c.FiId)).ToList();
+            var fixtureIdsWithMarket = new HashSet<long>(fixtureIds);
+            fixtures = fixtures.Where(c => fixtureIdsWithMarket.Contains(c.FiId)).ToList();
 
             if (fixtures.Count == 0)
             {
@@ -12904,7 +12888,6 @@ namespace Platform.Sportsbook.API.Repository
                 AddMongoTranslation(map, $"SpId:{fixture.SpId}", FindTranslation(fixture.SpNaTr, language, t => t.LaCo, t => t.SpNa));
                 AddMongoTranslation(map, $"SegId:{fixture.SegId}", FindTranslation(fixture.SegNaTr, language, t => t.LaCo, t => t.SegNa));
                 AddMongoTranslation(map, $"LeId:{fixture.LeId}", FindTranslation(fixture.LeNaTr, language, t => t.LaCo, t => t.LeNa));
-                AddMongoTranslation(map, $"FiId:{fixture.Id}", ComposeMongoFixtureName(fixture.HoNaTr, fixture.AwNaTr, language));
             }
 
             return Task.FromResult(map);

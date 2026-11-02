@@ -9498,7 +9498,7 @@ namespace Platform.Sportsbook.API.Repository
                 };
             }
 
-            var fixtureFilter = Builders<Fixture>.Filter.Where(c => c.FiStId < 12 && c.SpId.IsVirtualSportId());
+            var fixtureFilter = Builders<Fixture>.Filter.Where(VirtualSportFilter.VirtualSportFixtures());
             var fixtureProjection = Builders<Fixture>.Projection.Include(c => c.Id).Include(c => c.FiId).Include(c => c.FiTyId).Include(c => c.FiStId).Include(c => c.SpId).Include(c => c.SpNa);
             var fixtures = await primaryFixtureCollection.Find(fixtureFilter).Project<FixtureClientSportFilter>(fixtureProjection).ToListAsync();
             if (fixtures.Count == 0)
@@ -11151,7 +11151,7 @@ namespace Platform.Sportsbook.API.Repository
             if (mCache != null)
                 return mCache;
 
-            var fixtureFilter = Builders<Fixture>.Filter.Where(c => c.FiStId < 2 && c.FiTyId == (int)FixtureType.Match && !c.SpId.IsVirtualSportId());
+            var fixtureFilter = Builders<Fixture>.Filter.Where(VirtualSportFilter.ActiveMatchesExcludingVirtual());
             var fixtures = await fixtureCollection.Find(fixtureFilter).ToListAsync();
 
             fixtures = fixtures.Where(f => f.ClCo.Contains(request.ClientCode, StringComparison.OrdinalIgnoreCase)).OrderBy(o => o.FiTyId).ThenByDescending(o => o.FiStId).ThenBy(o => o.FiStDa).ToList();
@@ -11244,7 +11244,7 @@ namespace Platform.Sportsbook.API.Repository
             var timer = new Stopwatch();
             timer.Start();
 
-            var fixtureFilter = Builders<Fixture>.Filter.Where(c => c.FiStId < 2 && c.FiTyId == (int)FixtureType.Match && !c.SpId.IsVirtualSportId());
+            var fixtureFilter = Builders<Fixture>.Filter.Where(VirtualSportFilter.ActiveMatchesExcludingVirtual());
             var fixtures = await fixtureCollection.Find(fixtureFilter).ToListAsync();
 
             fixtures = fixtures.Where(f => f.ClCo.Contains(request.ClientCode, StringComparison.OrdinalIgnoreCase)).OrderBy(o => o.FiTyId).ThenByDescending(o => o.FiStId).ThenBy(o => o.FiStDa).ToList();

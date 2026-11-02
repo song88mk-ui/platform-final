@@ -516,6 +516,25 @@
 - **Confidence:** **[Verified]** in code and by unit tests; the GTS response to the empty path is
   **[Unknown]** until checked in stg provider-service logs.
 
+### TD-28 - League highlights and client sports lookup threw on every call: the Mongo filter called `IsVirtualSportId()` (`SportsbookRepository.cs`) - **Resolved** (2026-11-02, ticket TBD)
+- **Evidence:** GM-103 (2025-12-11) added `!c.SpId.IsVirtualSportId()` to the fixture filter of
+  `GetLeagueHighlights` and `GetLeagueHighlightsFixtures`, and `c.SpId.IsVirtualSportId()` to
+  `GetClientSportsLookup`. MongoDB.Driver 2.11.6 cannot translate a call to an extension method, so
+  building the query threw `ArgumentException: Unsupported filter: {document}{SpId}.IsVirtualSportId()`
+  before anything reached Mongo. Sportsbook.API returned a 500 and the gateway a 400 with
+  `StatusCode.Error`, on every call to `v1/sportsbook/highlights`, `v1/sportsbook/highlights/fixtures`
+  (public) and `v1/client/sports` (internal). Seen in a Sportsbook.API log on 2026-11-02.
+- **Files:** `Platform.Sportsbook.API/Repository/SportsbookRepository.cs`,
+  `Platform.Sportsbook.API/Utility/VirtualSportFilter.cs` (new).
+- **Fix:** the three predicates moved to `VirtualSportFilter` and check
+  `IntExtensions.GetVirtualSportIds().Contains(c.SpId)`, which renders as `$in`/`$nin`, the form
+  `GetSportstreeDetails` already used. The virtual sport list is empty, so the results are what the
+  code intended: highlights cover every sport, and the client sports lookup returns no sports.
+- **Tests (`Platform.Sportsbook.API.Test`):** `VirtualSportFilterTests` renders both filters to their
+  Mongo form and pins that the extension-method form still throws.
+- **Confidence:** **[Verified]** in code and by unit tests. How long staging and production have
+  returned the error depends on when GM-103 was deployed there **[Unknown]**.
+
 
 ## Consolidated cross-views
 - **Duplicate implementations** → TD-07 (+ AntiPatterns AP-8): v1/v2 projects, duplicated MessageBroker.

@@ -951,10 +951,12 @@ namespace Platform.Sportsbook.API.Repository
             var marketStatusIds = new List<int> { (int)MarketStatus.Active, (int)MarketStatus.Suspended };
 
             var marketFilter = Builders<Market>.Filter.Where(c => fixtureIds.Contains(c.FiId) && marketStatusIds.Contains(c.MaStId));
-            var marketProjection = Builders<Market>.Projection.Include(c => c.Id).Include(c => c.MaId).Include(c => c.FiId);
-            var markets = primaryMarketCollection.Find(marketFilter).Project<MarketCount>(marketProjection).ToList();
 
-            fixtureIds = markets.Select(s => s.FiId).Distinct().ToList();
+            // Only which fixtures have an active or suspended market matters here, so ask the server for those
+            // FiIds alone instead of reading every matching market document (synchronously) and deduplicating here.
+            using (var fixtureIdsWithMarkets = await primaryMarketCollection.DistinctAsync(c => c.FiId, marketFilter))
+                fixtureIds = await fixtureIdsWithMarkets.ToListAsync();
+
             fixtures = fixtures.Where(c => fixtureIds.Contains(c.FiId)).ToList();
 
             if (fixtures.Count == 0)

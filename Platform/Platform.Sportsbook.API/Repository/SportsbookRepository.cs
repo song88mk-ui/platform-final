@@ -8479,16 +8479,16 @@ namespace Platform.Sportsbook.API.Repository
         }
         private List<ClientSportOrder> GetSportOrder()
         {
-            return _memCache.GetCache($"so", () => _sportsbookContext.ClientSportOrder.AsNoTracking().ToList(), 24);
+            return _memCache.GetCache(SportSortOrderCache.SportOrderKey, () => _sportsbookContext.ClientSportOrder.AsNoTracking().ToList(), 24);
         }
         private List<ClientSegmentOrder> GetSegmentOrder(Guid clientId)
         {
-            var key = $"seo-{clientId.ToString().ToLower()}";
+            var key = SportSortOrderCache.SegmentOrderKey(clientId);
             return _memCache.GetCache(key, () => _sportsbookContext.ClientSegmentOrder.AsNoTracking().Where(c => c.ClientId == clientId).ToList(), 24);
         }
         private List<ClientLeagueOrder> GetLeagueOrder(Guid clientId)
         {
-            var key = $"leo-{clientId.ToString().ToLower()}";
+            var key = SportSortOrderCache.LeagueOrderKey(clientId);
             return _memCache.GetCache(key, () => _sportsbookContext.ClientLeagueOrder.AsNoTracking().Where(c => c.ClientId == clientId).ToList(), 24);
         }
         private List<ClientOddstableLeagueOrder> GetOddstableLeagueOrder(Guid clientId)
@@ -10431,9 +10431,7 @@ namespace Platform.Sportsbook.API.Repository
 
             if (request.CacheType == CacheType.SportSortOrder)
             {
-                _memCache.DeleteCache("so");
-                _memCache.DeleteCache("seo");
-                _memCache.DeleteCache("leo");
+                SportSortOrderCache.PurgeCache(_memCache);
                 _memCache.DeleteCacheByPrefix("ntf");
                 _memCache.DeleteCacheByPrefix("ntfbl");
                 _memCache.DeleteCacheByPrefix("nal");
